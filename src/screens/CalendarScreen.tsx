@@ -78,7 +78,7 @@ export default function CalendarScreen() {
 
       {/* Day entries */}
       <View style={styles.preview}>
-        <Text style={styles.previewLabel}>{MONTHS[month]} {selectedDay}일의 일기</Text>
+        <Text style={styles.previewLabel}>{MONTHS[month]} {selectedDay}일의 p!ng</Text>
         <ScrollView showsVerticalScrollIndicator={false}>
           {selectedEntries.length > 0 ? (
             selectedEntries.map((e) => (
@@ -98,7 +98,7 @@ export default function CalendarScreen() {
             ))
           ) : (
             <View style={styles.emptyDay}>
-              <Text style={styles.emptyText}>이 날의 일기가 없어요</Text>
+              <Text style={styles.emptyText}>이 날의 p!ng이 없어요</Text>
             </View>
           )}
         </ScrollView>
