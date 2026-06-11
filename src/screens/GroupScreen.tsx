@@ -8,6 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Line, Rect, Circle, Path } from 'react-native-svg';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { PhotoBlock } from '../components/PhotoThumb';
+import PhotoLightbox from '../components/PhotoLightbox';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import IconPlus from '../components/icons/IconPlus';
@@ -63,7 +64,7 @@ function IconGrid({ active }: { active: boolean }) {
   );
 }
 
-function ListCard({ entry }: { entry: DiaryEntry }) {
+function ListCard({ entry, onPhotoPress }: { entry: DiaryEntry; onPhotoPress: (p: string) => void }) {
   return (
     <View style={styles.listCard}>
       <View style={styles.listCardAuthor}>
@@ -75,7 +76,11 @@ function ListCard({ entry }: { entry: DiaryEntry }) {
           <Text style={styles.entryDate}>6월 {entry.dates.join(',')}일</Text>
         </View>
       </View>
-      {entry.photo && <PhotoBlock photo={entry.photo} height={140} />}
+      {entry.photo && (
+        <TouchableOpacity onPress={() => onPhotoPress(entry.photo!)}>
+          <PhotoBlock photo={entry.photo} height={140} />
+        </TouchableOpacity>
+      )}
       <View style={styles.listCardBody}>
         <Text style={styles.listCardTitle}>{entry.title}</Text>
         <Text style={styles.listCardPreview} numberOfLines={2}>{entry.body}</Text>
@@ -87,11 +92,13 @@ function ListCard({ entry }: { entry: DiaryEntry }) {
   );
 }
 
-function GridCard({ entry, index }: { entry: DiaryEntry; index: number }) {
+function GridCard({ entry, index, onPhotoPress }: { entry: DiaryEntry; index: number; onPhotoPress: (p: string) => void }) {
   return (
     <View style={styles.gridCard}>
       {entry.photo ? (
-        <PhotoBlock photo={entry.photo} height={90} />
+        <TouchableOpacity onPress={() => onPhotoPress(entry.photo!)}>
+          <PhotoBlock photo={entry.photo} height={90} />
+        </TouchableOpacity>
       ) : (
         <View style={[styles.gridBand, { backgroundColor: BAND_COLORS[index % BAND_COLORS.length] }]} />
       )}
@@ -117,6 +124,7 @@ export default function GroupScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { group } = useRoute<Route>().params;
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
 
   // 알림 설정 상태
   const [notifModalOpen, setNotifModalOpen] = useState(false);
@@ -220,17 +228,21 @@ export default function GroupScreen() {
       {viewMode === 'list' ? (
         <ScrollView contentContainerStyle={styles.listContent}>
           {group.entries.map((entry) => (
-            <ListCard key={entry.id} entry={entry} />
+            <ListCard key={entry.id} entry={entry} onPhotoPress={setLightboxPhoto} />
           ))}
         </ScrollView>
       ) : (
         <ScrollView contentContainerStyle={styles.gridContent}>
           <View style={styles.gridLayout}>
             {group.entries.map((entry, i) => (
-              <GridCard key={entry.id} entry={entry} index={i} />
+              <GridCard key={entry.id} entry={entry} index={i} onPhotoPress={setLightboxPhoto} />
             ))}
           </View>
         </ScrollView>
+      )}
+
+      {lightboxPhoto && (
+        <PhotoLightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
       )}
 
       {/* FAB */}
