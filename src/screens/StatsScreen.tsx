@@ -99,7 +99,7 @@ export default function StatsScreen() {
               style={styles.searchInput}
               value={searchTag}
               onChangeText={handleSearchChange}
-              placeholder="태그로 검색"
+              placeholder="탭하여 검색"
               placeholderTextColor="#9ca3af"
               autoCapitalize="none"
               returnKeyType="search"
