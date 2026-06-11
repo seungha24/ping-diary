@@ -90,7 +90,7 @@ export default function StatsScreen() {
 
         {/* Tag bar chart */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>자주 쓴 태그 · 탭하면 검색</Text>
+          <Text style={styles.cardTitle}>자주 쓴 태그 · 탭하여 검색</Text>
 
           {/* 검색창 */}
           <View style={styles.searchRow}>
