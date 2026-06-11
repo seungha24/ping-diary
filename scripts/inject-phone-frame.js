@@ -30,6 +30,7 @@ const css = `
     background: #111;
     padding: 13px;
     position: relative;
+    overflow: hidden; /* 최종 시각 클리핑은 여기서 */
     box-shadow: 0 0 0 1.5px #333, 0 0 0 3.5px #111, 0 60px 160px rgba(0,0,0,0.9);
   }
   .phone-outer::before {
@@ -50,13 +51,10 @@ const css = `
   .phone-screen {
     width: 100%; height: 100%;
     border-radius: 40px;
-    overflow: hidden;
     background: #fff;
     display: flex;
     flex-direction: column;
-    position: relative;          /* 홈바 absolute 기준점 */
-    transform: translate3d(0,0,0); /* fixed 자식 containing block (Safari 호환) */
-    isolation: isolate;
+    position: relative;
   }
 
   /* ── 상태바: Dynamic Island 포함, 앱 콘텐츠와 분리 ── */
@@ -75,10 +73,13 @@ const css = `
     background: #000; border-radius: 20px;
   }
 
-  /* ── 앱 콘텐츠 영역 (overflow/transform은 phone-screen이 담당) ── */
+  /* ── 앱 콘텐츠 영역: transform으로 fixed 자식 기준점 설정 ── */
   .phone-content {
     flex: 1;
+    min-height: 0;
     position: relative;
+    transform: translate3d(0,0,0);
+    isolation: isolate;
   }
 
   /* ── 홈 인디케이터: phone-screen 안에서 absolute ── */
