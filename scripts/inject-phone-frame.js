@@ -74,29 +74,25 @@ const css = `
     background: #000; border-radius: 20px;
   }
 
-  /* ── 앱 콘텐츠 영역 ── */
+  /* ── 앱 콘텐츠 영역 (overflow/transform은 phone-screen이 담당) ── */
   .phone-content {
     flex: 1;
-    overflow: hidden;
     position: relative;
-    /* 이 안의 fixed 포지션 요소들도 여기 기준으로 배치 */
-    transform: translate(0, 0);
-    isolation: isolate;
   }
 
-  /* ── 홈 인디케이터 (absolute 오버레이 → 앱 높이 침범 안 함) ── */
+  /* ── 홈 인디케이터: phone-screen 안에서 absolute ── */
   .phone-home-bar {
     position: absolute;
-    bottom: 6px; left: 0; right: 0;
+    bottom: 8px; left: 0; right: 0;
     display: flex;
     justify-content: center;
     pointer-events: none;
-    z-index: 50;
+    z-index: 200;
   }
   .phone-home-bar::after {
     content: '';
     width: 134px; height: 5px;
-    background: rgba(0,0,0,0.15);
+    background: rgba(0,0,0,0.18);
     border-radius: 3px;
   }
 
@@ -149,8 +145,8 @@ html = html.replace(
     <div class="phone-content">
       <div id="root"></div>
     </div>
+    <div class="phone-home-bar"></div>
   </div>
-  <div class="phone-home-bar"></div>
 </div>
 <span class="phone-label">p!ng · preview</span>`
 );
