@@ -4,6 +4,7 @@ import {
   Dimensions, StyleSheet, TouchableOpacity, Image,
 } from 'react-native';
 import { getPhotoPlaceholder } from '../data/types';
+import PHOTO_ASSETS from '../data/photoAssets';
 
 const { width: SW } = Dimensions.get('window');
 
@@ -33,6 +34,7 @@ export default function PhotoLightbox({ photo, onClose }: Props) {
   if (!photo) return null;
 
   const placeholder = photo.startsWith('ph:') ? getPhotoPlaceholder(photo) : null;
+  const assetSource = photo.startsWith('asset:') ? PHOTO_ASSETS[photo.slice(6)] : null;
   const size = 220;
 
   return (
@@ -46,7 +48,7 @@ export default function PhotoLightbox({ photo, onClose }: Props) {
               <Text style={{ fontSize: size * 0.38 }}>{placeholder.emoji}</Text>
             </View>
           ) : (
-            <Image source={{ uri: photo }} style={styles.image} resizeMode="contain" />
+            <Image source={assetSource ?? { uri: photo }} style={styles.image} resizeMode="contain" />
           )}
 
           <TouchableOpacity style={styles.closeBtn} onPress={close}>

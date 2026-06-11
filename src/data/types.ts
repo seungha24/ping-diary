@@ -41,7 +41,7 @@ export const INITIAL_ENTRIES: DiaryEntry[] = [
   {
     id: 1, title: '오늘도 평범한 하루',
     body: '아침에 커피 한 잔을 마시며 하루를 시작했다. 특별할 것 없지만 그래서 더 소중한 날들.',
-    dates: [10], tags: ['일상', '커피'], photo: 'ph:8', persona: '선생님',
+    dates: [10], tags: ['일상', '커피'], photo: 'asset:capy_sleep', persona: '선생님',
     createdAt: '2026-06-09T09:30:00',
     aiComment: '오늘 하루가 평범하다고 느꼈겠지만, 작은 것에서 소중함을 발견하는 눈을 가졌다는 게 정말 귀한 일이에요. 커피 한 잔의 루틴이 하루를 여는 의식이 된다면, 그 작은 행위가 당신의 정서적 안정에 큰 역할을 하고 있을 거예요. 평범한 날들이 쌓여 인생이 된다는 걸 잊지 마세요.',
   },
@@ -76,8 +76,8 @@ export const GROUPS: Group[] = [
     entries: [
       { id: 201, title: '제주 첫째 날', body: '드디어 제주! 공항부터 설레는 마음이었다.', dates: [10], tags: ['제주', '여행'], photo: 'ph:4', persona: '선생님', author: '민준', avatar: '🧑', createdAt: '2026-06-10T12:00:00', aiComment: '설렘을 글로 담아내는 능력이 돋보여요. 여행의 시작을 이렇게 온전히 느끼는 사람은 분명 끝도 아름답게 마무리할 거예요.' },
       { id: 202, title: '성산일출봉 등반', body: '새벽 5시에 일어나 일출을 봤다. 힘들었지만 잊을 수 없는 풍경.', dates: [10], tags: ['제주', '등산'], photo: 'ph:5', persona: '엄마', author: '소희', avatar: '👧', createdAt: '2026-06-10T08:00:00', aiComment: '힘들어도 포기하지 않고 정상에서 일출을 맞이한 그 순간, 정말 대단해. 몸은 힘들었어도 마음은 충분히 빛났을 거야.' },
-      { id: 203, title: '협재 해변에서', body: '에메랄드 빛 바다를 보며 멍하니 앉아있었다.', dates: [9], tags: ['바다', '제주'], photo: 'ph:6', persona: '상담사', author: '태양', avatar: '🧔', createdAt: '2026-06-09T16:00:00', aiComment: '멍하니 바다를 바라보는 시간, 그게 사실 최고의 힐링이에요. 아무것도 하지 않아도 괜찮다는 걸 바다가 말해주고 있었던 거예요.' },
-      { id: 204, title: '맛집 투어 완료', body: '오늘 세 군데 식당을 돌았다. 배가 터질 것 같다.', dates: [9], tags: ['맛집', '여행'], photo: 'ph:7', persona: '선생님', author: '유리', avatar: '👩', createdAt: '2026-06-09T20:00:00', aiComment: '맛집 세 곳을 완주한 건 단순한 식욕이 아니라 여행을 제대로 즐기겠다는 의지예요. 배가 부른 것도 소중한 여행의 기억이 됩니다.' },
+      { id: 203, title: '협재 해변에서', body: '에메랄드 빛 바다를 보며 멍하니 앉아있었다.', dates: [9], tags: ['바다', '제주'], photo: 'asset:capy_water', persona: '상담사', author: '태양', avatar: '🧔', createdAt: '2026-06-09T16:00:00', aiComment: '멍하니 바다를 바라보는 시간, 그게 사실 최고의 힐링이에요. 아무것도 하지 않아도 괜찮다는 걸 바다가 말해주고 있었던 거예요.' },
+      { id: 204, title: '맛집 투어 완료', body: '오늘 세 군데 식당을 돌았다. 배가 터질 것 같다.', dates: [9], tags: ['맛집', '여행'], photo: 'asset:capy_burger', persona: '선생님', author: '유리', avatar: '👩', createdAt: '2026-06-09T20:00:00', aiComment: '맛집 세 곳을 완주한 건 단순한 식욕이 아니라 여행을 제대로 즐기겠다는 의지예요. 배가 부른 것도 소중한 여행의 기억이 됩니다.' },
       { id: 205, title: '카페 투어의 하루', body: '감성 카페만 4군데. 사진 찍느라 커피가 다 식었다.', dates: [8], tags: ['카페', '제주'], photo: 'ph:8', persona: '미래의 나', author: '나라', avatar: '🙋', createdAt: '2026-06-08T14:00:00', aiComment: '지금 이 순간들을 열심히 기록하고 있는 너, 나중에 이 사진들과 글들이 얼마나 소중해질지 몰라. 식어버린 커피도 그날의 기억이 되니까 후회하지 마.' },
     ],
   },
