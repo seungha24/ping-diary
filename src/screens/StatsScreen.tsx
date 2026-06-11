@@ -91,6 +91,26 @@ export default function StatsScreen() {
         {/* Tag bar chart */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>자주 쓴 태그 · 탭하면 검색</Text>
+
+          {/* 검색창 */}
+          <View style={styles.searchRow}>
+            <Text style={styles.searchHash}>#</Text>
+            <TextInput
+              style={styles.searchInput}
+              value={searchTag}
+              onChangeText={handleSearchChange}
+              placeholder="태그로 검색"
+              placeholderTextColor="#9ca3af"
+              autoCapitalize="none"
+              returnKeyType="search"
+            />
+            {searchTag.length > 0 && (
+              <TouchableOpacity onPress={clearSearch} style={styles.clearBtn}>
+                <Text style={styles.clearBtnText}>✕</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
           {topTags.length === 0 ? (
             <Text style={styles.emptyText}>아직 태그가 없어요</Text>
           ) : (
@@ -117,25 +137,6 @@ export default function StatsScreen() {
                 </TouchableOpacity>
               ))}
             </View>
-          )}
-        </View>
-
-        {/* 검색창 */}
-        <View style={styles.searchRow}>
-          <Text style={styles.searchHash}>#</Text>
-          <TextInput
-            style={styles.searchInput}
-            value={searchTag}
-            onChangeText={handleSearchChange}
-            placeholder="태그로 검색"
-            placeholderTextColor="#9ca3af"
-            autoCapitalize="none"
-            returnKeyType="search"
-          />
-          {searchTag.length > 0 && (
-            <TouchableOpacity onPress={clearSearch} style={styles.clearBtn}>
-              <Text style={styles.clearBtnText}>✕</Text>
-            </TouchableOpacity>
           )}
         </View>
 
@@ -192,15 +193,15 @@ const styles = StyleSheet.create({
 
   // 검색
   searchRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#ffffff', borderRadius: 14,
-    borderWidth: 1.5, borderColor: '#e5e7eb',
-    paddingHorizontal: 14, paddingVertical: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: '#f9fafb', borderRadius: 10,
+    borderWidth: 1, borderColor: '#e5e7eb',
+    paddingHorizontal: 10, paddingVertical: 6,
   },
-  searchHash: { fontSize: 16, fontWeight: '700', color: '#111827' },
-  searchInput: { flex: 1, fontSize: 15, color: '#111827' },
-  clearBtn: { width: 24, height: 24, alignItems: 'center', justifyContent: 'center' },
-  clearBtnText: { fontSize: 13, color: '#9ca3af' },
+  searchHash: { fontSize: 12, fontWeight: '700', color: '#6b7280' },
+  searchInput: { flex: 1, fontSize: 12, color: '#111827' },
+  clearBtn: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
+  clearBtnText: { fontSize: 11, color: '#9ca3af' },
 
   // 검색 결과
   resultList: { gap: 10 },
