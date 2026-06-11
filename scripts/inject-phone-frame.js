@@ -24,7 +24,7 @@ const css = `
 
   /* ── 폰 외관 ── */
   .phone-outer {
-    width: 393px; height: 852px;
+    width: 393px; height: 874px;
     flex-shrink: 0;
     border-radius: 52px;
     background: #111;
