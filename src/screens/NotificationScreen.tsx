@@ -7,7 +7,7 @@ import IconChev from '../components/icons/IconChev';
 
 interface Notif {
   id: number;
-  type: 'diary' | 'invite' | 'reminder' | 'comment';
+  type: 'diary' | 'invite' | 'reminder' | 'ai';
   title: string;
   body: string;
   time: string;
@@ -16,21 +16,22 @@ interface Notif {
 }
 
 const MOCK_NOTIFS: Notif[] = [
-  { id: 1, type: 'diary',    emoji: '👩', title: '엄마가 새 일기를 작성했어요',        body: '가족 일기 · 가족 외식한 날',         time: '방금 전',   read: false },
-  { id: 2, type: 'diary',    emoji: '🧑', title: '민준이 새 일기를 작성했어요',        body: '여행크루 · 제주 첫째 날',           time: '1시간 전',  read: false },
-  { id: 3, type: 'reminder', emoji: '🔔', title: '가족 일기 알림',                   body: '오늘 일기를 아직 쓰지 않았어요!',    time: '3시간 전',  read: false },
-  { id: 4, type: 'invite',   emoji: '👥', title: '독서모임에 초대받았어요',            body: '지연님이 그룹에 초대했어요',          time: '어제',      read: true  },
-  { id: 5, type: 'diary',    emoji: '👧', title: '소희가 새 일기를 작성했어요',        body: '여행크루 · 성산일출봉 등반',         time: '어제',      read: true  },
-  { id: 6, type: 'reminder', emoji: '🔔', title: '여행크루 알림',                    body: '매주 월요일 일기 알림이에요',         time: '2일 전',    read: true  },
-  { id: 7, type: 'diary',    emoji: '👨', title: '아빠가 새 일기를 작성했어요',        body: '가족 일기 · 주말 드라이브',          time: '3일 전',    read: true  },
-  { id: 8, type: 'invite',   emoji: '👥', title: '여행크루에 초대받았어요',            body: '민준님이 그룹에 초대했어요',          time: '5일 전',    read: true  },
+  { id: 1, type: 'ai',       emoji: '📖', title: 'AI 코멘트가 도착했어요',             body: '선생님 · 오늘도 평범한 하루',        time: '방금 전',   read: false },
+  { id: 2, type: 'diary',    emoji: '👩', title: '엄마가 새 일기를 작성했어요',        body: '가족 일기 · 가족 외식한 날',         time: '1시간 전',  read: false },
+  { id: 3, type: 'ai',       emoji: '🌸', title: 'AI 코멘트가 도착했어요',             body: '엄마 · 오랜 친구를 만난 날',        time: '2시간 전',  read: false },
+  { id: 4, type: 'diary',    emoji: '🧑', title: '민준이 새 일기를 작성했어요',        body: '여행크루 · 제주 첫째 날',           time: '3시간 전',  read: false },
+  { id: 5, type: 'reminder', emoji: '🔔', title: '가족 일기 알림',                   body: '오늘 일기를 아직 쓰지 않았어요!',    time: '4시간 전',  read: false },
+  { id: 6, type: 'invite',   emoji: '👥', title: '독서모임에 초대받았어요',            body: '지연님이 그룹에 초대했어요',          time: '어제',      read: true  },
+  { id: 7, type: 'diary',    emoji: '👧', title: '소희가 새 일기를 작성했어요',        body: '여행크루 · 성산일출봉 등반',         time: '어제',      read: true  },
+  { id: 8, type: 'reminder', emoji: '🔔', title: '여행크루 알림',                    body: '매주 월요일 일기 알림이에요',         time: '2일 전',    read: true  },
+  { id: 9, type: 'diary',    emoji: '👨', title: '아빠가 새 일기를 작성했어요',        body: '가족 일기 · 주말 드라이브',          time: '3일 전',    read: true  },
 ];
 
 const TYPE_COLOR: Record<Notif['type'], string> = {
   diary:    '#e0f2fe',
   invite:   '#fef9c3',
   reminder: '#f3e8ff',
-  comment:  '#dcfce7',
+  ai:       '#dcfce7',
 };
 
 export default function NotificationScreen() {
