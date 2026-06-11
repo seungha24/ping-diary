@@ -46,7 +46,7 @@ const css = `
     background: #2e2e2e; border-radius: 0 2px 2px 0;
   }
 
-  /* ── 화면 전체 래퍼 (transform으로 fixed 자식 제한) ── */
+  /* ── 화면 전체 래퍼 ── */
   .phone-screen {
     width: 100%; height: 100%;
     border-radius: 40px;
@@ -54,7 +54,8 @@ const css = `
     background: #fff;
     display: flex;
     flex-direction: column;
-    transform: translate(0, 0);
+    position: relative;          /* 홈바 absolute 기준점 */
+    transform: translate3d(0,0,0); /* fixed 자식 containing block (Safari 호환) */
     isolation: isolate;
   }
 
@@ -101,7 +102,7 @@ const css = `
     width: 100% !important;
     height: 100% !important;
     flex: 1 !important;
-    overflow: hidden !important;
+    overflow: visible !important; /* phone-screen이 클리핑 담당 */
   }
 
   .phone-label {
