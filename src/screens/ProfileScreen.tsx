@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Alert, Image, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as ImagePicker from 'expo-image-picker';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
@@ -14,23 +15,93 @@ export default function ProfileScreen() {
   const navigation = useNavigation<Nav>();
   const count = INITIAL_ENTRIES.length;
 
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState(false);
+  const [displayName, setDisplayName] = useState('김지연');
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [username, setUsername] = useState('jiyeon_ping');
+  const [tempName, setTempName] = useState(displayName);
+  const [tempUsername, setTempUsername] = useState(username);
+
+  async function pickAvatar() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setAvatarUri(result.assets[0].uri);
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>프로필</Text>
-        <TouchableOpacity>
-          <Text style={styles.editBtn}>편집</Text>
-        </TouchableOpacity>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.profileRow}>
-          <View style={styles.avatarCircle}>
-            <Text style={{ fontSize: 32 }}>👤</Text>
-          </View>
+          {/* 프사 */}
+          <TouchableOpacity style={styles.avatarWrap} onPress={pickAvatar}>
+            {avatarUri ? (
+              <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
+            ) : (
+              <View style={styles.avatarCircle}>
+                <Text style={{ fontSize: 32 }}>👤</Text>
+              </View>
+            )}
+            <View style={styles.avatarBadge}>
+              <Text style={styles.avatarBadgeText}>📷</Text>
+            </View>
+          </TouchableOpacity>
+
+          {/* 이름 / 아이디 */}
           <View style={styles.profileInfo}>
-            <Text style={styles.displayName}>김지연</Text>
-            <Text style={styles.username}>@jiyeon_ping</Text>
+            {editingName ? (
+              <View style={styles.inlineRow}>
+                <TextInput
+                  style={styles.inlineInput}
+                  value={tempName}
+                  onChangeText={setTempName}
+                  autoFocus
+                  returnKeyType="done"
+                  onSubmitEditing={() => { setDisplayName(tempName); setEditingName(false); }}
+                />
+                <TouchableOpacity onPress={() => { setDisplayName(tempName); setEditingName(false); }}>
+                  <Text style={styles.saveBtn}>저장</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity onPress={() => { setTempName(displayName); setEditingName(true); }}>
+                <Text style={styles.displayName}>{displayName} ✎</Text>
+              </TouchableOpacity>
+            )}
+
+            {editingUsername ? (
+              <View style={styles.inlineRow}>
+                <Text style={styles.atSign}>@</Text>
+                <TextInput
+                  style={[styles.inlineInput, { fontSize: 13 }]}
+                  value={tempUsername}
+                  onChangeText={setTempUsername}
+                  autoFocus
+                  returnKeyType="done"
+                  autoCapitalize="none"
+                  onSubmitEditing={() => { setUsername(tempUsername); setEditingUsername(false); }}
+                />
+                <TouchableOpacity onPress={() => { setUsername(tempUsername); setEditingUsername(false); }}>
+                  <Text style={styles.saveBtn}>저장</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity onPress={() => { setTempUsername(username); setEditingUsername(true); }}>
+                <Text style={styles.usernameText}>@{username} ✎</Text>
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
@@ -95,14 +166,30 @@ const styles = StyleSheet.create({
   editBtn: { fontSize: 14, color: '#6b7280' },
   content: { padding: 20, gap: 20, paddingBottom: 48 },
   profileRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  avatarWrap: { position: 'relative', width: 72, height: 72 },
   avatarCircle: {
     width: 72, height: 72, borderRadius: 36,
     backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
   },
-  profileInfo: { gap: 3 },
+  avatarImage: { width: 72, height: 72, borderRadius: 36 },
+  avatarBadge: {
+    position: 'absolute', bottom: 0, right: 0,
+    width: 22, height: 22, borderRadius: 11,
+    backgroundColor: '#ffffff', borderWidth: 1, borderColor: '#e5e7eb',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  avatarBadgeText: { fontSize: 11 },
+  profileInfo: { flex: 1, gap: 4 },
   displayName: { fontSize: 18, fontWeight: '800', color: '#111827' },
-  username: { fontSize: 13, color: '#9ca3af' },
-  joinDate: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
+  usernameText: { fontSize: 13, color: '#9ca3af' },
+  inlineRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  inlineInput: {
+    fontSize: 16, fontWeight: '700', color: '#111827',
+    borderBottomWidth: 1.5, borderBottomColor: '#111827',
+    paddingVertical: 2, flex: 1,
+  },
+  atSign: { fontSize: 13, color: '#9ca3af' },
+  saveBtn: { fontSize: 13, fontWeight: '700', color: '#111827' },
   divider: { height: 1, backgroundColor: '#f3f4f6' },
   section: { gap: 10 },
   sectionTitle: { fontSize: 13, fontWeight: '700', color: '#374151' },
