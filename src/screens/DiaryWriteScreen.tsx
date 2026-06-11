@@ -149,7 +149,7 @@ export default function DiaryWriteScreen() {
           <View style={styles.aiTitleRow}>
             <View style={styles.aiDot}><View style={styles.aiDotInner} /></View>
             <Text style={styles.aiTitle}>AI 코멘트</Text>
-            <Text style={styles.aiSub}>24시간 뒤 공개됩니다</Text>
+            <Text style={styles.aiSub}>24시간 뒤 공개돼요!</Text>
           </View>
           <View style={styles.personaRow}>
             {PERSONAS.map((p) => (
