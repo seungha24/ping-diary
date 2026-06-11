@@ -8,6 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import Tag from '../components/Tag';
 import IconPlus from '../components/icons/IconPlus';
+import IconBell from '../components/icons/IconBell';
 import { PhotoThumb } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
 import { INITIAL_ENTRIES, GROUPS } from '../data/types';
@@ -26,9 +27,9 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.logo}>p!ng</Text>
-        <View style={styles.avatar}>
-          <Text style={{ fontSize: 18 }}>👤</Text>
-        </View>
+        <TouchableOpacity style={styles.bellBtn} onPress={() => navigation.navigate('Notifications')}>
+          <IconBell size={22} dot />
+        </TouchableOpacity>
       </View>
 
       {/* Tab switcher */}
@@ -173,8 +174,8 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f3f4f6',
   },
   logo: { fontSize: 22, fontWeight: '800', color: '#111827', letterSpacing: -0.5 },
-  avatar: {
-    width: 36, height: 36, borderRadius: 18,
+  bellBtn: {
+    width: 36, height: 36, borderRadius: 10,
     backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
   },
   tabRow: { paddingHorizontal: 20, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },

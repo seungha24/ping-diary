@@ -13,6 +13,7 @@ import DiaryWriteScreen from '../screens/DiaryWriteScreen';
 import DiaryDetailScreen from '../screens/DiaryDetailScreen';
 import GroupScreen from '../screens/GroupScreen';
 import GroupCreateScreen from '../screens/GroupCreateScreen';
+import NotificationScreen from '../screens/NotificationScreen';
 
 import IconHome from '../components/icons/IconHome';
 import IconCal from '../components/icons/IconCal';
@@ -28,6 +29,7 @@ export type RootStackParamList = {
   DiaryDetail: { entry: DiaryEntry };
   Group: { group: Group };
   GroupCreate: undefined;
+  Notifications: undefined;
 };
 
 export type TabParamList = {
@@ -75,6 +77,7 @@ export default function RootNavigator() {
         <Stack.Screen name="DiaryDetail" component={DiaryDetailScreen} />
         <Stack.Screen name="Group" component={GroupScreen} />
         <Stack.Screen name="GroupCreate" component={GroupCreateScreen} options={{ presentation: 'modal' }} />
+        <Stack.Screen name="Notifications" component={NotificationScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
