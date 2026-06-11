@@ -7,11 +7,11 @@ let html = fs.readFileSync(distIndex, 'utf8');
 const css = `
 <style id="phone-frame">
   /* ── Override expo-reset ── */
-  html { background: #0d0d14 !important; height: auto !important; overflow: auto !important; }
+  html { background: #f3f4f6 !important; height: auto !important; overflow: auto !important; }
   body {
     overflow: auto !important;
     height: auto !important;
-    background: #0d0d14 !important;
+    background: #f3f4f6 !important;
     display: flex !important;
     flex-direction: column !important;
     align-items: center !important;
@@ -109,7 +109,7 @@ const css = `
   }
 
   .phone-label {
-    color: rgba(255,255,255,0.2);
+    color: rgba(0,0,0,0.25);
     font-size: 12px;
     font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     letter-spacing: 0.1em; font-weight: 500;
@@ -121,6 +121,7 @@ const css = `
     html { background: #fff !important; }
     body {
       background: #fff !important; padding: 0 !important;
+
       display: block !important; min-height: 100% !important;
     }
     .phone-outer {
