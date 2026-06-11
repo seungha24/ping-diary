@@ -22,7 +22,7 @@ const css = `
     margin: 0 !important;
   }
 
-  /* ── 폰 프레임 ── */
+  /* ── 폰 외관 ── */
   .phone-outer {
     width: 393px; height: 852px;
     flex-shrink: 0;
@@ -45,30 +45,61 @@ const css = `
     width: 3.5px; height: 76px;
     background: #2e2e2e; border-radius: 0 2px 2px 0;
   }
-  /* transform 적용 → position:fixed 자식들을 폰 안에 가둠 */
+
+  /* ── 화면 전체 래퍼 (transform으로 fixed 자식 제한) ── */
   .phone-screen {
     width: 100%; height: 100%;
     border-radius: 40px;
     overflow: hidden;
     background: #fff;
-    position: relative;
+    display: flex;
+    flex-direction: column;
     transform: translate(0, 0);
     isolation: isolate;
   }
+
+  /* ── 상태바: Dynamic Island 포함, 앱 콘텐츠와 분리 ── */
+  .phone-status-bar {
+    height: 50px;
+    flex-shrink: 0;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 100;
+  }
   .phone-island {
-    position: absolute; top: 11px; left: 50%;
-    transform: translateX(-50%);
     width: 120px; height: 34px;
     background: #000; border-radius: 20px;
-    z-index: 9999; pointer-events: none;
   }
-  .phone-home {
-    position: absolute; bottom: 8px; left: 50%;
-    transform: translateX(-50%);
+
+  /* ── 앱 콘텐츠 영역 ── */
+  .phone-content {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    /* 이 안의 fixed 포지션 요소들도 여기 기준으로 배치 */
+    transform: translate(0, 0);
+    isolation: isolate;
+  }
+
+  /* ── 홈 인디케이터 ── */
+  .phone-home-bar {
+    height: 20px;
+    flex-shrink: 0;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .phone-home-bar::after {
+    content: '';
     width: 134px; height: 5px;
-    background: rgba(0,0,0,0.18); border-radius: 3px;
-    z-index: 9999; pointer-events: none;
+    background: rgba(0,0,0,0.18);
+    border-radius: 3px;
   }
+
   #root {
     display: flex !important;
     width: 100% !important;
@@ -76,6 +107,7 @@ const css = `
     flex: 1 !important;
     overflow: hidden !important;
   }
+
   .phone-label {
     color: rgba(255,255,255,0.2);
     font-size: 12px;
@@ -98,7 +130,7 @@ const css = `
     }
     .phone-outer::before, .phone-outer::after { display: none !important; }
     .phone-screen { border-radius: 0 !important; }
-    .phone-island, .phone-home, .phone-label { display: none !important; }
+    .phone-status-bar, .phone-home-bar, .phone-label { display: none !important; }
   }
 </style>`;
 
@@ -110,9 +142,13 @@ html = html.replace(
   '<div id="root"></div>',
   `<div class="phone-outer">
   <div class="phone-screen">
-    <div class="phone-island"></div>
-    <div id="root"></div>
-    <div class="phone-home"></div>
+    <div class="phone-status-bar">
+      <div class="phone-island"></div>
+    </div>
+    <div class="phone-content">
+      <div id="root"></div>
+    </div>
+    <div class="phone-home-bar"></div>
   </div>
 </div>
 <span class="phone-label">p!ng · preview</span>`
