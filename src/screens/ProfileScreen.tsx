@@ -31,7 +31,6 @@ export default function ProfileScreen() {
           <View style={styles.profileInfo}>
             <Text style={styles.displayName}>김지연</Text>
             <Text style={styles.username}>@jiyeon_ping</Text>
-            <Text style={styles.joinDate}>가입일 · 2025년 3월</Text>
           </View>
         </View>
 
