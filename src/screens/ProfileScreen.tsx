@@ -1,13 +1,17 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/RootNavigator';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import { INITIAL_ENTRIES } from '../data/types';
 
 const INTEREST_TAGS = ['일상', '산책', '독서', '커피', '여행', '음악', '요리', '영화'];
-const MENU_ITEMS = ['알림 설정', '계정 설정', '로그아웃'];
+type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export default function ProfileScreen() {
+  const navigation = useNavigation<Nav>();
   const count = INITIAL_ENTRIES.length;
 
   return (
@@ -57,12 +61,24 @@ export default function ProfileScreen() {
         <View style={styles.divider} />
 
         <View>
-          {MENU_ITEMS.map((item) => (
-            <TouchableOpacity key={item} style={styles.menuItem}>
-              <Text style={[styles.menuText, item === '로그아웃' && styles.menuTextDanger]}>{item}</Text>
-              <IconChev dir="right" size={18} color="#d1d5db" />
-            </TouchableOpacity>
-          ))}
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('NotifSettings')}>
+            <Text style={styles.menuText}>알림 설정</Text>
+            <IconChev dir="right" size={18} color="#d1d5db" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('AccountSettings')}>
+            <Text style={styles.menuText}>계정 설정</Text>
+            <IconChev dir="right" size={18} color="#d1d5db" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => Alert.alert('로그아웃', '로그아웃하시겠어요?', [
+              { text: '취소', style: 'cancel' },
+              { text: '로그아웃', onPress: () => {} },
+            ])}
+          >
+            <Text style={[styles.menuText, styles.menuTextDanger]}>로그아웃</Text>
+            <IconChev dir="right" size={18} color="#d1d5db" />
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
