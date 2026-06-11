@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView,
+  Modal, Pressable, Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,6 +18,7 @@ export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const [tab, setTab] = useState<'personal' | 'group'>('personal');
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
+  const [zoomedGroup, setZoomedGroup] = useState<{ emoji: string; photo?: string; name: string } | null>(null);
   const entries = INITIAL_ENTRIES;
 
   return (
@@ -49,6 +51,18 @@ export default function HomeScreen() {
       {lightboxPhoto && (
         <PhotoLightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
       )}
+
+      <Modal visible={!!zoomedGroup} transparent animationType="fade">
+        <Pressable style={styles.zoomOverlay} onPress={() => setZoomedGroup(null)}>
+          <View style={styles.zoomCard}>
+            {zoomedGroup?.photo
+              ? <Image source={{ uri: zoomedGroup.photo }} style={styles.zoomPhoto} />
+              : <Text style={styles.zoomEmoji}>{zoomedGroup?.emoji}</Text>
+            }
+            <Text style={styles.zoomName}>{zoomedGroup?.name}</Text>
+          </View>
+        </Pressable>
+      </Modal>
 
       {tab === 'personal' ? (
         <>
@@ -102,9 +116,15 @@ export default function HomeScreen() {
             >
               <View style={styles.groupTop}>
                 <View style={styles.groupLeft}>
-                  <View style={styles.groupIconBox}>
-                    <Text style={{ fontSize: 20 }}>{group.emoji}</Text>
-                  </View>
+                  <TouchableOpacity
+                    style={styles.groupIconBox}
+                    onPress={(e) => { e.stopPropagation(); setZoomedGroup({ emoji: group.emoji, photo: group.photo, name: group.name }); }}
+                  >
+                    {group.photo
+                      ? <Image source={{ uri: group.photo }} style={{ width: 44, height: 44, borderRadius: 12 }} />
+                      : <Text style={{ fontSize: 20 }}>{group.emoji}</Text>
+                    }
+                  </TouchableOpacity>
                   <View>
                     <Text style={styles.groupName}>{group.name} · {group.members.length}명</Text>
                     <Text style={styles.groupSub}>최근 일기 {group.entries.length}개</Text>
@@ -218,4 +238,12 @@ const styles = StyleSheet.create({
   },
   newGroupPlus: { fontSize: 24, color: '#9ca3af' },
   newGroupText: { fontSize: 13, color: '#9ca3af' },
+  zoomOverlay: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.75)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  zoomCard: { alignItems: 'center', gap: 14 },
+  zoomPhoto: { width: 180, height: 180, borderRadius: 32 },
+  zoomEmoji: { fontSize: 100 },
+  zoomName: { fontSize: 16, fontWeight: '700', color: '#ffffff' },
 });

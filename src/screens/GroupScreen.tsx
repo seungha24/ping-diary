@@ -77,9 +77,9 @@ function ListCard({ entry, onPhotoPress }: { entry: DiaryEntry; onPhotoPress: (p
         </View>
       </View>
       {entry.photo && (
-        <TouchableOpacity onPress={() => onPhotoPress(entry.photo!)}>
+        <Pressable style={{ width: '100%' }} onPress={() => onPhotoPress(entry.photo!)}>
           <PhotoBlock photo={entry.photo} height={140} />
-        </TouchableOpacity>
+        </Pressable>
       )}
       <View style={styles.listCardBody}>
         <Text style={styles.listCardTitle}>{entry.title}</Text>
@@ -96,9 +96,9 @@ function GridCard({ entry, index, onPhotoPress }: { entry: DiaryEntry; index: nu
   return (
     <View style={styles.gridCard}>
       {entry.photo ? (
-        <TouchableOpacity onPress={() => onPhotoPress(entry.photo!)}>
+        <Pressable style={{ width: '100%' }} onPress={() => onPhotoPress(entry.photo!)}>
           <PhotoBlock photo={entry.photo} height={90} />
-        </TouchableOpacity>
+        </Pressable>
       ) : (
         <View style={[styles.gridBand, { backgroundColor: BAND_COLORS[index % BAND_COLORS.length] }]} />
       )}
