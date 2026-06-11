@@ -14,6 +14,10 @@ import IconChev from '../components/icons/IconChev';
 import IconPlus from '../components/icons/IconPlus';
 import { BAND_COLORS, DiaryEntry } from '../data/types';
 
+const PERSONA_EMOJI: Record<string, string> = {
+  '선생님': '📖', '엄마': '🌸', '상담사': '💆', '미래의 나': '🔮',
+};
+
 type Route = RouteProp<RootStackParamList, 'Group'>;
 type ViewMode = 'list' | 'grid';
 type Frequency = 'interval' | 'weekly' | 'biweekly' | 'off';
@@ -64,7 +68,14 @@ function IconGrid({ active }: { active: boolean }) {
   );
 }
 
-function ListCard({ entry, onPhotoPress }: { entry: DiaryEntry; onPhotoPress: (p: string) => void }) {
+function ListCard({
+  entry, onPhotoPress, isShared, onToggleShare,
+}: {
+  entry: DiaryEntry;
+  onPhotoPress: (p: string) => void;
+  isShared: boolean;
+  onToggleShare: () => void;
+}) {
   return (
     <View style={styles.listCard}>
       <View style={styles.listCardAuthor}>
@@ -88,6 +99,32 @@ function ListCard({ entry, onPhotoPress }: { entry: DiaryEntry; onPhotoPress: (p
           {entry.tags.map((t) => <Tag key={t} label={t} />)}
         </View>
       </View>
+      {entry.aiComment && (
+        <View style={styles.aiSection}>
+          <View style={styles.aiSectionHeader}>
+            <View style={styles.aiDotWrap}><View style={styles.aiDotInner} /></View>
+            <Text style={styles.aiSectionLabel}>AI 코멘트</Text>
+            <Text style={styles.aiPersona}>
+              {PERSONA_EMOJI[entry.persona] ?? '🤖'} {entry.persona}
+            </Text>
+            <TouchableOpacity
+              style={[styles.shareToggle, isShared && styles.shareToggleActive]}
+              onPress={onToggleShare}
+            >
+              <Text style={[styles.shareToggleText, isShared && styles.shareToggleTextActive]}>
+                {isShared ? '공개 중' : '비공개'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {isShared ? (
+            <Text style={styles.aiCommentText}>{entry.aiComment}</Text>
+          ) : (
+            <TouchableOpacity style={styles.aiLocked} onPress={onToggleShare}>
+              <Text style={styles.aiLockedText}>🔒  비공개 · 탭하여 그룹에 공개하기</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
     </View>
   );
 }
@@ -125,6 +162,15 @@ export default function GroupScreen() {
   const { group } = useRoute<Route>().params;
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
+  const [sharedAiComments, setSharedAiComments] = useState<Set<number>>(new Set());
+
+  function toggleShare(id: number) {
+    setSharedAiComments((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
 
   // 알림 설정 상태
   const [notifModalOpen, setNotifModalOpen] = useState(false);
@@ -228,7 +274,13 @@ export default function GroupScreen() {
       {viewMode === 'list' ? (
         <ScrollView contentContainerStyle={styles.listContent}>
           {group.entries.map((entry) => (
-            <ListCard key={entry.id} entry={entry} onPhotoPress={setLightboxPhoto} />
+            <ListCard
+              key={entry.id}
+              entry={entry}
+              onPhotoPress={setLightboxPhoto}
+              isShared={sharedAiComments.has(entry.id)}
+              onToggleShare={() => toggleShare(entry.id)}
+            />
           ))}
         </ScrollView>
       ) : (
@@ -475,6 +527,34 @@ const styles = StyleSheet.create({
   dayChipActive: { backgroundColor: '#111827' },
   dayChipText: { fontSize: 13, fontWeight: '600', color: '#9ca3af' },
   dayChipTextActive: { color: '#ffffff' },
+
+  // AI comment section in ListCard
+  aiSection: {
+    marginHorizontal: 14, marginBottom: 14,
+    backgroundColor: '#f8f9ff', borderRadius: 12,
+    borderWidth: 1, borderColor: '#e8eaf6',
+    padding: 12, gap: 8,
+  },
+  aiSectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  aiDotWrap: {
+    width: 16, height: 16, borderRadius: 8, backgroundColor: '#111827',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  aiDotInner: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#ffffff' },
+  aiSectionLabel: { fontSize: 11, fontWeight: '700', color: '#374151' },
+  aiPersona: { flex: 1, fontSize: 11, color: '#9ca3af' },
+  shareToggle: {
+    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 99,
+    borderWidth: 1, borderColor: '#d1d5db', backgroundColor: '#ffffff',
+  },
+  shareToggleActive: { borderColor: '#111827', backgroundColor: '#111827' },
+  shareToggleText: { fontSize: 10, fontWeight: '600', color: '#6b7280' },
+  shareToggleTextActive: { color: '#ffffff' },
+  aiCommentText: { fontSize: 12, color: '#4b5563', lineHeight: 18 },
+  aiLocked: {
+    paddingVertical: 6, alignItems: 'center',
+  },
+  aiLockedText: { fontSize: 11, color: '#9ca3af' },
 
   // Save button
   saveBtn: {
