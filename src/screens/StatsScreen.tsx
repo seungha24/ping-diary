@@ -63,63 +63,6 @@ export default function StatsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        {/* 검색창 */}
-        <View style={styles.searchRow}>
-          <Text style={styles.searchHash}>#</Text>
-          <TextInput
-            style={styles.searchInput}
-            value={searchTag}
-            onChangeText={handleSearchChange}
-            placeholder="태그로 검색"
-            placeholderTextColor="#9ca3af"
-            autoCapitalize="none"
-            returnKeyType="search"
-          />
-          {searchTag.length > 0 && (
-            <TouchableOpacity onPress={clearSearch} style={styles.clearBtn}>
-              <Text style={styles.clearBtnText}>✕</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        {/* 검색 결과 */}
-        {query.length > 0 && (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>
-              #{query} 검색 결과 · {filteredEntries.length}개
-            </Text>
-            {filteredEntries.length === 0 ? (
-              <Text style={styles.emptyText}>일치하는 일기가 없어요</Text>
-            ) : (
-              <View style={styles.resultList}>
-                {filteredEntries.map((e) => (
-                  <TouchableOpacity
-                    key={e.id}
-                    style={styles.resultCard}
-                    onPress={() => navigation.navigate('DiaryDetail', { entry: e })}
-                  >
-                    <View style={styles.resultTop}>
-                      <Text style={styles.resultTitle} numberOfLines={1}>{e.title}</Text>
-                      <Text style={styles.resultDate}>6월 {e.dates.join(',')}일</Text>
-                    </View>
-                    <Text style={styles.resultPreview} numberOfLines={2}>{e.body}</Text>
-                    <View style={styles.resultTagRow}>
-                      {e.tags.map((t) => (
-                        <Text
-                          key={t}
-                          style={[styles.resultTag, t === query && styles.resultTagActive]}
-                        >
-                          #{t}
-                        </Text>
-                      ))}
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
-          </View>
-        )}
-
         {/* Summary */}
         <View style={styles.statsGrid}>
           {[['총 일기', `${entries.length}개`], ['이번 달', `${entries.length}개`]].map(([label, val]) => (
@@ -176,6 +119,63 @@ export default function StatsScreen() {
             </View>
           )}
         </View>
+
+        {/* 검색창 */}
+        <View style={styles.searchRow}>
+          <Text style={styles.searchHash}>#</Text>
+          <TextInput
+            style={styles.searchInput}
+            value={searchTag}
+            onChangeText={handleSearchChange}
+            placeholder="태그로 검색"
+            placeholderTextColor="#9ca3af"
+            autoCapitalize="none"
+            returnKeyType="search"
+          />
+          {searchTag.length > 0 && (
+            <TouchableOpacity onPress={clearSearch} style={styles.clearBtn}>
+              <Text style={styles.clearBtnText}>✕</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* 검색 결과 */}
+        {query.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>
+              #{query} 검색 결과 · {filteredEntries.length}개
+            </Text>
+            {filteredEntries.length === 0 ? (
+              <Text style={styles.emptyText}>일치하는 일기가 없어요</Text>
+            ) : (
+              <View style={styles.resultList}>
+                {filteredEntries.map((e) => (
+                  <TouchableOpacity
+                    key={e.id}
+                    style={styles.resultCard}
+                    onPress={() => navigation.navigate('DiaryDetail', { entry: e })}
+                  >
+                    <View style={styles.resultTop}>
+                      <Text style={styles.resultTitle} numberOfLines={1}>{e.title}</Text>
+                      <Text style={styles.resultDate}>6월 {e.dates.join(',')}일</Text>
+                    </View>
+                    <Text style={styles.resultPreview} numberOfLines={2}>{e.body}</Text>
+                    <View style={styles.resultTagRow}>
+                      {e.tags.map((t) => (
+                        <Text
+                          key={t}
+                          style={[styles.resultTag, t === query && styles.resultTagActive]}
+                        >
+                          #{t}
+                        </Text>
+                      ))}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
