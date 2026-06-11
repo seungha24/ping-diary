@@ -129,7 +129,15 @@ function ListCard({
   );
 }
 
-function GridCard({ entry, index, onPhotoPress }: { entry: DiaryEntry; index: number; onPhotoPress: (p: string) => void }) {
+function GridCard({
+  entry, index, onPhotoPress, isShared, onToggleShare,
+}: {
+  entry: DiaryEntry;
+  index: number;
+  onPhotoPress: (p: string) => void;
+  isShared: boolean;
+  onToggleShare: () => void;
+}) {
   return (
     <View style={styles.gridCard}>
       {entry.photo ? (
@@ -153,6 +161,29 @@ function GridCard({ entry, index, onPhotoPress }: { entry: DiaryEntry; index: nu
         </View>
         <Text style={styles.gridDate}>6월 {entry.dates.join(',')}일</Text>
       </View>
+      {entry.aiComment && (
+        <View style={styles.gridAiSection}>
+          <View style={styles.gridAiHeader}>
+            <View style={styles.aiDotWrap}><View style={styles.aiDotInner} /></View>
+            <Text style={styles.gridAiLabel}>AI 코멘트</Text>
+            <TouchableOpacity
+              style={[styles.shareToggle, isShared && styles.shareToggleActive]}
+              onPress={onToggleShare}
+            >
+              <Text style={[styles.shareToggleText, isShared && styles.shareToggleTextActive]}>
+                {isShared ? '공개' : '비공개'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {isShared ? (
+            <Text style={styles.gridAiText} numberOfLines={3}>{entry.aiComment}</Text>
+          ) : (
+            <TouchableOpacity onPress={onToggleShare}>
+              <Text style={styles.gridAiLocked}>🔒 탭하여 공개</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
     </View>
   );
 }
@@ -287,7 +318,14 @@ export default function GroupScreen() {
         <ScrollView contentContainerStyle={styles.gridContent}>
           <View style={styles.gridLayout}>
             {group.entries.map((entry, i) => (
-              <GridCard key={entry.id} entry={entry} index={i} onPhotoPress={setLightboxPhoto} />
+              <GridCard
+                key={entry.id}
+                entry={entry}
+                index={i}
+                onPhotoPress={setLightboxPhoto}
+                isShared={sharedAiComments.has(entry.id)}
+                onToggleShare={() => toggleShare(entry.id)}
+              />
             ))}
           </View>
         </ScrollView>
@@ -527,6 +565,18 @@ const styles = StyleSheet.create({
   dayChipActive: { backgroundColor: '#111827' },
   dayChipText: { fontSize: 13, fontWeight: '600', color: '#9ca3af' },
   dayChipTextActive: { color: '#ffffff' },
+
+  // AI comment section in GridCard
+  gridAiSection: {
+    marginHorizontal: 8, marginBottom: 10,
+    backgroundColor: '#f8f9ff', borderRadius: 10,
+    borderWidth: 1, borderColor: '#e8eaf6',
+    padding: 8, gap: 5,
+  },
+  gridAiHeader: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  gridAiLabel: { flex: 1, fontSize: 10, fontWeight: '700', color: '#374151' },
+  gridAiText: { fontSize: 10, color: '#4b5563', lineHeight: 15 },
+  gridAiLocked: { fontSize: 10, color: '#9ca3af', textAlign: 'center', paddingVertical: 2 },
 
   // AI comment section in ListCard
   aiSection: {
