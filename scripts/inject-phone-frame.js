@@ -84,19 +84,19 @@ const css = `
     isolation: isolate;
   }
 
-  /* ── 홈 인디케이터 ── */
+  /* ── 홈 인디케이터 (absolute 오버레이 → 앱 높이 침범 안 함) ── */
   .phone-home-bar {
-    height: 20px;
-    flex-shrink: 0;
-    background: #fff;
+    position: absolute;
+    bottom: 6px; left: 0; right: 0;
     display: flex;
-    align-items: center;
     justify-content: center;
+    pointer-events: none;
+    z-index: 50;
   }
   .phone-home-bar::after {
     content: '';
     width: 134px; height: 5px;
-    background: rgba(0,0,0,0.18);
+    background: rgba(0,0,0,0.15);
     border-radius: 3px;
   }
 
@@ -149,8 +149,8 @@ html = html.replace(
     <div class="phone-content">
       <div id="root"></div>
     </div>
-    <div class="phone-home-bar"></div>
   </div>
+  <div class="phone-home-bar"></div>
 </div>
 <span class="phone-label">p!ng · preview</span>`
 );
