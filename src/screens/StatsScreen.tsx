@@ -78,12 +78,17 @@ export default function StatsScreen() {
           <Text style={styles.cardTitle}>월별 기록 · 2026</Text>
           <View style={styles.monthGrid}>
             {MONTH_COUNTS.map((count, i) => (
-              <View key={i} style={[styles.monthCell, { backgroundColor: getMonthBg(count) }]}>
+              <TouchableOpacity
+                key={i}
+                style={[styles.monthCell, { backgroundColor: getMonthBg(count) }]}
+                onPress={() => (navigation as any).navigate('Calendar', { month: i })}
+                activeOpacity={0.7}
+              >
                 <Text style={[styles.monthLabel, { color: getMonthTextColor(count) }]}>{MONTHS[i]}</Text>
                 {count > 0 && (
                   <Text style={[styles.monthCount, { color: getMonthTextColor(count) }]}>{count}</Text>
                 )}
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         </View>

@@ -55,6 +55,7 @@ const css = `
     display: flex;
     flex-direction: column;
     position: relative;
+    overflow: hidden;
   }
 
   /* ── 상태바: Dynamic Island 포함, 앱 콘텐츠와 분리 ── */
@@ -80,6 +81,8 @@ const css = `
     position: relative;
     transform: translate3d(0,0,0);
     isolation: isolate;
+    display: flex;
+    flex-direction: column;
   }
 
   /* ── 홈 인디케이터: phone-screen 안에서 absolute ── */
@@ -98,12 +101,14 @@ const css = `
     border-radius: 3px;
   }
 
+  /* height:100% 대신 flex:1 — Safari의 flex 자식 퍼센트 높이 오해석 버그 우회 */
   #root {
+    flex: 1 !important;
     display: flex !important;
     width: 100% !important;
-    height: 100% !important;
-    flex: 1 !important;
-    overflow: visible !important; /* phone-screen이 클리핑 담당 */
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
   }
 
   .phone-label {

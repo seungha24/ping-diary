@@ -1,22 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/RootNavigator';
+import { RootStackParamList, TabParamList } from '../navigation/RootNavigator';
 import IconChev from '../components/icons/IconChev';
 import { INITIAL_ENTRIES, MONTHS, DAYS } from '../data/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
+type CalendarRoute = RouteProp<TabParamList, 'Calendar'>;
 
 function getDaysInMonth(year: number, month: number) { return new Date(year, month + 1, 0).getDate(); }
 function getFirstDayOfMonth(year: number, month: number) { return new Date(year, month, 1).getDay(); }
 
 export default function CalendarScreen() {
   const navigation = useNavigation<Nav>();
+  const route = useRoute<CalendarRoute>();
   const today = new Date();
   const [selectedDay, setSelectedDay] = useState(today.getDate());
   const [year] = useState(2026);
-  const [month, setMonth] = useState(5);
+  const [month, setMonth] = useState(route.params?.month ?? 5);
+
+  useEffect(() => {
+    if (route.params?.month !== undefined) setMonth(route.params.month);
+  }, [route.params?.month]);
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
