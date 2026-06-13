@@ -28,7 +28,7 @@ import { useTheme } from '../context/ThemeContext';
 export type RootStackParamList = {
   Splash: undefined;
   Main: undefined;
-  DiaryWrite: undefined;
+  DiaryWrite: { entry?: DiaryEntry } | undefined;
   DiaryDetail: { entry: DiaryEntry };
   Group: { group: Group };
   GroupCreate: undefined;

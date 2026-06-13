@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  SafeAreaView, Modal, Pressable, TextInput, Image,
+  SafeAreaView, Pressable, TextInput, Image,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -345,8 +345,9 @@ export default function GroupScreen() {
       </TouchableOpacity>
 
       {/* 알림 설정 모달 */}
-      <Modal visible={notifModalOpen} transparent animationType="slide">
-        <Pressable style={styles.modalOverlay} onPress={() => setNotifModalOpen(false)} />
+      {notifModalOpen && (
+      <View style={styles.overlayWrap}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setNotifModalOpen(false)} />
         <View style={styles.sheet}>
           {/* 핸들 */}
           <View style={styles.sheetHandle} />
@@ -421,11 +422,12 @@ export default function GroupScreen() {
           )}
 
           {/* 저장 버튼 */}
-          <TouchableOpacity style={styles.saveBtn} onPress={saveAndClose}>
+          <TouchableOpacity style={[styles.saveBtn, { backgroundColor: accent }]} onPress={saveAndClose}>
             <Text style={styles.saveBtnText}>저장</Text>
           </TouchableOpacity>
         </View>
-      </Modal>
+      </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -516,7 +518,8 @@ const styles = StyleSheet.create({
   gridDate: { fontSize: 10, color: '#d1d5db', marginTop: 2 },
 
   // Modal bottom sheet
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' },
+  overlayWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' },
+  modalOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)' },
   sheet: {
     backgroundColor: '#ffffff',
     borderTopLeftRadius: 24, borderTopRightRadius: 24,

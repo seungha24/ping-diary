@@ -4,8 +4,9 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, TabParamList } from '../navigation/RootNavigator';
 import IconChev from '../components/icons/IconChev';
-import { INITIAL_ENTRIES, MONTHS, DAYS } from '../data/types';
+import { MONTHS, DAYS } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
+import { useEntries } from '../context/EntriesContext';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type CalendarRoute = RouteProp<TabParamList, 'Calendar'>;
@@ -34,8 +35,9 @@ export default function CalendarScreen() {
   ];
   while (calGrid.length % 7 !== 0) calGrid.push(null);
 
+  const { entries } = useEntries();
   const todayDate = today.getDate();
-  const selectedEntries = INITIAL_ENTRIES.filter((e) => e.dates.includes(selectedDay));
+  const selectedEntries = entries.filter((e) => e.dates.includes(selectedDay));
 
   return (
     <SafeAreaView style={styles.container}>
@@ -61,7 +63,7 @@ export default function CalendarScreen() {
           {calGrid.map((day, i) => {
             const isSelected = day === selectedDay;
             const isToday = day === todayDate;
-            const hasEntry = day !== null && INITIAL_ENTRIES.some((e) => e.dates.includes(day));
+            const hasEntry = day !== null && entries.some((e) => e.dates.includes(day));
             return (
               <TouchableOpacity
                 key={i}

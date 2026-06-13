@@ -3,12 +3,16 @@ import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
   StyleSheet, SafeAreaView, Modal,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Audio } from 'expo-av';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import { PERSONAS, MONTHS, DAYS } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
+import { useEntries } from '../context/EntriesContext';
+import { RootStackParamList } from '../navigation/RootNavigator';
+
+type WriteRoute = RouteProp<RootStackParamList, 'DiaryWrite'>;
 
 async function playPing() {
   try {
@@ -31,17 +35,20 @@ function getFirstDayOfMonth(year: number, month: number) {
 
 export default function DiaryWriteScreen() {
   const navigation = useNavigation();
+  const route = useRoute<WriteRoute>();
+  const editEntry = route.params?.entry;
   const { accent } = useTheme();
+  const { addEntry, updateEntry } = useEntries();
   const today = new Date();
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
-  const [tags, setTags] = useState<string[]>([]);
+  const [title, setTitle] = useState(editEntry?.title ?? '');
+  const [body, setBody] = useState(editEntry?.body ?? '');
+  const [tags, setTags] = useState<string[]>(editEntry?.tags ?? []);
   const [tagInput, setTagInput] = useState('');
-  const [persona, setPersona] = useState('선생님');
+  const [persona, setPersona] = useState(editEntry?.persona ?? '선생님');
   const [calOpen, setCalOpen] = useState(false);
   const [calYear] = useState(2026);
   const [calMonth, setCalMonth] = useState(5);
-  const [selectedDates, setSelectedDates] = useState<number[]>([today.getDate()]);
+  const [selectedDates, setSelectedDates] = useState<number[]>(editEntry?.dates ?? [today.getDate()]);
 
   const daysInMonth = getDaysInMonth(calYear, calMonth);
   const firstDay = getFirstDayOfMonth(calYear, calMonth);
@@ -76,14 +83,34 @@ export default function DiaryWriteScreen() {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.cancelText}>취소</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>오늘의 일기</Text>
+        <Text style={styles.headerTitle}>{editEntry ? '일기 수정' : '오늘의 일기'}</Text>
         <View style={styles.headerRight}>
           <View style={styles.autoSaveBadge}>
             <View style={styles.autoSaveDot} />
             <Text style={styles.autoSaveText}>자동저장</Text>
           </View>
-          <TouchableOpacity style={[styles.saveBtn, { backgroundColor: accent }]} onPress={() => { playPing(); navigation.goBack(); }}>
-            <Text style={styles.saveBtnText}>p!ng</Text>
+          <TouchableOpacity
+            style={[styles.saveBtn, { backgroundColor: accent }]}
+            onPress={() => {
+              if (editEntry) {
+                updateEntry({ ...editEntry, title, body, tags, persona, dates: selectedDates });
+              } else {
+                addEntry({
+                  id: Date.now(),
+                  title,
+                  body,
+                  tags,
+                  persona,
+                  dates: selectedDates,
+                  photo: null,
+                  createdAt: new Date().toISOString(),
+                });
+              }
+              playPing();
+              navigation.goBack();
+            }}
+          >
+            <Text style={styles.saveBtnText}>{editEntry ? '저장' : 'p!ng'}</Text>
           </TouchableOpacity>
         </View>
       </View>

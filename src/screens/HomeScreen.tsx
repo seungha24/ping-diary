@@ -11,18 +11,35 @@ import IconPlus from '../components/icons/IconPlus';
 import IconBell from '../components/icons/IconBell';
 import { PhotoThumb } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
-import { INITIAL_ENTRIES, GROUPS } from '../data/types';
+import { GROUPS, DiaryEntry } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
+import { useEntries } from '../context/EntriesContext';
+import Svg, { Path, Line } from 'react-native-svg';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const { accent } = useTheme();
+  const { entries } = useEntries();
   const [tab, setTab] = useState<'personal' | 'group'>('personal');
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const [zoomedGroup, setZoomedGroup] = useState<{ emoji: string; photo?: string; name: string } | null>(null);
-  const entries = INITIAL_ENTRIES;
+  const [shareEntry, setShareEntry] = useState<DiaryEntry | null>(null);
+  const [sharedGroups, setSharedGroups] = useState<Set<string>>(new Set());
+
+  function openShare(entry: DiaryEntry) {
+    setSharedGroups(new Set());
+    setShareEntry(entry);
+  }
+
+  function toggleGroup(name: string) {
+    setSharedGroups((prev) => {
+      const next = new Set(prev);
+      next.has(name) ? next.delete(name) : next.add(name);
+      return next;
+    });
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -84,7 +101,20 @@ export default function HomeScreen() {
               >
                 <View style={styles.entryHeader}>
                   <Text style={styles.entryTitle} numberOfLines={1}>{entry.title}</Text>
-                  <Text style={styles.entryDate}>6월 {entry.dates.join(',')}일</Text>
+                  <View style={styles.entryHeaderRight}>
+                    <Text style={styles.entryDate}>6월 {entry.dates.join(',')}일</Text>
+                    <TouchableOpacity
+                      style={styles.cardShareBtn}
+                      onPress={(e) => { e.stopPropagation(); openShare(entry); }}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <Path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                        <Path d="M16 6l-4-4-4 4" />
+                        <Line x1="12" y1="2" x2="12" y2="15" />
+                      </Svg>
+                    </TouchableOpacity>
+                  </View>
                 </View>
                 <View style={styles.entryBody}>
                   {entry.photo && (
@@ -159,6 +189,53 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </ScrollView>
       )}
+
+      {shareEntry && (
+        <View style={styles.overlayWrap}>
+          <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setShareEntry(null)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <View style={styles.sheetHeader}>
+              <View style={styles.sheetTitleWrap}>
+                <Text style={styles.sheetTitle}>그룹에 공유</Text>
+                <Text style={styles.sheetSub} numberOfLines={1}>{shareEntry.title}</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShareEntry(null)}>
+                <Text style={styles.sheetClose}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            {GROUPS.map((g) => {
+              const selected = sharedGroups.has(g.name);
+              return (
+                <TouchableOpacity
+                  key={g.name}
+                  style={[styles.groupRow, selected && { borderColor: accent, backgroundColor: `${accent}0d` }]}
+                  onPress={() => toggleGroup(g.name)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.groupEmoji}>{g.emoji}</Text>
+                  <View style={styles.groupInfo}>
+                    <Text style={styles.groupName}>{g.name}</Text>
+                    <Text style={styles.groupMembers}>멤버 {g.members.length}명</Text>
+                  </View>
+                  <View style={[styles.checkbox, selected && { backgroundColor: accent, borderColor: accent }]}>
+                    {selected && <Text style={styles.checkmark}>✓</Text>}
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+            <TouchableOpacity
+              style={[styles.confirmBtn, { backgroundColor: sharedGroups.size > 0 ? accent : '#e5e7eb' }]}
+              onPress={() => setShareEntry(null)}
+              disabled={sharedGroups.size === 0}
+            >
+              <Text style={[styles.confirmBtnText, { color: sharedGroups.size > 0 ? '#fff' : '#9ca3af' }]}>
+                {sharedGroups.size > 0 ? `${sharedGroups.size}개 그룹에 공유` : '그룹을 선택하세요'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -199,9 +276,14 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1,
     gap: 8,
   },
-  entryHeader: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
+  entryHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   entryTitle: { fontSize: 14, fontWeight: '700', color: '#1f2937', flex: 1 },
-  entryDate: { fontSize: 11, color: '#9ca3af', marginLeft: 8, flexShrink: 0 },
+  entryHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 8 },
+  entryDate: { fontSize: 11, color: '#9ca3af', flexShrink: 0 },
+  cardShareBtn: {
+    width: 20, height: 20,
+    alignItems: 'center', justifyContent: 'center',
+  },
   entryBody: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   entryPreview: { fontSize: 12, color: '#9ca3af', flex: 1, lineHeight: 18 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
@@ -249,4 +331,32 @@ const styles = StyleSheet.create({
   zoomPhoto: { width: 180, height: 180, borderRadius: 32 },
   zoomEmoji: { fontSize: 100 },
   zoomName: { fontSize: 16, fontWeight: '700', color: '#ffffff' },
+
+  overlayWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' },
+  overlayBg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)' },
+  sheet: {
+    backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingHorizontal: 20, paddingBottom: 32,
+  },
+  sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#e5e7eb', alignSelf: 'center', marginTop: 12, marginBottom: 4 },
+  sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14 },
+  sheetTitleWrap: { flex: 1, gap: 2 },
+  sheetTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
+  sheetSub: { fontSize: 12, color: '#9ca3af' },
+  sheetClose: { fontSize: 16, color: '#9ca3af', paddingLeft: 12 },
+  groupRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    padding: 12, borderRadius: 14, borderWidth: 1.5, borderColor: '#f3f4f6',
+    marginBottom: 8,
+  },
+  groupEmoji: { fontSize: 22 },
+  groupInfo: { flex: 1 },
+  groupMembers: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
+  checkbox: {
+    width: 22, height: 22, borderRadius: 11, borderWidth: 1.5,
+    borderColor: '#d1d5db', alignItems: 'center', justifyContent: 'center',
+  },
+  checkmark: { fontSize: 12, color: '#fff', fontWeight: '700' },
+  confirmBtn: { marginTop: 8, borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
+  confirmBtnText: { fontSize: 14, fontWeight: '700' },
 });

@@ -6,8 +6,9 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
-import { INITIAL_ENTRIES, MONTH_COUNTS, MONTHS } from '../data/types';
+import { MONTH_COUNTS, MONTHS } from '../data/types';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
+import { useEntries } from '../context/EntriesContext';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -19,7 +20,7 @@ function getMonthTextColor(count: number): string {
 export default function StatsScreen() {
   const navigation = useNavigation<Nav>();
   const { accent } = useTheme();
-  const entries = INITIAL_ENTRIES;
+  const { entries } = useEntries();
 
   function getMonthBg(count: number): string {
     if (count === 0) return '#f3f4f6';
@@ -31,6 +32,8 @@ export default function StatsScreen() {
   }
   const [searchTag, setSearchTag] = useState('');
   const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [listOpen, setListOpen] = useState(false);
+  const [monthOpen, setMonthOpen] = useState(false);
 
   const tagCounts: Record<string, number> = {};
   entries.forEach((e) => e.tags.forEach((t) => { tagCounts[t] = (tagCounts[t] || 0) + 1; }));
@@ -59,7 +62,7 @@ export default function StatsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} collapsable={false}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>통계</Text>
       </View>
@@ -67,13 +70,16 @@ export default function StatsScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* Summary */}
         <View style={styles.statsGrid}>
-          {[['총 일기', `${entries.length}개`], ['이번 달', `${entries.length}개`]].map(([label, val]) => (
-            <View key={label} style={styles.statCard}>
-              <Text style={styles.statVal}>{val}</Text>
-              <Text style={styles.statLabel}>{label}</Text>
-            </View>
-          ))}
+          <TouchableOpacity style={styles.statCard} onPress={() => setListOpen(true)} activeOpacity={0.7}>
+            <Text style={[styles.statVal, { color: accent }]}>{entries.length}개</Text>
+            <Text style={styles.statLabel}>총 일기</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.statCard} onPress={() => setMonthOpen(true)} activeOpacity={0.7}>
+            <Text style={[styles.statVal, { color: accent }]}>{entries.length}개</Text>
+            <Text style={styles.statLabel}>이번 달</Text>
+          </TouchableOpacity>
         </View>
+
 
         {/* Monthly heatmap */}
         <View style={styles.card}>
@@ -185,6 +191,75 @@ export default function StatsScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* 전체 일기 목록 — 화면 안에서 올라오는 시트 */}
+      {monthOpen && (
+        <View style={styles.overlay}>
+          <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setMonthOpen(false)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>이번 달 일기 · {entries.length}개</Text>
+              <TouchableOpacity onPress={() => setMonthOpen(false)}>
+                <Text style={styles.sheetClose}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {entries.map((e) => (
+                <TouchableOpacity
+                  key={e.id}
+                  style={styles.entryRow}
+                  onPress={() => { setMonthOpen(false); navigation.navigate('DiaryDetail', { entry: e }); }}
+                >
+                  <View style={styles.entryRowLeft}>
+                    <Text style={styles.entryRowTitle} numberOfLines={1}>{e.title}</Text>
+                    <Text style={styles.entryRowDate}>6월 {e.dates.join(', ')}일</Text>
+                  </View>
+                  <View style={styles.entryTagRow}>
+                    {e.tags.slice(0, 2).map((t) => (
+                      <Text key={t} style={styles.entryTag}>#{t}</Text>
+                    ))}
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      )}
+
+      {listOpen && (
+        <View style={styles.overlay}>
+          <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setListOpen(false)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>전체 일기 · {entries.length}개</Text>
+              <TouchableOpacity onPress={() => setListOpen(false)}>
+                <Text style={styles.sheetClose}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {entries.map((e) => (
+                <TouchableOpacity
+                  key={e.id}
+                  style={styles.entryRow}
+                  onPress={() => { setListOpen(false); navigation.navigate('DiaryDetail', { entry: e }); }}
+                >
+                  <View style={styles.entryRowLeft}>
+                    <Text style={styles.entryRowTitle} numberOfLines={1}>{e.title}</Text>
+                    <Text style={styles.entryRowDate}>6월 {e.dates.join(', ')}일</Text>
+                  </View>
+                  <View style={styles.entryTagRow}>
+                    {e.tags.slice(0, 2).map((t) => (
+                      <Text key={t} style={styles.entryTag}>#{t}</Text>
+                    ))}
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -260,4 +335,24 @@ const styles = StyleSheet.create({
   barFillActive: { backgroundColor: '#111827' },
   tagCount: { fontSize: 12, color: '#9ca3af', width: 20, textAlign: 'right' },
   emptyText: { fontSize: 13, color: '#d1d5db' },
+
+  overlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' },
+  overlayBg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)' },
+  sheet: {
+    backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingHorizontal: 20, paddingBottom: 40, maxHeight: '80%',
+  },
+  sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#e5e7eb', alignSelf: 'center', marginTop: 12, marginBottom: 4 },
+  sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14 },
+  sheetTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
+  sheetClose: { fontSize: 16, color: '#9ca3af', paddingHorizontal: 4 },
+  entryRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#f3f4f6', gap: 12,
+  },
+  entryRowLeft: { flex: 1, gap: 3 },
+  entryRowTitle: { fontSize: 14, fontWeight: '600', color: '#111827' },
+  entryRowDate: { fontSize: 12, color: '#9ca3af' },
+  entryTagRow: { flexDirection: 'row', gap: 4 },
+  entryTag: { fontSize: 11, color: '#9ca3af' },
 });
