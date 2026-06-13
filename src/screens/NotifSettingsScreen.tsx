@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import IconChev from '../components/icons/IconChev';
+import { useTheme } from '../context/ThemeContext';
 
 interface ToggleRowProps {
   label: string;
@@ -15,6 +16,7 @@ interface ToggleRowProps {
 }
 
 function ToggleRow({ label, desc, value, onChange, disabled }: ToggleRowProps) {
+  const { accent } = useTheme();
   return (
     <View style={[styles.row, disabled && styles.rowDisabled]}>
       <View style={styles.rowText}>
@@ -25,7 +27,7 @@ function ToggleRow({ label, desc, value, onChange, disabled }: ToggleRowProps) {
         value={value}
         onValueChange={onChange}
         disabled={disabled}
-        trackColor={{ false: '#e5e7eb', true: '#111827' }}
+        trackColor={{ false: '#e5e7eb', true: accent }}
         thumbColor="#ffffff"
       />
     </View>

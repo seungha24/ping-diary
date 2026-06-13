@@ -5,6 +5,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, TabParamList } from '../navigation/RootNavigator';
 import IconChev from '../components/icons/IconChev';
 import { INITIAL_ENTRIES, MONTHS, DAYS } from '../data/types';
+import { useTheme } from '../context/ThemeContext';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type CalendarRoute = RouteProp<TabParamList, 'Calendar'>;
@@ -15,6 +16,7 @@ function getFirstDayOfMonth(year: number, month: number) { return new Date(year,
 export default function CalendarScreen() {
   const navigation = useNavigation<Nav>();
   const route = useRoute<CalendarRoute>();
+  const { accent } = useTheme();
   const today = new Date();
   const [selectedDay, setSelectedDay] = useState(today.getDate());
   const [year] = useState(2026);
@@ -65,7 +67,7 @@ export default function CalendarScreen() {
                 key={i}
                 style={[
                   styles.cell,
-                  isSelected ? styles.cellSelected : isToday ? styles.cellToday : null,
+                  isSelected ? { backgroundColor: accent } : isToday ? styles.cellToday : null,
                 ]}
                 onPress={() => day && setSelectedDay(day)}
                 disabled={day === null}

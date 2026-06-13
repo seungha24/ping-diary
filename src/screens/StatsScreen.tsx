@@ -7,17 +7,9 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { INITIAL_ENTRIES, MONTH_COUNTS, MONTHS } from '../data/types';
+import { useTheme, hexToRgba } from '../context/ThemeContext';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
-
-function getMonthBg(count: number): string {
-  if (count === 0) return '#f3f4f6';
-  const r = count / 30;
-  if (r > 0.8) return '#111827';
-  if (r > 0.5) return '#4b5563';
-  if (r > 0.3) return '#9ca3af';
-  return '#d1d5db';
-}
 
 function getMonthTextColor(count: number): string {
   if (count === 0) return '#9ca3af';
@@ -26,7 +18,17 @@ function getMonthTextColor(count: number): string {
 
 export default function StatsScreen() {
   const navigation = useNavigation<Nav>();
+  const { accent } = useTheme();
   const entries = INITIAL_ENTRIES;
+
+  function getMonthBg(count: number): string {
+    if (count === 0) return '#f3f4f6';
+    const r = count / 30;
+    if (r > 0.8) return accent;
+    if (r > 0.5) return hexToRgba(accent, 0.65);
+    if (r > 0.3) return hexToRgba(accent, 0.38);
+    return hexToRgba(accent, 0.18);
+  }
   const [searchTag, setSearchTag] = useState('');
   const [activeTag, setActiveTag] = useState<string | null>(null);
 
@@ -126,17 +128,17 @@ export default function StatsScreen() {
                   style={[styles.tagRow, activeTag === label && styles.tagRowActive]}
                   onPress={() => activeTag === label ? clearSearch() : selectTag(label)}
                 >
-                  <Text style={[styles.tagName, activeTag === label && styles.tagNameActive]}>
+                  <Text style={[styles.tagName, activeTag === label && { color: accent, fontWeight: '700' }]}>
                     #{label}
                   </Text>
                   <View style={styles.barBg}>
                     <View style={[
                       styles.barFill,
-                      { width: `${(count / maxTag) * 100}%` },
-                      activeTag === label && styles.barFillActive,
+                      { width: `${(count / maxTag) * 100}%`, backgroundColor: hexToRgba(accent, 0.35) },
+                      activeTag === label && { backgroundColor: accent },
                     ]} />
                   </View>
-                  <Text style={[styles.tagCount, activeTag === label && styles.tagNameActive]}>
+                  <Text style={[styles.tagCount, activeTag === label && { color: accent, fontWeight: '700' }]}>
                     {count}
                   </Text>
                 </TouchableOpacity>

@@ -2,16 +2,18 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
+import { useTheme } from '../context/ThemeContext';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Splash'>;
 };
 
 export default function SplashScreen({ navigation }: Props) {
+  const { accent } = useTheme();
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.inner}>
-        <View style={styles.logoBox}>
+        <View style={[styles.logoBox, { backgroundColor: accent }]}>
           <Text style={styles.logoText}>p!ng</Text>
         </View>
 
@@ -22,7 +24,7 @@ export default function SplashScreen({ navigation }: Props) {
 
         <View style={styles.buttons}>
           <TouchableOpacity
-            style={styles.btnFilled}
+            style={[styles.btnFilled, { backgroundColor: accent }]}
             onPress={() => navigation.replace('Main')}
           >
             <Text style={styles.btnFilledText}>시작하기</Text>

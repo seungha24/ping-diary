@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import IconChev from '../components/icons/IconChev';
+import { useTheme } from '../context/ThemeContext';
 
 function Row({ label, value, onPress }: { label: string; value?: string; onPress?: () => void }) {
   return (
@@ -20,6 +21,7 @@ function Row({ label, value, onPress }: { label: string; value?: string; onPress
 
 export default function AccountSettingsScreen() {
   const navigation = useNavigation();
+  const { accent } = useTheme();
 
   const [name, setName] = useState('김지연');
   const [username, setUsername] = useState('jiyeon_ping');
@@ -106,7 +108,7 @@ export default function AccountSettingsScreen() {
               <Switch
                 value={privateMode}
                 onValueChange={setPrivateMode}
-                trackColor={{ false: '#e5e7eb', true: '#111827' }}
+                trackColor={{ false: '#e5e7eb', true: accent }}
                 thumbColor="#ffffff"
               />
             </View>
@@ -122,7 +124,7 @@ export default function AccountSettingsScreen() {
               <Switch
                 value={darkMode}
                 onValueChange={setDarkMode}
-                trackColor={{ false: '#e5e7eb', true: '#111827' }}
+                trackColor={{ false: '#e5e7eb', true: accent }}
                 thumbColor="#ffffff"
               />
             </View>

@@ -12,11 +12,13 @@ import IconBell from '../components/icons/IconBell';
 import { PhotoThumb } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
 import { INITIAL_ENTRIES, GROUPS } from '../data/types';
+import { useTheme } from '../context/ThemeContext';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
+  const { accent } = useTheme();
   const [tab, setTab] = useState<'personal' | 'group'>('personal');
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const [zoomedGroup, setZoomedGroup] = useState<{ emoji: string; photo?: string; name: string } | null>(null);
@@ -41,7 +43,7 @@ export default function HomeScreen() {
               style={[styles.tabItem, tab === t && styles.tabItemActive]}
               onPress={() => setTab(t)}
             >
-              <Text style={[styles.tabText, tab === t && styles.tabTextActive]}>
+              <Text style={[styles.tabText, tab === t && { color: accent, fontWeight: '700' }]}>
                 {t === 'personal' ? '개인' : '그룹'}
               </Text>
             </TouchableOpacity>
@@ -100,7 +102,7 @@ export default function HomeScreen() {
           </ScrollView>
 
           <TouchableOpacity
-            style={styles.fab}
+            style={[styles.fab, { backgroundColor: accent }]}
             onPress={() => navigation.navigate('DiaryWrite')}
           >
             <IconPlus color="#ffffff" size={22} />

@@ -23,6 +23,7 @@ import IconChart from '../components/icons/IconChart';
 import IconPerson from '../components/icons/IconPerson';
 
 import { DiaryEntry, Group } from '../data/types';
+import { useTheme } from '../context/ThemeContext';
 
 export type RootStackParamList = {
   Splash: undefined;
@@ -47,12 +48,13 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
 
 function MainTabs() {
+  const { accent } = useTheme();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarStyle: styles.tabBar,
-        tabBarActiveTintColor: '#1f2937',
+        tabBarActiveTintColor: accent,
         tabBarInactiveTintColor: '#9ca3af',
         tabBarLabelStyle: styles.tabLabel,
         tabBarIcon: ({ color, size }) => {

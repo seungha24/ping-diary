@@ -8,6 +8,7 @@ import { Audio } from 'expo-av';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import { PERSONAS, MONTHS, DAYS } from '../data/types';
+import { useTheme } from '../context/ThemeContext';
 
 async function playPing() {
   try {
@@ -30,6 +31,7 @@ function getFirstDayOfMonth(year: number, month: number) {
 
 export default function DiaryWriteScreen() {
   const navigation = useNavigation();
+  const { accent } = useTheme();
   const today = new Date();
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
@@ -80,7 +82,7 @@ export default function DiaryWriteScreen() {
             <View style={styles.autoSaveDot} />
             <Text style={styles.autoSaveText}>자동저장</Text>
           </View>
-          <TouchableOpacity style={styles.saveBtn} onPress={() => { playPing(); navigation.goBack(); }}>
+          <TouchableOpacity style={[styles.saveBtn, { backgroundColor: accent }]} onPress={() => { playPing(); navigation.goBack(); }}>
             <Text style={styles.saveBtnText}>p!ng</Text>
           </TouchableOpacity>
         </View>
@@ -155,7 +157,7 @@ export default function DiaryWriteScreen() {
             {PERSONAS.map((p) => (
               <TouchableOpacity
                 key={p.label}
-                style={[styles.personaCard, persona === p.label && styles.personaCardActive]}
+                style={[styles.personaCard, persona === p.label && { backgroundColor: accent, borderColor: accent }]}
                 onPress={() => setPersona(p.label)}
               >
                 <Text style={styles.personaEmoji}>{p.emoji}</Text>
@@ -191,7 +193,7 @@ export default function DiaryWriteScreen() {
                     key={i}
                     style={[
                       styles.calCell,
-                      day !== null && selectedDates.includes(day) && styles.calCellActive,
+                      day !== null && selectedDates.includes(day) && { backgroundColor: accent },
                     ]}
                     onPress={() => day && toggleDate(day)}
                     disabled={day === null}

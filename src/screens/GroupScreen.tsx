@@ -13,6 +13,7 @@ import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import IconPlus from '../components/icons/IconPlus';
 import { BAND_COLORS, DiaryEntry } from '../data/types';
+import { useTheme } from '../context/ThemeContext';
 
 const PERSONA_EMOJI: Record<string, string> = {
   '선생님': '📖', '엄마': '🌸', '상담사': '💆', '미래의 나': '🔮',
@@ -31,19 +32,19 @@ const FREQ_OPTIONS: { value: Frequency; label: string; desc: string }[] = [
 
 const WEEK_DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
-function IconBell({ hasNotif }: { hasNotif: boolean }) {
-  const c = hasNotif ? '#111827' : '#9ca3af';
+function IconBell({ hasNotif, accent }: { hasNotif: boolean; accent: string }) {
+  const c = hasNotif ? accent : '#9ca3af';
   return (
     <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
       <Path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
       <Path d="M13.73 21a2 2 0 0 1-3.46 0" />
-      {hasNotif && <Circle cx="18" cy="5" r="3" fill="#111827" stroke="none" />}
+      {hasNotif && <Circle cx="18" cy="5" r="3" fill={accent} stroke="none" />}
     </Svg>
   );
 }
 
-function IconList({ active }: { active: boolean }) {
-  const c = active ? '#111827' : '#9ca3af';
+function IconList({ active, accent }: { active: boolean; accent: string }) {
+  const c = active ? accent : '#9ca3af';
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={2} strokeLinecap="round">
       <Line x1="8" y1="6" x2="21" y2="6" />
@@ -56,8 +57,8 @@ function IconList({ active }: { active: boolean }) {
   );
 }
 
-function IconGrid({ active }: { active: boolean }) {
-  const c = active ? '#111827' : '#9ca3af';
+function IconGrid({ active, accent }: { active: boolean; accent: string }) {
+  const c = active ? accent : '#9ca3af';
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={2} strokeLinecap="round">
       <Rect x="3" y="3" width="7" height="7" rx="1" />
@@ -76,6 +77,7 @@ function ListCard({
   isShared: boolean;
   onToggleShare: () => void;
 }) {
+  const { accent } = useTheme();
   return (
     <View style={styles.listCard}>
       <View style={styles.listCardAuthor}>
@@ -108,7 +110,7 @@ function ListCard({
               {PERSONA_EMOJI[entry.persona] ?? '🤖'} {entry.persona}
             </Text>
             <TouchableOpacity
-              style={[styles.shareToggle, isShared && styles.shareToggleActive]}
+              style={[styles.shareToggle, isShared && { borderColor: accent, backgroundColor: accent }]}
               onPress={onToggleShare}
             >
               <Text style={[styles.shareToggleText, isShared && styles.shareToggleTextActive]}>
@@ -138,6 +140,7 @@ function GridCard({
   isShared: boolean;
   onToggleShare: () => void;
 }) {
+  const { accent } = useTheme();
   return (
     <View style={styles.gridCard}>
       {entry.photo ? (
@@ -167,7 +170,7 @@ function GridCard({
             <View style={styles.aiDotWrap}><View style={styles.aiDotInner} /></View>
             <Text style={styles.gridAiLabel}>AI 코멘트</Text>
             <TouchableOpacity
-              style={[styles.shareToggle, isShared && styles.shareToggleActive]}
+              style={[styles.shareToggle, isShared && { borderColor: accent, backgroundColor: accent }]}
               onPress={onToggleShare}
             >
               <Text style={[styles.shareToggleText, isShared && styles.shareToggleTextActive]}>
@@ -191,6 +194,7 @@ function GridCard({
 export default function GroupScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { group } = useRoute<Route>().params;
+  const { accent } = useTheme();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const [sharedAiComments, setSharedAiComments] = useState<Set<number>>(new Set());
@@ -271,7 +275,7 @@ export default function GroupScreen() {
         <View style={styles.headerRight}>
           {/* 알림 설정 버튼 */}
           <TouchableOpacity style={styles.bellBtn} onPress={openModal}>
-            <IconBell hasNotif={hasNotif} />
+            <IconBell hasNotif={hasNotif} accent={accent} />
           </TouchableOpacity>
 
           {/* 리스트/그리드 토글 */}
@@ -280,13 +284,13 @@ export default function GroupScreen() {
               style={[styles.toggleBtn, viewMode === 'list' && styles.toggleBtnActive]}
               onPress={() => setViewMode('list')}
             >
-              <IconList active={viewMode === 'list'} />
+              <IconList active={viewMode === 'list'} accent={accent} />
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.toggleBtn, viewMode === 'grid' && styles.toggleBtnActive]}
               onPress={() => setViewMode('grid')}
             >
-              <IconGrid active={viewMode === 'grid'} />
+              <IconGrid active={viewMode === 'grid'} accent={accent} />
             </TouchableOpacity>
           </View>
         </View>
@@ -355,7 +359,7 @@ export default function GroupScreen() {
             {FREQ_OPTIONS.map((opt) => (
               <TouchableOpacity
                 key={opt.value}
-                style={[styles.freqRow, draftFreq === opt.value && styles.freqRowActive]}
+                style={[styles.freqRow, draftFreq === opt.value && { borderColor: accent, backgroundColor: '#ffffff' }]}
                 onPress={() => setDraftFreq(opt.value)}
                 activeOpacity={0.8}
               >
@@ -383,14 +387,14 @@ export default function GroupScreen() {
                       <Text style={[styles.freqLabel, draftFreq === 'interval' && styles.freqLabelActive]}>일마다</Text>
                     </View>
                   ) : (
-                    <Text style={[styles.freqLabel, draftFreq === opt.value && styles.freqLabelActive]}>
+                    <Text style={[styles.freqLabel, draftFreq === opt.value && { color: accent }]}>
                       {opt.label}
                     </Text>
                   )}
                   <Text style={styles.freqDesc}>{opt.desc}</Text>
                 </View>
-                <View style={[styles.radio, draftFreq === opt.value && styles.radioActive]}>
-                  {draftFreq === opt.value && <View style={styles.radioInner} />}
+                <View style={[styles.radio, draftFreq === opt.value && { borderColor: accent }]}>
+                  {draftFreq === opt.value && <View style={[styles.radioInner, { backgroundColor: accent }]} />}
                 </View>
               </TouchableOpacity>
             ))}
@@ -404,7 +408,7 @@ export default function GroupScreen() {
                 {WEEK_DAYS.map((d, i) => (
                   <TouchableOpacity
                     key={i}
-                    style={[styles.dayChip, draftDays.includes(i) && styles.dayChipActive]}
+                    style={[styles.dayChip, draftDays.includes(i) && { backgroundColor: accent }]}
                     onPress={() => toggleDay(i)}
                   >
                     <Text style={[styles.dayChipText, draftDays.includes(i) && styles.dayChipTextActive]}>

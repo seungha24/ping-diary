@@ -8,6 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { Group } from '../data/types';
+import { useTheme } from '../context/ThemeContext';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -19,6 +20,7 @@ const EMOJI_OPTIONS = [
 
 export default function GroupCreateScreen() {
   const navigation = useNavigation<Nav>();
+  const { accent } = useTheme();
   const [iconMode, setIconMode] = useState<'emoji' | 'photo'>('emoji');
   const [emoji, setEmoji] = useState('👨‍👩‍👧‍👦');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -79,7 +81,7 @@ export default function GroupCreateScreen() {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>새 그룹</Text>
           <TouchableOpacity
-            style={[styles.createBtn, !canCreate && styles.createBtnDisabled]}
+            style={[styles.createBtn, { backgroundColor: accent }, !canCreate && styles.createBtnDisabled]}
             onPress={handleCreate}
             disabled={!canCreate}
           >
@@ -121,7 +123,7 @@ export default function GroupCreateScreen() {
                 style={[styles.iconModeTab, iconMode === 'emoji' && styles.iconModeTabActive]}
                 onPress={() => setIconMode('emoji')}
               >
-                <Text style={[styles.iconModeTabText, iconMode === 'emoji' && styles.iconModeTabTextActive]}>
+                <Text style={[styles.iconModeTabText, iconMode === 'emoji' && { color: accent, fontWeight: '700' }]}>
                   😊 이모지
                 </Text>
               </TouchableOpacity>
@@ -129,7 +131,7 @@ export default function GroupCreateScreen() {
                 style={[styles.iconModeTab, iconMode === 'photo' && styles.iconModeTabActive]}
                 onPress={pickPhoto}
               >
-                <Text style={[styles.iconModeTabText, iconMode === 'photo' && styles.iconModeTabTextActive]}>
+                <Text style={[styles.iconModeTabText, iconMode === 'photo' && { color: accent, fontWeight: '700' }]}>
                   📷 사진
                 </Text>
               </TouchableOpacity>
@@ -140,7 +142,7 @@ export default function GroupCreateScreen() {
                 {EMOJI_OPTIONS.map((e) => (
                   <TouchableOpacity
                     key={e}
-                    style={[styles.emojiCell, emoji === e && styles.emojiCellActive]}
+                    style={[styles.emojiCell, emoji === e && { borderColor: accent, backgroundColor: '#f3f4f6' }]}
                     onPress={() => setEmoji(e)}
                   >
                     <Text style={styles.emojiCellText}>{e}</Text>

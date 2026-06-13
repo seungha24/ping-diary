@@ -6,14 +6,14 @@ import * as ImagePicker from 'expo-image-picker';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
-import { INITIAL_ENTRIES } from '../data/types';
+import { useTheme, THEMES } from '../context/ThemeContext';
 
 const INTEREST_TAGS = ['일상', '산책', '독서', '커피', '여행', '음악', '요리', '영화'];
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export default function ProfileScreen() {
   const navigation = useNavigation<Nav>();
-  const count = INITIAL_ENTRIES.length;
+  const { accent, themeKey, setTheme } = useTheme();
 
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
@@ -119,13 +119,20 @@ export default function ProfileScreen() {
 
         <View style={styles.divider} />
 
-        <View style={styles.statsGrid}>
-          {[['총 일기', `${count}개`], ['이번 달', `${count}개`]].map(([label, val]) => (
-            <View key={label} style={styles.statCard}>
-              <Text style={styles.statVal}>{val}</Text>
-              <Text style={styles.statLabel}>{label}</Text>
-            </View>
-          ))}
+        {/* 테마 색상 */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>테마 색상</Text>
+          <View style={styles.themeRow}>
+            {THEMES.map((t) => (
+              <TouchableOpacity
+                key={t.key}
+                onPress={() => setTheme(t.key)}
+                style={[styles.themeCircle, { backgroundColor: t.color }, themeKey === t.key && styles.themeCircleActive]}
+              >
+                {themeKey === t.key && <View style={styles.themeCheck} />}
+              </TouchableOpacity>
+            ))}
+          </View>
         </View>
 
         <View style={styles.divider} />
@@ -199,17 +206,23 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#d1d5db', borderStyle: 'dashed',
   },
   addTagText: { fontSize: 12, color: '#9ca3af' },
-  statsGrid: { flexDirection: 'row', gap: 12 },
-  statCard: {
-    flex: 1, backgroundColor: '#f9fafb', borderRadius: 16, padding: 16,
-    borderWidth: 1, borderColor: '#f3f4f6', alignItems: 'center', gap: 4,
-  },
-  statVal: { fontSize: 20, fontWeight: '700', color: '#374151' },
-  statLabel: { fontSize: 12, color: '#9ca3af' },
   menuItem: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#f9fafb',
   },
   menuText: { fontSize: 14, color: '#374151' },
   menuTextDanger: { color: '#ef4444' },
+  themeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  themeCircle: {
+    width: 36, height: 36, borderRadius: 18,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  themeCircleActive: {
+    shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 6, shadowOffset: { width: 0, height: 2 }, elevation: 4,
+    transform: [{ scale: 1.15 }],
+  },
+  themeCheck: {
+    width: 12, height: 12, borderRadius: 6,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+  },
 });
