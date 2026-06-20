@@ -5,16 +5,17 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as ImagePicker from 'expo-image-picker';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import Tag from '../components/Tag';
 import IconPlus from '../components/icons/IconPlus';
 import IconBell from '../components/icons/IconBell';
 import { PhotoThumb } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
-import { GROUPS, DiaryEntry } from '../data/types';
+import { GROUPS, FOLDERS, DiaryEntry, DiaryFolder } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
-import Svg, { Path, Line } from 'react-native-svg';
+import Svg, { Path, Line, Circle } from 'react-native-svg';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -25,7 +26,24 @@ export default function HomeScreen() {
   const [tab, setTab] = useState<'personal' | 'group'>('personal');
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const [zoomedGroup, setZoomedGroup] = useState<{ emoji: string; photo?: string; name: string } | null>(null);
+  const [selectedFolder, setSelectedFolder] = useState<DiaryFolder | null>(null);
+  const [personalView, setPersonalView] = useState<'folder' | 'all'>('folder');
+  const [folderCovers, setFolderCovers] = useState<Record<string, string>>({});
   const [shareEntry, setShareEntry] = useState<DiaryEntry | null>(null);
+
+  async function pickFolderCover(folderId: string) {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [3, 2],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setFolderCovers((prev) => ({ ...prev, [folderId]: result.assets[0].uri }));
+    }
+  }
   const [sharedGroups, setSharedGroups] = useState<Set<string>>(new Set());
 
   function openShare(entry: DiaryEntry) {
@@ -86,50 +104,185 @@ export default function HomeScreen() {
 
       {tab === 'personal' ? (
         <>
-          <ScrollView contentContainerStyle={styles.list}>
-            {entries.length === 0 && (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyText}>아직 일기가 없어요</Text>
-                <Text style={styles.emptySubText}>오른쪽 아래 버튼을 눌러 첫 일기를 써보세요</Text>
-              </View>
-            )}
-            {entries.map((entry) => (
-              <TouchableOpacity
-                key={entry.id}
-                style={styles.entryCard}
-                onPress={() => navigation.navigate('DiaryDetail', { entry })}
-              >
-                <View style={styles.entryHeader}>
-                  <Text style={styles.entryTitle} numberOfLines={1}>{entry.title}</Text>
-                  <View style={styles.entryHeaderRight}>
-                    <Text style={styles.entryDate}>6월 {entry.dates.join(',')}일</Text>
-                    <TouchableOpacity
-                      style={styles.cardShareBtn}
-                      onPress={(e) => { e.stopPropagation(); openShare(entry); }}
-                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                    >
-                      <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                        <Path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-                        <Path d="M16 6l-4-4-4 4" />
-                        <Line x1="12" y1="2" x2="12" y2="15" />
-                      </Svg>
-                    </TouchableOpacity>
+          {selectedFolder ? (
+            /* ── 폴더 내 일기 목록 ── */
+            <>
+              {folderCovers[selectedFolder.id] ? (
+                <TouchableOpacity onPress={() => pickFolderCover(selectedFolder.id)} activeOpacity={0.9}>
+                  <Image source={{ uri: folderCovers[selectedFolder.id] }} style={styles.folderCoverBanner} />
+                  <View style={styles.folderCoverOverlay}>
+                    <View style={styles.folderHeader}>
+                      <TouchableOpacity style={styles.folderBackBtn} onPress={() => setSelectedFolder(null)}>
+                        <Text style={[styles.folderBackText, { color: '#fff' }]}>← 폴더</Text>
+                      </TouchableOpacity>
+                      <Text style={[styles.folderHeaderTitle, { color: '#fff' }]}>{selectedFolder.emoji} {selectedFolder.name}</Text>
+                      <View style={[styles.folderBackBtn, styles.folderCameraChip]}>
+                        <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                          <Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                          <Circle cx="12" cy="13" r="4"/>
+                        </Svg>
+                      </View>
+                    </View>
                   </View>
+                </TouchableOpacity>
+              ) : (
+                <View style={styles.folderHeader}>
+                  <TouchableOpacity style={styles.folderBackBtn} onPress={() => setSelectedFolder(null)}>
+                    <Text style={styles.folderBackText}>← 폴더</Text>
+                  </TouchableOpacity>
+                  <Text style={styles.folderHeaderTitle}>{selectedFolder.emoji} {selectedFolder.name}</Text>
+                  <TouchableOpacity style={[styles.folderBackBtn, { alignItems: 'flex-end' }]} onPress={() => pickFolderCover(selectedFolder.id)}>
+                    <View style={styles.folderAddCoverBtn}>
+                      <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                      </Svg>
+                      <Text style={styles.folderAddCoverText}>커버</Text>
+                    </View>
+                  </TouchableOpacity>
                 </View>
-                <View style={styles.entryBody}>
-                  {entry.photo && (
-                    <TouchableOpacity onPress={() => setLightboxPhoto(entry.photo)}>
-                      <PhotoThumb photo={entry.photo} size={48} radius={10} />
+              )}
+              <ScrollView contentContainerStyle={styles.list}>
+                {entries.filter((e) => e.folder === selectedFolder.id).length === 0 && (
+                  <View style={styles.emptyState}>
+                    <Text style={styles.emptyText}>아직 일기가 없어요</Text>
+                    <Text style={styles.emptySubText}>오른쪽 아래 버튼을 눌러 첫 일기를 써보세요</Text>
+                  </View>
+                )}
+                {entries.filter((e) => e.folder === selectedFolder.id).map((entry) => (
+                  <TouchableOpacity
+                    key={entry.id}
+                    style={styles.entryCard}
+                    onPress={() => navigation.navigate('DiaryDetail', { entry })}
+                  >
+                    <View style={styles.entryHeader}>
+                      <Text style={styles.entryTitle} numberOfLines={1}>{entry.title}</Text>
+                      <View style={styles.entryHeaderRight}>
+                        <Text style={styles.entryDate}>6월 {entry.dates.join(',')}일</Text>
+                        <TouchableOpacity
+                          style={styles.cardShareBtn}
+                          onPress={(e) => { e.stopPropagation(); openShare(entry); }}
+                          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                        >
+                          <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                            <Path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                            <Path d="M16 6l-4-4-4 4" />
+                            <Line x1="12" y1="2" x2="12" y2="15" />
+                          </Svg>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    <View style={styles.entryBody}>
+                      {entry.photo && (
+                        <TouchableOpacity onPress={() => setLightboxPhoto(entry.photo)}>
+                          <PhotoThumb photo={entry.photo} size={48} radius={10} />
+                        </TouchableOpacity>
+                      )}
+                      <Text style={styles.entryPreview} numberOfLines={3}>{entry.body}</Text>
+                    </View>
+                    <View style={styles.tagRow}>
+                      {entry.tags.map((t) => <Tag key={t} label={t} />)}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </>
+          ) : (
+            /* ── 폴더 목록 / 전체 보기 ── */
+            <>
+              <View style={styles.viewToggleRow}>
+                <TouchableOpacity
+                  style={[styles.viewToggleBtn, personalView === 'folder' && { backgroundColor: '#111827' }]}
+                  onPress={() => setPersonalView('folder')}
+                >
+                  <Text style={[styles.viewToggleText, personalView === 'folder' && { color: '#fff' }]}>폴더</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.viewToggleBtn, personalView === 'all' && { backgroundColor: '#111827' }]}
+                  onPress={() => setPersonalView('all')}
+                >
+                  <Text style={[styles.viewToggleText, personalView === 'all' && { color: '#fff' }]}>전체</Text>
+                </TouchableOpacity>
+              </View>
+
+              {personalView === 'folder' ? (
+            <ScrollView contentContainerStyle={styles.folderList}>
+              <View style={styles.folderGrid}>
+                {FOLDERS.map((folder) => {
+                  const count = entries.filter((e) => e.folder === folder.id).length;
+                  const cover = folderCovers[folder.id];
+                  return (
+                    <TouchableOpacity
+                      key={folder.id}
+                      style={styles.folderCard}
+                      onPress={() => setSelectedFolder(folder)}
+                    >
+                      <View style={styles.folderCoverWrap}>
+                        {cover ? (
+                          <Image source={{ uri: cover }} style={styles.folderCoverImg} />
+                        ) : (
+                          <View style={styles.folderCoverEmpty}>
+                            <Text style={styles.folderCoverEmoji}>{folder.emoji}</Text>
+                          </View>
+                        )}
+                      </View>
+                      <View style={styles.folderCardBody}>
+                        <Text style={styles.folderName}>{folder.name}</Text>
+                        <Text style={styles.folderCount}>{count}개</Text>
+                      </View>
                     </TouchableOpacity>
-                  )}
-                  <Text style={styles.entryPreview} numberOfLines={3}>{entry.body}</Text>
-                </View>
-                <View style={styles.tagRow}>
-                  {entry.tags.map((t) => <Tag key={t} label={t} />)}
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
+                  );
+                })}
+              </View>
+            </ScrollView>
+              ) : (
+              <ScrollView contentContainerStyle={styles.list}>
+                {entries.length === 0 && (
+                  <View style={styles.emptyState}>
+                    <Text style={styles.emptyText}>아직 일기가 없어요</Text>
+                    <Text style={styles.emptySubText}>오른쪽 아래 버튼을 눌러 첫 일기를 써보세요</Text>
+                  </View>
+                )}
+                {entries.map((entry) => (
+                  <TouchableOpacity
+                    key={entry.id}
+                    style={styles.entryCard}
+                    onPress={() => navigation.navigate('DiaryDetail', { entry })}
+                  >
+                    <View style={styles.entryHeader}>
+                      <Text style={styles.entryTitle} numberOfLines={1}>{entry.title}</Text>
+                      <View style={styles.entryHeaderRight}>
+                        <Text style={styles.entryDate}>6월 {entry.dates.join(',')}일</Text>
+                        <TouchableOpacity
+                          style={styles.cardShareBtn}
+                          onPress={(e) => { e.stopPropagation(); openShare(entry); }}
+                          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                        >
+                          <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#d1d5db" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                            <Path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                            <Path d="M16 6l-4-4-4 4" />
+                            <Line x1="12" y1="2" x2="12" y2="15" />
+                          </Svg>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                    <View style={styles.entryBody}>
+                      {entry.photo && (
+                        <TouchableOpacity onPress={() => setLightboxPhoto(entry.photo)}>
+                          <PhotoThumb photo={entry.photo} size={48} radius={10} />
+                        </TouchableOpacity>
+                      )}
+                      <Text style={styles.entryPreview} numberOfLines={3}>{entry.body}</Text>
+                    </View>
+                    <View style={styles.tagRow}>
+                      {entry.tags.map((t) => <Tag key={t} label={t} />)}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+              )}
+            </>
+          )}
 
           <TouchableOpacity
             style={[styles.fab, { backgroundColor: accent }]}
@@ -293,6 +446,63 @@ const styles = StyleSheet.create({
     backgroundColor: '#111827', alignItems: 'center', justifyContent: 'center',
     shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 5,
   },
+  viewToggleRow: {
+    flexDirection: 'row', gap: 6,
+    paddingHorizontal: 20, paddingVertical: 10,
+    borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
+  },
+  viewToggleBtn: {
+    paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999,
+    backgroundColor: '#f3f4f6',
+  },
+  viewToggleText: { fontSize: 12, fontWeight: '600', color: '#9ca3af' },
+  folderHeader: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 20, paddingVertical: 12,
+    borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
+  },
+  folderBackBtn: { width: 60 },
+  folderBackText: { fontSize: 13, color: '#6b7280' },
+  folderHeaderTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
+  folderList: { padding: 16, paddingBottom: 80 },
+  folderGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  folderCard: {
+    width: '47%',
+    backgroundColor: '#ffffff', borderRadius: 18,
+    borderWidth: 1, borderColor: '#f3f4f6',
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1,
+    overflow: 'hidden',
+  },
+  folderCoverWrap: {
+    width: '100%', height: 90,
+    position: 'relative',
+  },
+  folderCoverImg: { width: '100%', height: '100%' },
+  folderCoverEmpty: {
+    width: '100%', height: '100%',
+    backgroundColor: '#f3f4f6',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  folderCoverEmoji: { fontSize: 32 },
+  folderCoverBanner: { width: '100%', height: 130 },
+  folderCoverOverlay: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.28)',
+    justifyContent: 'flex-end',
+  },
+  folderCameraChip: {
+    alignItems: 'flex-end', justifyContent: 'center',
+  },
+  folderAddCoverBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 10, paddingVertical: 5,
+    borderRadius: 999, borderWidth: 1, borderColor: '#e5e7eb',
+    backgroundColor: '#f9fafb',
+  },
+  folderAddCoverText: { fontSize: 11, color: '#6b7280', fontWeight: '600' },
+  folderCardBody: { padding: 12, gap: 3 },
+  folderName: { fontSize: 14, fontWeight: '700', color: '#111827' },
+  folderCount: { fontSize: 12, color: '#9ca3af' },
   sectionLabel: { fontSize: 12, color: '#9ca3af', marginBottom: 2, paddingHorizontal: 4 },
   groupCard: {
     backgroundColor: '#ffffff', borderRadius: 16, padding: 16,

@@ -1,3 +1,18 @@
+export interface DiaryFolder {
+  id: string;
+  name: string;
+  emoji: string;
+}
+
+export const FOLDERS: DiaryFolder[] = [
+  { id: 'daily',   name: '일상',   emoji: '☁️' },
+  { id: 'travel',  name: '여행',   emoji: '✈️' },
+  { id: 'reading', name: '독서',   emoji: '📚' },
+  { id: 'food',    name: '맛집',   emoji: '🍜' },
+  { id: 'music',   name: '음악',   emoji: '🎵' },
+  { id: 'etc',     name: '기타',   emoji: '📁' },
+];
+
 export interface DiaryEntry {
   id: number;
   title: string;
@@ -6,6 +21,7 @@ export interface DiaryEntry {
   tags: string[];
   photo: string | null;
   persona: string;
+  folder?: string;
   author?: string;
   avatar?: string;
   createdAt: string;   // ISO 8601
@@ -41,21 +57,21 @@ export const INITIAL_ENTRIES: DiaryEntry[] = [
   {
     id: 1, title: '오늘도 평범한 하루',
     body: '아침에 커피 한 잔을 마시며 하루를 시작했다. 특별할 것 없지만 그래서 더 소중한 날들.',
-    dates: [10], tags: ['일상', '커피'], photo: 'asset:capy_sleep', persona: '선생님',
+    dates: [10], tags: ['일상', '커피'], photo: 'asset:capy_sleep', persona: '선생님', folder: 'daily',
     createdAt: '2026-06-09T09:30:00',
     aiComment: '오늘 하루가 평범하다고 느꼈겠지만, 작은 것에서 소중함을 발견하는 눈을 가졌다는 게 정말 귀한 일이에요. 커피 한 잔의 루틴이 하루를 여는 의식이 된다면, 그 작은 행위가 당신의 정서적 안정에 큰 역할을 하고 있을 거예요. 평범한 날들이 쌓여 인생이 된다는 걸 잊지 마세요.',
   },
   {
     id: 2, title: '오랜 친구를 만난 날',
     body: '3년 만에 지현이를 만났다. 시간이 흘러도 변하지 않는 것들이 있다는 걸 느꼈다.',
-    dates: [8], tags: ['일상', '산책'], photo: null, persona: '엄마',
+    dates: [8], tags: ['일상', '산책'], photo: null, persona: '엄마', folder: 'daily',
     createdAt: '2026-06-08T14:00:00',
     aiComment: '3년이라는 시간이 흘렀어도 변하지 않는 우정을 느꼈다니 얼마나 따뜻한 하루였을까. 그런 관계를 소중히 지켜온 네가 대견하고, 지현이도 같은 마음이었을 거야. 그 인연 앞으로도 잘 챙겨나가렴.',
   },
   {
     id: 3, title: '비 오는 날의 단상',
     body: '온종일 비가 내렸다. 창문 너머로 빗소리를 들으며 책을 읽었다.',
-    dates: [5], tags: ['독서', '음악'], photo: 'ph:9', persona: '상담사',
+    dates: [5], tags: ['독서', '음악'], photo: 'ph:9', persona: '상담사', folder: 'reading',
     createdAt: '2026-06-12T06:00:00',
     aiComment: '빗소리와 함께하는 독서라니, 마음이 자연스럽게 내면으로 향하는 시간이었겠어요. 그런 고요한 순간들이 감정을 정리하고 자신을 돌아보는 데 큰 도움이 된답니다.',
   },
