@@ -191,18 +191,20 @@ export default function HomeScreen() {
             /* ── 폴더 목록 / 전체 보기 ── */
             <>
               <View style={styles.viewToggleRow}>
-                <TouchableOpacity
-                  style={[styles.viewToggleBtn, personalView === 'folder' && { backgroundColor: '#111827' }]}
-                  onPress={() => setPersonalView('folder')}
-                >
-                  <Text style={[styles.viewToggleText, personalView === 'folder' && { color: '#fff' }]}>폴더</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.viewToggleBtn, personalView === 'all' && { backgroundColor: '#111827' }]}
-                  onPress={() => setPersonalView('all')}
-                >
-                  <Text style={[styles.viewToggleText, personalView === 'all' && { color: '#fff' }]}>전체</Text>
-                </TouchableOpacity>
+                <View style={styles.viewTogglePill}>
+                  <TouchableOpacity
+                    style={[styles.viewToggleBtn, personalView === 'folder' && { backgroundColor: accent }]}
+                    onPress={() => setPersonalView('folder')}
+                  >
+                    <Text style={[styles.viewToggleText, personalView === 'folder' && { color: '#fff' }]}>📁  폴더</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.viewToggleBtn, personalView === 'all' && { backgroundColor: accent }]}
+                    onPress={() => setPersonalView('all')}
+                  >
+                    <Text style={[styles.viewToggleText, personalView === 'all' && { color: '#fff' }]}>📋  전체</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
               {personalView === 'folder' ? (
@@ -447,15 +449,19 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 5,
   },
   viewToggleRow: {
-    flexDirection: 'row', gap: 6,
     paddingHorizontal: 20, paddingVertical: 10,
     borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
   },
-  viewToggleBtn: {
-    paddingHorizontal: 14, paddingVertical: 6, borderRadius: 999,
+  viewTogglePill: {
+    flexDirection: 'row',
     backgroundColor: '#f3f4f6',
+    borderRadius: 12, padding: 3,
+    alignSelf: 'flex-start',
   },
-  viewToggleText: { fontSize: 12, fontWeight: '600', color: '#9ca3af' },
+  viewToggleBtn: {
+    paddingHorizontal: 18, paddingVertical: 7, borderRadius: 10,
+  },
+  viewToggleText: { fontSize: 13, fontWeight: '600', color: '#9ca3af' },
   folderHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 12,
