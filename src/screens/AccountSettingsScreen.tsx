@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  SafeAreaView, TextInput, Switch, Alert,
+  SafeAreaView, TextInput, Switch, Alert, Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import IconChev from '../components/icons/IconChev';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 function Row({ label, value, onPress }: { label: string; value?: string; onPress?: () => void }) {
   return (
@@ -22,6 +23,7 @@ function Row({ label, value, onPress }: { label: string; value?: string; onPress
 export default function AccountSettingsScreen() {
   const navigation = useNavigation();
   const { accent } = useTheme();
+  const { logout } = useAuth();
 
   const [name, setName] = useState('김지연');
   const [username, setUsername] = useState('jiyeon_ping');
@@ -42,9 +44,15 @@ export default function AccountSettingsScreen() {
   }
 
   function handleLogout() {
+    // 웹에서는 Alert 버튼 콜백이 동작하지 않을 수 있어 window.confirm으로 분기
+    if (Platform.OS === 'web') {
+      // eslint-disable-next-line no-alert
+      if (typeof window !== 'undefined' && window.confirm('로그아웃하시겠어요?')) logout();
+      return;
+    }
     Alert.alert('로그아웃', '로그아웃하시겠어요?', [
       { text: '취소', style: 'cancel' },
-      { text: '로그아웃', onPress: () => {} },
+      { text: '로그아웃', onPress: () => logout() },
     ]);
   }
 

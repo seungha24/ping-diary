@@ -34,6 +34,14 @@ export function setToken(token: string) {
   storage.set(TOKEN_KEY, token);
 }
 
+/** 액세스 토큰 삭제 (로그아웃) */
+export function clearToken() {
+  try {
+    if (typeof localStorage !== 'undefined') localStorage.removeItem(TOKEN_KEY);
+  } catch {}
+  delete mem[TOKEN_KEY];
+}
+
 /** 서버 원본(diary_entries 행)을 앱의 DiaryEntry로 변환 */
 function fromServer(row: any): DiaryEntry {
   return {
@@ -105,6 +113,23 @@ export async function createEntry(entry: DiaryEntry): Promise<DiaryEntry> {
       folder: entry.folder ?? '',
       photo_url: entry.photo ?? null,
       visibility: 'private',
+    }),
+  });
+  return fromServer(row);
+}
+
+/** 일기 수정 (서버 저장 후 갱신된 엔트리 반환) */
+export async function patchEntry(entry: DiaryEntry): Promise<DiaryEntry> {
+  const row = await request(`/entries/${entry.id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      content: entry.body || entry.title || '(내용 없음)',
+      title: entry.title ?? '',
+      tags: entry.tags ?? [],
+      dates: entry.dates ?? [],
+      persona: entry.persona ?? '',
+      folder: entry.folder ?? '',
+      photo_url: entry.photo ?? null,
     }),
   });
   return fromServer(row);

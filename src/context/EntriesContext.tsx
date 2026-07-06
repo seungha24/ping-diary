@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { DiaryEntry, INITIAL_ENTRIES } from '../data/types';
 import { useAuth } from './AuthContext';
-import { fetchEntries, createEntry, removeEntry } from '../api';
+import { fetchEntries, createEntry, patchEntry, removeEntry } from '../api';
 
 interface EntriesContextValue {
   entries: DiaryEntry[];
@@ -67,9 +67,18 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
       });
   }
 
-  // 수정: 현재 서버에 수정 API가 없어 로컬 상태만 갱신
+  // 낙관적 수정: 화면에 먼저 반영하고 서버에 저장
   function updateEntry(updated: DiaryEntry) {
+    const backup = entries;
     setEntries((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+    patchEntry(updated)
+      .then((saved) => {
+        setEntries((prev) => prev.map((e) => (e.id === updated.id ? saved : e)));
+      })
+      .catch(() => {
+        // 저장 실패 시 롤백
+        setEntries(backup);
+      });
   }
 
   // 낙관적 삭제

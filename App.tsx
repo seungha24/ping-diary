@@ -1,9 +1,17 @@
 import 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import RootNavigator from './src/navigation/RootNavigator';
+import LoginScreen from './src/screens/LoginScreen';
 import { ThemeProvider } from './src/context/ThemeContext';
-import { AuthProvider } from './src/context/AuthContext';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { EntriesProvider } from './src/context/EntriesContext';
+
+/** 인증 상태에 따라 로그인 화면 또는 앱 본체를 렌더링 */
+function Gate() {
+  const { ready, authed } = useAuth();
+  if (!ready) return null;
+  return authed ? <RootNavigator /> : <LoginScreen />;
+}
 
 export default function App() {
   return (
@@ -11,7 +19,7 @@ export default function App() {
       <AuthProvider>
         <EntriesProvider>
           <StatusBar style="dark" />
-          <RootNavigator />
+          <Gate />
         </EntriesProvider>
       </AuthProvider>
     </ThemeProvider>
