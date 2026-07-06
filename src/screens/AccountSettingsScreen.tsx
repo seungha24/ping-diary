@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  SafeAreaView, TextInput, Switch, Alert, Platform,
+  SafeAreaView, TextInput, Switch, Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import IconChev from '../components/icons/IconChev';
@@ -45,16 +45,8 @@ export default function AccountSettingsScreen() {
   }
 
   function handleLogout() {
-    // 웹에서는 Alert 버튼 콜백이 동작하지 않을 수 있어 window.confirm으로 분기
-    if (Platform.OS === 'web') {
-      // eslint-disable-next-line no-alert
-      if (typeof window !== 'undefined' && window.confirm('로그아웃하시겠어요?')) logout();
-      return;
-    }
-    Alert.alert('로그아웃', '로그아웃하시겠어요?', [
-      { text: '취소', style: 'cancel' },
-      { text: '로그아웃', onPress: () => logout() },
-    ]);
+    // 즉시 로그아웃 (확인창이 탭을 막는 문제 방지)
+    logout();
   }
 
   return (

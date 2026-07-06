@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Alert, Image, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
@@ -15,7 +15,7 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 export default function ProfileScreen() {
   const navigation = useNavigation<Nav>();
   const { accent, themeKey, setTheme } = useTheme();
-  const { email } = useAuth();
+  const { email, logout } = useAuth();
   const emailPrefix = (email ?? '').split('@')[0] || '사용자';
 
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
@@ -151,10 +151,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.menuItem}
-            onPress={() => Alert.alert('로그아웃', '로그아웃하시겠어요?', [
-              { text: '취소', style: 'cancel' },
-              { text: '로그아웃', onPress: () => {} },
-            ])}
+            onPress={() => logout()}
           >
             <Text style={[styles.menuText, styles.menuTextDanger]}>로그아웃</Text>
             <IconChev dir="right" size={18} color="#d1d5db" />

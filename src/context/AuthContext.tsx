@@ -60,6 +60,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (session?.access_token) adoptSession(session);
     });
     (async () => {
+      // URL에 ?logout 이 있으면 강제 로그아웃 (DevTools 없이 로그아웃용)
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && /[?&]logout/.test(window.location.search)) {
+        clearToken();
+        await supabase.auth.signOut().catch(() => {});
+        if (!cancelled) { setTok(null); setUserEmail(null); setReady(true); }
+        return;
+      }
       await hydrateToken();
       try {
         const { data } = await supabase.auth.getSession();
