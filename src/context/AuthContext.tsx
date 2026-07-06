@@ -21,9 +21,12 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
   loginDemo: () => Promise<void>;
-  loginGoogle: () => Promise<void>;
+  loginOAuth: (provider: OAuthProvider) => Promise<void>;
   logout: () => void;
 }
+
+/** 소셜 로그인 provider (Supabase 기본 지원) */
+export type OAuthProvider = 'google' | 'kakao';
 
 const AuthContext = createContext<AuthContextValue>({
   ready: false,
@@ -33,7 +36,7 @@ const AuthContext = createContext<AuthContextValue>({
   login: async () => {},
   signup: async () => {},
   loginDemo: async () => {},
-  loginGoogle: async () => {},
+  loginOAuth: async () => {},
   logout: () => {},
 });
 
@@ -104,12 +107,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  /** 구글 계정으로 로그인 (웹: 리디렉트 방식) */
-  async function loginGoogle() {
+  /** 소셜 계정으로 로그인 (구글/카카오, 웹: 리디렉트 방식) */
+  async function loginOAuth(provider: OAuthProvider) {
     const redirectTo =
       Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.origin : undefined;
     const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
+      provider,
       options: { redirectTo },
     });
     if (error) throw error;
@@ -125,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ ready, authed: !!token, token, email: userEmail, login, signup, loginDemo, loginGoogle, logout }}
+      value={{ ready, authed: !!token, token, email: userEmail, login, signup, loginDemo, loginOAuth, logout }}
     >
       {children}
     </AuthContext.Provider>

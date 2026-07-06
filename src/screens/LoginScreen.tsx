@@ -12,7 +12,7 @@ import { useAuth } from '../context/AuthContext';
  */
 export default function LoginScreen() {
   const { accent } = useTheme();
-  const { login, signup, loginDemo, loginGoogle } = useAuth();
+  const { login, signup, loginDemo, loginOAuth } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -51,9 +51,18 @@ export default function LoginScreen() {
   async function google() {
     setError(null);
     try {
-      await loginGoogle(); // 웹: 구글 페이지로 리디렉트됨
+      await loginOAuth('google'); // 웹: 구글 페이지로 리디렉트됨
     } catch (e: any) {
       setError(e?.message ?? '구글 로그인을 시작하지 못했습니다. (Supabase 구글 provider 설정 필요)');
+    }
+  }
+
+  async function kakao() {
+    setError(null);
+    try {
+      await loginOAuth('kakao'); // 웹: 카카오 페이지로 리디렉트됨
+    } catch (e: any) {
+      setError(e?.message ?? '카카오 로그인을 시작하지 못했습니다. (Supabase 카카오 provider 설정 필요)');
     }
   }
 
@@ -135,6 +144,12 @@ export default function LoginScreen() {
             <Text style={styles.googleText}>구글로 계속하기</Text>
           </TouchableOpacity>
 
+          {/* 카카오 로그인 */}
+          <TouchableOpacity style={styles.kakaoBtn} onPress={kakao} disabled={loading}>
+            <Text style={styles.kakaoIcon}>💬</Text>
+            <Text style={styles.kakaoText}>카카오로 계속하기</Text>
+          </TouchableOpacity>
+
           {/* 데모 */}
           <TouchableOpacity style={styles.demoBtn} onPress={demo} disabled={loading}>
             <Text style={styles.demoText}>데모 계정으로 둘러보기</Text>
@@ -174,4 +189,10 @@ const styles = StyleSheet.create({
   },
   googleG: { fontSize: 16, fontWeight: '800', color: '#4285F4' },
   googleText: { fontSize: 14, fontWeight: '600', color: '#374151' },
+  kakaoBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    borderRadius: 12, paddingVertical: 13, backgroundColor: '#FEE500',
+  },
+  kakaoIcon: { fontSize: 15 },
+  kakaoText: { fontSize: 14, fontWeight: '700', color: '#191600' },
 });
