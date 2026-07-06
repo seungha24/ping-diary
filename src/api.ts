@@ -139,3 +139,72 @@ export async function patchEntry(entry: DiaryEntry): Promise<DiaryEntry> {
 export async function removeEntry(id: number): Promise<void> {
   await request(`/entries/${id}`, { method: 'DELETE' });
 }
+
+/** AI 코멘트 즉시 생성 (미리보기/데모용) */
+export async function generateComment(id: number): Promise<DiaryEntry> {
+  const row = await request(`/entries/${id}/comment`, { method: 'POST' });
+  return fromServer(row);
+}
+
+/** 이미지 업로드 → 공개 URL 반환 (웹/네이티브 모두 지원) */
+export async function uploadPhoto(uri: string): Promise<string> {
+  const token = getToken();
+  const form = new FormData();
+
+  if (uri.startsWith('data:') || uri.startsWith('blob:') || uri.startsWith('http')) {
+    // 웹: uri를 blob으로 변환해 첨부
+    const blob = await (await fetch(uri)).blob();
+    form.append('file', blob, 'photo.jpg');
+  } else {
+    // 네이티브: RN FormData 파일 객체
+    const name = uri.split('/').pop() || 'photo.jpg';
+    const m = /\.(\w+)$/.exec(name);
+    const ext = m ? m[1].toLowerCase() : 'jpg';
+    const type = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
+    // @ts-ignore React Native FormData 파일 형식
+    form.append('file', { uri, name, type });
+  }
+
+  const res = await fetch(`${API_BASE_URL}/upload`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body: form,
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error((data && data.error) || '이미지 업로드에 실패했습니다');
+  return data.url;
+}
+
+// ── 그룹 ──
+export interface ServerGroup {
+  id: number;
+  name: string;
+  invite_code: string;
+  member_count?: number;
+  created_at?: string;
+}
+
+/** 내가 속한 그룹 목록 */
+export async function fetchGroups(): Promise<ServerGroup[]> {
+  const rows = await request('/groups');
+  return Array.isArray(rows) ? rows : [];
+}
+
+/** 그룹 생성 */
+export async function createGroup(name: string): Promise<ServerGroup> {
+  return request('/groups', { method: 'POST', body: JSON.stringify({ name }) });
+}
+
+/** 초대 코드로 그룹 참여 */
+export async function joinGroup(inviteCode: string): Promise<{ id: number; name: string }> {
+  return request('/groups/join', {
+    method: 'POST',
+    body: JSON.stringify({ invite_code: inviteCode }),
+  });
+}
+
+/** 그룹에 공유된 일기 조회 */
+export async function fetchGroupEntries(id: number): Promise<any[]> {
+  const rows = await request(`/groups/${id}/entries`);
+  return Array.isArray(rows) ? rows : [];
+}

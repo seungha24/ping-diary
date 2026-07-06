@@ -8,6 +8,7 @@ interface EntriesContextValue {
   loading: boolean;
   addEntry: (entry: DiaryEntry) => void;
   updateEntry: (entry: DiaryEntry) => void;
+  updateLocal: (entry: DiaryEntry) => void;
   deleteEntry: (id: number) => void;
 }
 
@@ -16,6 +17,7 @@ const EntriesContext = createContext<EntriesContextValue>({
   loading: true,
   addEntry: () => {},
   updateEntry: () => {},
+  updateLocal: () => {},
   deleteEntry: () => {},
 });
 
@@ -81,6 +83,11 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
       });
   }
 
+  // 서버 결과를 로컬 상태에만 반영 (별도 네트워크 호출 없음)
+  function updateLocal(updated: DiaryEntry) {
+    setEntries((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+  }
+
   // 낙관적 삭제
   function deleteEntry(id: number) {
     const backup = entries;
@@ -92,7 +99,7 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <EntriesContext.Provider value={{ entries, loading, addEntry, updateEntry, deleteEntry }}>
+    <EntriesContext.Provider value={{ entries, loading, addEntry, updateEntry, updateLocal, deleteEntry }}>
       {children}
     </EntriesContext.Provider>
   );

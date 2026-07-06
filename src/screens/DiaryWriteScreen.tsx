@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
-  StyleSheet, SafeAreaView, Modal,
+  StyleSheet, SafeAreaView, Modal, Image, ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Audio } from 'expo-av';
+import * as ImagePicker from 'expo-image-picker';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import { PERSONAS, MONTHS, DAYS } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
+import { uploadPhoto } from '../api';
 import { RootStackParamList } from '../navigation/RootNavigator';
 
 type WriteRoute = RouteProp<RootStackParamList, 'DiaryWrite'>;
@@ -45,6 +47,8 @@ export default function DiaryWriteScreen() {
   const [tags, setTags] = useState<string[]>(editEntry?.tags ?? []);
   const [tagInput, setTagInput] = useState('');
   const [persona, setPersona] = useState(editEntry?.persona ?? '선생님');
+  const [photo, setPhoto] = useState<string | null>(editEntry?.photo ?? null);
+  const [uploading, setUploading] = useState(false);
   const [calOpen, setCalOpen] = useState(false);
   const [calYear] = useState(2026);
   const [calMonth, setCalMonth] = useState(5);
@@ -70,6 +74,27 @@ export default function DiaryWriteScreen() {
     setTagInput('');
   }
 
+  // 사진 선택 → 서버 업로드 → 공개 URL 저장
+  async function pickPhoto() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets[0]) return;
+    setUploading(true);
+    try {
+      const url = await uploadPhoto(result.assets[0].uri);
+      setPhoto(url);
+    } catch (_) {
+      // 업로드 실패 시 무시
+    } finally {
+      setUploading(false);
+    }
+  }
+
   function dateLabel() {
     if (selectedDates.length === 0) return '날짜 선택';
     if (selectedDates.length === 1) return `6월 ${selectedDates[0]}일`;
@@ -93,7 +118,7 @@ export default function DiaryWriteScreen() {
             style={[styles.saveBtn, { backgroundColor: accent }]}
             onPress={() => {
               if (editEntry) {
-                updateEntry({ ...editEntry, title, body, tags, persona, dates: selectedDates });
+                updateEntry({ ...editEntry, title, body, tags, persona, dates: selectedDates, photo });
               } else {
                 addEntry({
                   id: Date.now(),
@@ -102,7 +127,7 @@ export default function DiaryWriteScreen() {
                   tags,
                   persona,
                   dates: selectedDates,
-                  photo: null,
+                  photo,
                   createdAt: new Date().toISOString(),
                 });
               }
@@ -172,6 +197,22 @@ export default function DiaryWriteScreen() {
             textAlignVertical="top"
           />
         </View>
+
+        {/* Photo */}
+        {photo ? (
+          <View style={styles.photoBox}>
+            <Image source={{ uri: photo }} style={styles.photoImg} resizeMode="cover" />
+            <TouchableOpacity style={styles.photoRemove} onPress={() => setPhoto(null)}>
+              <Text style={styles.photoRemoveText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <TouchableOpacity style={styles.photoAddBtn} onPress={pickPhoto} disabled={uploading}>
+            {uploading
+              ? <ActivityIndicator color="#9ca3af" size="small" />
+              : <Text style={styles.photoAddText}>📷 사진 추가</Text>}
+          </TouchableOpacity>
+        )}
 
         {/* AI comment section */}
         <View style={styles.aiSection}>
@@ -311,6 +352,19 @@ const styles = StyleSheet.create({
     padding: 14, minHeight: 140,
   },
   bodyInput: { fontSize: 14, color: '#374151', lineHeight: 22, minHeight: 120 },
+  photoBox: { position: 'relative', borderRadius: 14, overflow: 'hidden' },
+  photoImg: { width: '100%', height: 180 },
+  photoRemove: {
+    position: 'absolute', top: 8, right: 8,
+    width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.55)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  photoRemoveText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  photoAddBtn: {
+    borderWidth: 1.5, borderColor: '#e5e7eb', borderStyle: 'dashed',
+    borderRadius: 14, paddingVertical: 16, alignItems: 'center',
+  },
+  photoAddText: { fontSize: 13, color: '#6b7280', fontWeight: '500' },
   aiSection: { gap: 10, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
   aiTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   aiDot: {

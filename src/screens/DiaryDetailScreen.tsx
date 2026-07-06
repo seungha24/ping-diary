@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -13,6 +14,7 @@ import IconTrash from '../components/icons/IconTrash';
 import { GROUPS } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
+import { generateComment } from '../api';
 import Svg, { Path, Line } from 'react-native-svg';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -47,15 +49,31 @@ export default function DiaryDetailScreen() {
   const navigation = useNavigation<Nav>();
   const { entry } = useRoute<Route>().params;
   const { accent } = useTheme();
-  const { deleteEntry } = useEntries();
+  const { deleteEntry, updateLocal } = useEntries();
   const remaining = useCountdown(entry.createdAt);
   const isUnlocked = remaining <= 0;
   const [shareOpen, setShareOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [sharedGroups, setSharedGroups] = useState<Set<string>>(new Set());
+  const [aiComment, setAiComment] = useState<string | undefined>(entry.aiComment);
+  const [genLoading, setGenLoading] = useState(false);
 
   function handleEdit() {
     navigation.navigate('DiaryWrite', { entry });
+  }
+
+  // AI 코멘트 즉시 생성 (24시간 기다리지 않고 미리 받아보기)
+  async function handleGenerateComment() {
+    setGenLoading(true);
+    try {
+      const updated = await generateComment(entry.id);
+      setAiComment(updated.aiComment);
+      updateLocal(updated); // 목록에도 반영
+    } catch (_) {
+      // 실패 시 조용히 무시
+    } finally {
+      setGenLoading(false);
+    }
   }
 
   function toggleGroup(name: string) {
@@ -116,20 +134,26 @@ export default function DiaryDetailScreen() {
             <Text style={styles.aiPersona}>{PERSONA_EMOJI[entry.persona]} {entry.persona}</Text>
           </View>
 
-          {isUnlocked && entry.aiComment ? (
+          {aiComment ? (
             <View style={styles.aiCommentBox}>
-              <Text style={styles.aiCommentText}>{entry.aiComment}</Text>
-            </View>
-          ) : isUnlocked ? (
-            <View style={styles.aiLockedBox}>
-              <Text style={styles.aiLockedEmoji}>✨</Text>
-              <Text style={styles.aiLockedText}>코멘트가 준비되지 않았어요</Text>
+              <Text style={styles.aiCommentText}>{aiComment}</Text>
             </View>
           ) : (
             <View style={styles.aiLockedBox}>
-              <Text style={styles.aiLockedEmoji}>🔒</Text>
-              <Text style={styles.aiLockedText}>일기 작성 24시간 후 공개돼요</Text>
-              <Text style={styles.aiCountdown}>{formatRemaining(remaining)}</Text>
+              <Text style={styles.aiLockedEmoji}>{isUnlocked ? '✨' : '🔒'}</Text>
+              <Text style={styles.aiLockedText}>
+                {isUnlocked ? '아직 코멘트가 없어요' : '일기 작성 24시간 후 공개돼요'}
+              </Text>
+              {!isUnlocked && <Text style={styles.aiCountdown}>{formatRemaining(remaining)}</Text>}
+              <TouchableOpacity
+                style={[styles.genBtn, { backgroundColor: accent }, genLoading && { opacity: 0.6 }]}
+                onPress={handleGenerateComment}
+                disabled={genLoading}
+              >
+                {genLoading
+                  ? <ActivityIndicator color="#fff" size="small" />
+                  : <Text style={styles.genBtnText}>{isUnlocked ? '지금 코멘트 받기' : '지금 미리 받기'}</Text>}
+              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -250,6 +274,8 @@ const styles = StyleSheet.create({
   aiLockedEmoji: { fontSize: 28 },
   aiLockedText: { fontSize: 13, color: '#9ca3af' },
   aiCountdown: { fontSize: 20, fontWeight: '800', color: '#374151', letterSpacing: 2 },
+  genBtn: { marginTop: 8, borderRadius: 10, paddingHorizontal: 18, paddingVertical: 10, alignItems: 'center' },
+  genBtnText: { color: '#ffffff', fontSize: 13, fontWeight: '700' },
 
   shareIconBtn: {
     width: 36, height: 36, borderRadius: 10,

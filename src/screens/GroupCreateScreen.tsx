@@ -1,14 +1,24 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView,
-  StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, Image,
+  StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, Image, ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import { RootStackParamList } from '../navigation/RootNavigator';
-import { Group } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
+import { createGroup, joinGroup } from '../api';
+
+/** 웹/네이티브 공통 알림 */
+function notify(message: string) {
+  if (Platform.OS === 'web') {
+    if (typeof window !== 'undefined') window.alert(message);
+  } else {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    require('react-native').Alert.alert(message);
+  }
+}
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -27,6 +37,8 @@ export default function GroupCreateScreen() {
   const [name, setName] = useState('');
   const [memberInput, setMemberInput] = useState('');
   const [members, setMembers] = useState<string[]>([]);
+  const [inviteCode, setInviteCode] = useState('');
+  const [loading, setLoading] = useState(false);
 
   async function pickPhoto() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -53,20 +65,38 @@ export default function GroupCreateScreen() {
     setMembers(members.filter((x) => x !== m));
   }
 
-  function handleCreate() {
-    if (!name.trim()) return;
-    const newGroup: Group = {
-      name: name.trim(),
-      emoji,
-      photo: iconMode === 'photo' && photoUri ? photoUri : undefined,
-      members: members.length > 0 ? members : ['나'],
-      entries: [],
-    };
-    // 그룹 화면으로 바로 이동 (홈의 백스택 위에)
-    navigation.replace('Group', { group: newGroup });
+  // 서버에 실제 그룹 생성 → 초대 코드 발급
+  async function handleCreate() {
+    if (!name.trim() || loading) return;
+    setLoading(true);
+    try {
+      const group = await createGroup(name.trim());
+      notify(`'${group.name}' 그룹이 만들어졌어요!\n초대 코드: ${group.invite_code}\n\n친구에게 이 코드를 공유하면 함께 쓸 수 있어요.`);
+      navigation.goBack();
+    } catch (e: any) {
+      notify(e?.message ?? '그룹 생성에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
   }
 
-  const canCreate = name.trim().length > 0;
+  // 초대 코드로 기존 그룹 참여
+  async function handleJoin() {
+    const code = inviteCode.trim();
+    if (!code || loading) return;
+    setLoading(true);
+    try {
+      const group = await joinGroup(code);
+      notify(`'${group.name}' 그룹에 참여했어요!`);
+      navigation.goBack();
+    } catch (e: any) {
+      notify(e?.message ?? '참여에 실패했습니다. 코드를 확인해주세요.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const canCreate = name.trim().length > 0 && !loading;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -85,7 +115,9 @@ export default function GroupCreateScreen() {
             onPress={handleCreate}
             disabled={!canCreate}
           >
-            <Text style={[styles.createBtnText, !canCreate && styles.createBtnTextDisabled]}>완료</Text>
+            {loading
+              ? <ActivityIndicator color="#fff" size="small" />
+              : <Text style={[styles.createBtnText, !canCreate && styles.createBtnTextDisabled]}>완료</Text>}
           </TouchableOpacity>
         </View>
 
@@ -195,6 +227,30 @@ export default function GroupCreateScreen() {
             {members.length === 0 && (
               <Text style={styles.memberHint}>멤버를 추가하지 않으면 나 혼자 시작해요</Text>
             )}
+          </View>
+
+          {/* 초대 코드로 참여 */}
+          <View style={styles.section}>
+            <Text style={styles.sectionLabel}>이미 초대 코드가 있나요?</Text>
+            <View style={styles.memberInputRow}>
+              <TextInput
+                style={styles.memberInput}
+                value={inviteCode}
+                onChangeText={setInviteCode}
+                placeholder="초대 코드 입력 (예: 9D42PC)"
+                placeholderTextColor="#9ca3af"
+                autoCapitalize="characters"
+                returnKeyType="done"
+                onSubmitEditing={handleJoin}
+              />
+              <TouchableOpacity
+                style={[styles.addBtn, (!inviteCode.trim() || loading) && styles.addBtnDisabled]}
+                onPress={handleJoin}
+                disabled={!inviteCode.trim() || loading}
+              >
+                <Text style={styles.addBtnText}>참여</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
