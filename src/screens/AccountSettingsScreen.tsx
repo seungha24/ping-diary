@@ -23,11 +23,12 @@ function Row({ label, value, onPress }: { label: string; value?: string; onPress
 export default function AccountSettingsScreen() {
   const navigation = useNavigation();
   const { accent } = useTheme();
-  const { logout } = useAuth();
+  const { logout, email: authEmail } = useAuth();
 
-  const [name, setName] = useState('김지연');
-  const [username, setUsername] = useState('jiyeon_ping');
-  const [email] = useState('jiyeon@example.com');
+  const emailPrefix = (authEmail ?? '').split('@')[0] || '사용자';
+  const [name, setName] = useState(emailPrefix);
+  const [username] = useState(emailPrefix);
+  const email = authEmail ?? '-';
   const [editingName, setEditingName] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [privateMode, setPrivateMode] = useState(false);

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getToken, clearToken, hydrateToken, login as apiLogin, signup as apiSignup } from '../api';
+import { getToken, getUserEmail, clearToken, hydrateToken, login as apiLogin, signup as apiSignup } from '../api';
 
 /**
  * 인증 컨텍스트.
@@ -12,6 +12,7 @@ interface AuthContextValue {
   ready: boolean;        // 초기 토큰 확인 완료 여부
   authed: boolean;       // 로그인 상태
   token: string | null;
+  email: string | null;  // 로그인한 사용자 이메일
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
   loginDemo: () => Promise<void>;
@@ -22,6 +23,7 @@ const AuthContext = createContext<AuthContextValue>({
   ready: false,
   authed: false,
   token: null,
+  email: null,
   login: async () => {},
   signup: async () => {},
   loginDemo: async () => {},
@@ -31,6 +33,7 @@ const AuthContext = createContext<AuthContextValue>({
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [token, setTok] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   // 앱 시작 시 저장된 토큰 복원 (네이티브는 AsyncStorage에서 hydrate)
   useEffect(() => {
@@ -39,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await hydrateToken();
       if (!cancelled) {
         setTok(getToken());
+        setUserEmail(getUserEmail());
         setReady(true);
       }
     })();
@@ -47,8 +51,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /** 로그인 → 토큰 저장 */
   async function login(email: string, password: string) {
-    const t = await apiLogin(email, password); // 성공 시 토큰 저장됨
+    const t = await apiLogin(email, password); // 성공 시 토큰·이메일 저장됨
     setTok(t);
+    setUserEmail(getUserEmail());
   }
 
   /** 회원가입 후 자동 로그인 */
@@ -71,11 +76,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   function logout() {
     clearToken();
     setTok(null);
+    setUserEmail(null);
   }
 
   return (
     <AuthContext.Provider
-      value={{ ready, authed: !!token, token, login, signup, loginDemo, logout }}
+      value={{ ready, authed: !!token, token, email: userEmail, login, signup, loginDemo, logout }}
     >
       {children}
     </AuthContext.Provider>

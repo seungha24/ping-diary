@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { DiaryEntry, INITIAL_ENTRIES } from '../data/types';
 import { useAuth } from './AuthContext';
 import { fetchEntries, createEntry, patchEntry, removeEntry } from '../api';
+import { notify } from '../notify';
 
 interface EntriesContextValue {
   entries: DiaryEntry[];
@@ -66,6 +67,7 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
       .catch(() => {
         // 저장 실패 시 낙관적 항목 롤백
         setEntries((prev) => prev.filter((e) => e.id !== entry.id));
+        notify('일기 저장에 실패했어요. 네트워크를 확인해주세요.');
       });
   }
 
@@ -80,6 +82,7 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
       .catch(() => {
         // 저장 실패 시 롤백
         setEntries(backup);
+        notify('수정 저장에 실패했어요.');
       });
   }
 
@@ -95,6 +98,7 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
     removeEntry(id).catch(() => {
       // 실패 시 복구
       setEntries(backup);
+      notify('삭제에 실패했어요.');
     });
   }
 

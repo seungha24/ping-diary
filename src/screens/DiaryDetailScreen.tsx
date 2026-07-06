@@ -11,10 +11,10 @@ import { PhotoBlock } from '../components/PhotoThumb';
 import IconChev from '../components/icons/IconChev';
 import IconEdit from '../components/icons/IconEdit';
 import IconTrash from '../components/icons/IconTrash';
-import { GROUPS } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { generateComment } from '../api';
+import { notify } from '../notify';
 import Svg, { Path, Line } from 'react-native-svg';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -49,17 +49,28 @@ export default function DiaryDetailScreen() {
   const navigation = useNavigation<Nav>();
   const { entry } = useRoute<Route>().params;
   const { accent } = useTheme();
-  const { deleteEntry, updateLocal } = useEntries();
+  const { deleteEntry, updateLocal, updateEntry } = useEntries();
   const remaining = useCountdown(entry.createdAt);
   const isUnlocked = remaining <= 0;
   const [shareOpen, setShareOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [sharedGroups, setSharedGroups] = useState<Set<string>>(new Set());
+  const [published, setPublished] = useState(entry.visibility === 'friends');
+  const [publishing, setPublishing] = useState(false);
   const [aiComment, setAiComment] = useState<string | undefined>(entry.aiComment);
   const [genLoading, setGenLoading] = useState(false);
 
   function handleEdit() {
     navigation.navigate('DiaryWrite', { entry });
+  }
+
+  // 이 일기를 참여 중인 그룹에 공개/비공개 전환 (visibility)
+  function togglePublish() {
+    const next: 'private' | 'friends' = published ? 'private' : 'friends';
+    setPublishing(true);
+    setPublished(!published);
+    updateEntry({ ...entry, visibility: next, aiComment });
+    setPublishing(false);
+    setShareOpen(false);
   }
 
   // AI 코멘트 즉시 생성 (24시간 기다리지 않고 미리 받아보기)
@@ -69,19 +80,11 @@ export default function DiaryDetailScreen() {
       const updated = await generateComment(entry.id);
       setAiComment(updated.aiComment);
       updateLocal(updated); // 목록에도 반영
-    } catch (_) {
-      // 실패 시 조용히 무시
+    } catch (e: any) {
+      notify(e?.message ?? 'AI 코멘트 생성에 실패했어요. 잠시 후 다시 시도해주세요.');
     } finally {
       setGenLoading(false);
     }
-  }
-
-  function toggleGroup(name: string) {
-    setSharedGroups((prev) => {
-      const next = new Set(prev);
-      next.has(name) ? next.delete(name) : next.add(name);
-      return next;
-    });
   }
 
   return (
@@ -170,34 +173,18 @@ export default function DiaryDetailScreen() {
                 <Text style={styles.sheetClose}>✕</Text>
               </TouchableOpacity>
             </View>
-            <Text style={styles.sheetSub}>공유할 그룹을 선택하세요</Text>
-            {GROUPS.map((g) => {
-              const selected = sharedGroups.has(g.name);
-              return (
-                <TouchableOpacity
-                  key={g.name}
-                  style={[styles.groupRow, selected && { borderColor: accent, backgroundColor: `${accent}0d` }]}
-                  onPress={() => toggleGroup(g.name)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.groupEmoji}>{g.emoji}</Text>
-                  <View style={styles.groupInfo}>
-                    <Text style={styles.groupName}>{g.name}</Text>
-                    <Text style={styles.groupMembers}>멤버 {g.members.length}명</Text>
-                  </View>
-                  <View style={[styles.checkbox, selected && { backgroundColor: accent, borderColor: accent }]}>
-                    {selected && <Text style={styles.checkmark}>✓</Text>}
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
+            <Text style={styles.sheetSub}>
+              {published
+                ? '이 일기는 참여 중인 그룹의 피드에 공개돼 있어요.'
+                : '공개하면 참여 중인 모든 그룹의 피드에 이 일기가 표시돼요.'}
+            </Text>
             <TouchableOpacity
-              style={[styles.confirmBtn, { backgroundColor: sharedGroups.size > 0 ? accent : '#e5e7eb' }]}
-              onPress={() => setShareOpen(false)}
-              disabled={sharedGroups.size === 0}
+              style={[styles.confirmBtn, { backgroundColor: published ? '#e5e7eb' : accent }]}
+              onPress={togglePublish}
+              disabled={publishing}
             >
-              <Text style={[styles.confirmBtnText, { color: sharedGroups.size > 0 ? '#fff' : '#9ca3af' }]}>
-                {sharedGroups.size > 0 ? `${sharedGroups.size}개 그룹에 공유` : '그룹을 선택하세요'}
+              <Text style={[styles.confirmBtnText, { color: published ? '#374151' : '#fff' }]}>
+                {published ? '그룹 공개 해제' : '그룹에 공개하기'}
               </Text>
             </TouchableOpacity>
           </View>

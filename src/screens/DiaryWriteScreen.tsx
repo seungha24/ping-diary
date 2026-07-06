@@ -12,6 +12,7 @@ import { PERSONAS, MONTHS, DAYS } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { uploadPhoto } from '../api';
+import { notify } from '../notify';
 import { RootStackParamList } from '../navigation/RootNavigator';
 
 type WriteRoute = RouteProp<RootStackParamList, 'DiaryWrite'>;
@@ -89,8 +90,8 @@ export default function DiaryWriteScreen() {
     try {
       const url = await uploadPhoto(result.assets[0].uri);
       setPhoto(url);
-    } catch (_) {
-      // 업로드 실패 시 무시
+    } catch (e: any) {
+      notify(e?.message ?? '사진 업로드에 실패했어요. 다시 시도해주세요.');
     } finally {
       setUploading(false);
     }

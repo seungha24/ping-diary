@@ -7,6 +7,7 @@ import { RootStackParamList } from '../navigation/RootNavigator';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import { useTheme, THEMES } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 const INTEREST_TAGS = ['일상', '산책', '독서', '커피', '여행', '음악', '요리', '영화'];
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -14,12 +15,14 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 export default function ProfileScreen() {
   const navigation = useNavigation<Nav>();
   const { accent, themeKey, setTheme } = useTheme();
+  const { email } = useAuth();
+  const emailPrefix = (email ?? '').split('@')[0] || '사용자';
 
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
   const [editingName, setEditingName] = useState(false);
-  const [displayName, setDisplayName] = useState('김지연');
+  const [displayName, setDisplayName] = useState(emailPrefix);
   const [editingUsername, setEditingUsername] = useState(false);
-  const [username, setUsername] = useState('jiyeon_ping');
+  const [username, setUsername] = useState(emailPrefix);
   const [tempName, setTempName] = useState(displayName);
   const [tempUsername, setTempUsername] = useState(username);
 

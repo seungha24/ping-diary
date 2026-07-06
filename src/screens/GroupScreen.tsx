@@ -16,6 +16,7 @@ import { BAND_COLORS, DiaryEntry } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
 import { useGroups } from '../context/GroupsContext';
 import { fetchGroupEntries, leaveGroup } from '../api';
+import { notify } from '../notify';
 import { Platform } from 'react-native';
 
 /** 서버 그룹 피드 행 → DiaryEntry 매핑 */
@@ -228,7 +229,9 @@ export default function GroupScreen() {
       await leaveGroup(group.id);
       await refreshGroups();
       navigation.goBack();
-    } catch (_) {}
+    } catch (e: any) {
+      notify(e?.message ?? '그룹 나가기에 실패했어요.');
+    }
   }
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const [sharedAiComments, setSharedAiComments] = useState<Set<number>>(new Set());

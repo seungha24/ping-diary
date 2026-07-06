@@ -23,7 +23,7 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const { accent } = useTheme();
-  const { entries } = useEntries();
+  const { entries, updateEntry } = useEntries();
   const { groups } = useGroups();
   const [tab, setTab] = useState<'personal' | 'group'>('personal');
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
@@ -46,19 +46,8 @@ export default function HomeScreen() {
       setFolderCovers((prev) => ({ ...prev, [folderId]: result.assets[0].uri }));
     }
   }
-  const [sharedGroups, setSharedGroups] = useState<Set<string>>(new Set());
-
   function openShare(entry: DiaryEntry) {
-    setSharedGroups(new Set());
     setShareEntry(entry);
-  }
-
-  function toggleGroup(name: string) {
-    setSharedGroups((prev) => {
-      const next = new Set(prev);
-      next.has(name) ? next.delete(name) : next.add(name);
-      return next;
-    });
   }
 
   return (
@@ -341,37 +330,21 @@ export default function HomeScreen() {
                 <Text style={styles.sheetClose}>✕</Text>
               </TouchableOpacity>
             </View>
-            {groups.length === 0 && (
-              <Text style={styles.groupEmptyHint}>참여 중인 그룹이 없어요.</Text>
-            )}
-            {groups.map((g) => {
-              const key = String(g.id);
-              const selected = sharedGroups.has(key);
-              return (
-                <TouchableOpacity
-                  key={g.id}
-                  style={[styles.groupRow, selected && { borderColor: accent, backgroundColor: `${accent}0d` }]}
-                  onPress={() => toggleGroup(key)}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.groupEmoji}>👥</Text>
-                  <View style={styles.groupInfo}>
-                    <Text style={styles.groupName}>{g.name}</Text>
-                    <Text style={styles.groupMembers}>멤버 {g.member_count ?? 1}명</Text>
-                  </View>
-                  <View style={[styles.checkbox, selected && { backgroundColor: accent, borderColor: accent }]}>
-                    {selected && <Text style={styles.checkmark}>✓</Text>}
-                  </View>
-                </TouchableOpacity>
-              );
-            })}
+            <Text style={styles.sheetSub}>
+              {shareEntry.visibility === 'friends'
+                ? '이미 참여 중인 그룹 피드에 공개돼 있어요.'
+                : '공개하면 참여 중인 모든 그룹 피드에 이 일기가 표시돼요.'}
+            </Text>
             <TouchableOpacity
-              style={[styles.confirmBtn, { backgroundColor: sharedGroups.size > 0 ? accent : '#e5e7eb' }]}
-              onPress={() => setShareEntry(null)}
-              disabled={sharedGroups.size === 0}
+              style={[styles.confirmBtn, { backgroundColor: shareEntry.visibility === 'friends' ? '#e5e7eb' : accent }]}
+              onPress={() => {
+                const next: 'private' | 'friends' = shareEntry.visibility === 'friends' ? 'private' : 'friends';
+                updateEntry({ ...shareEntry, visibility: next });
+                setShareEntry(null);
+              }}
             >
-              <Text style={[styles.confirmBtnText, { color: sharedGroups.size > 0 ? '#fff' : '#9ca3af' }]}>
-                {sharedGroups.size > 0 ? `${sharedGroups.size}개 그룹에 공유` : '그룹을 선택하세요'}
+              <Text style={[styles.confirmBtnText, { color: shareEntry.visibility === 'friends' ? '#374151' : '#fff' }]}>
+                {shareEntry.visibility === 'friends' ? '그룹 공개 해제' : '그룹에 공개하기'}
               </Text>
             </TouchableOpacity>
           </View>

@@ -41,10 +41,16 @@ const storage = {
 };
 
 const TOKEN_KEY = 'ping_diary_token';
+const EMAIL_KEY = 'ping_diary_email';
 
 /** 저장된 액세스 토큰 반환 (동기) */
 export function getToken(): string | null {
   return storage.get(TOKEN_KEY);
+}
+
+/** 로그인한 사용자 이메일 반환 (동기) */
+export function getUserEmail(): string | null {
+  return storage.get(EMAIL_KEY);
 }
 
 /** 액세스 토큰 저장 */
@@ -52,17 +58,20 @@ export function setToken(token: string) {
   storage.set(TOKEN_KEY, token);
 }
 
-/** 액세스 토큰 삭제 (로그아웃) */
+/** 액세스 토큰·이메일 삭제 (로그아웃) */
 export function clearToken() {
   storage.remove(TOKEN_KEY);
+  storage.remove(EMAIL_KEY);
 }
 
-/** 앱 시작 시 네이티브 영구 저장소에서 토큰을 메모리로 복원 */
+/** 앱 시작 시 네이티브 영구 저장소에서 토큰·이메일을 메모리로 복원 */
 export async function hydrateToken(): Promise<string | null> {
   if (Platform.OS !== 'web') {
     try {
-      const v = await AsyncStorage.getItem(TOKEN_KEY);
-      if (v) mem[TOKEN_KEY] = v;
+      const t = await AsyncStorage.getItem(TOKEN_KEY);
+      if (t) mem[TOKEN_KEY] = t;
+      const e = await AsyncStorage.getItem(EMAIL_KEY);
+      if (e) mem[EMAIL_KEY] = e;
     } catch {}
   }
   return getToken();
@@ -111,13 +120,14 @@ export async function signup(email: string, password: string) {
   });
 }
 
-/** 로그인 → 토큰 저장 후 반환 */
+/** 로그인 → 토큰·이메일 저장 후 토큰 반환 */
 export async function login(email: string, password: string): Promise<string> {
   const data = await request('/auth/login', {
     method: 'POST',
     body: JSON.stringify({ email, password }),
   });
   setToken(data.token);
+  if (data.user?.email) storage.set(EMAIL_KEY, data.user.email);
   return data.token;
 }
 
