@@ -49,6 +49,7 @@ export default function DiaryWriteScreen() {
   const [persona, setPersona] = useState(editEntry?.persona ?? '선생님');
   const [photo, setPhoto] = useState<string | null>(editEntry?.photo ?? null);
   const [uploading, setUploading] = useState(false);
+  const [visibility, setVisibility] = useState<'private' | 'friends'>(editEntry?.visibility ?? 'private');
   const [calOpen, setCalOpen] = useState(false);
   const [calYear] = useState(2026);
   const [calMonth, setCalMonth] = useState(5);
@@ -118,7 +119,7 @@ export default function DiaryWriteScreen() {
             style={[styles.saveBtn, { backgroundColor: accent }]}
             onPress={() => {
               if (editEntry) {
-                updateEntry({ ...editEntry, title, body, tags, persona, dates: selectedDates, photo });
+                updateEntry({ ...editEntry, title, body, tags, persona, dates: selectedDates, photo, visibility });
               } else {
                 addEntry({
                   id: Date.now(),
@@ -128,6 +129,7 @@ export default function DiaryWriteScreen() {
                   persona,
                   dates: selectedDates,
                   photo,
+                  visibility,
                   createdAt: new Date().toISOString(),
                 });
               }
@@ -212,6 +214,27 @@ export default function DiaryWriteScreen() {
               ? <ActivityIndicator color="#9ca3af" size="small" />
               : <Text style={styles.photoAddText}>📷 사진 추가</Text>}
           </TouchableOpacity>
+        )}
+
+        {/* Visibility */}
+        <View style={styles.visRow}>
+          <TouchableOpacity
+            style={[styles.visBtn, visibility === 'private' && { borderColor: accent, backgroundColor: `${accent}0d` }]}
+            onPress={() => setVisibility('private')}
+          >
+            <Text style={styles.visEmoji}>🔒</Text>
+            <Text style={[styles.visLabel, visibility === 'private' && { color: accent, fontWeight: '700' }]}>나만 보기</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.visBtn, visibility === 'friends' && { borderColor: accent, backgroundColor: `${accent}0d` }]}
+            onPress={() => setVisibility('friends')}
+          >
+            <Text style={styles.visEmoji}>👥</Text>
+            <Text style={[styles.visLabel, visibility === 'friends' && { color: accent, fontWeight: '700' }]}>그룹 공개</Text>
+          </TouchableOpacity>
+        </View>
+        {visibility === 'friends' && (
+          <Text style={styles.visHint}>참여 중인 그룹의 피드에 이 일기가 공개돼요.</Text>
         )}
 
         {/* AI comment section */}
@@ -365,6 +388,14 @@ const styles = StyleSheet.create({
     borderRadius: 14, paddingVertical: 16, alignItems: 'center',
   },
   photoAddText: { fontSize: 13, color: '#6b7280', fontWeight: '500' },
+  visRow: { flexDirection: 'row', gap: 8 },
+  visBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: 11, borderRadius: 12, borderWidth: 1.5, borderColor: '#e5e7eb', backgroundColor: '#f9fafb',
+  },
+  visEmoji: { fontSize: 15 },
+  visLabel: { fontSize: 13, color: '#6b7280', fontWeight: '500' },
+  visHint: { fontSize: 11, color: '#9ca3af', marginTop: -4 },
   aiSection: { gap: 10, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
   aiTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   aiDot: {

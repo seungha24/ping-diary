@@ -26,6 +26,7 @@ export interface DiaryEntry {
   avatar?: string;
   createdAt: string;   // ISO 8601
   aiComment?: string;
+  visibility?: 'private' | 'friends';  // 'friends'면 참여 그룹 피드에 공개
 }
 
 export interface Group {

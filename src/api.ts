@@ -55,6 +55,7 @@ function fromServer(row: any): DiaryEntry {
     folder: row.folder ?? undefined,
     createdAt: row.created_at,
     aiComment: row.ai_comment ?? undefined,
+    visibility: row.visibility === 'friends' ? 'friends' : 'private',
   };
 }
 
@@ -112,7 +113,7 @@ export async function createEntry(entry: DiaryEntry): Promise<DiaryEntry> {
       persona: entry.persona ?? '',
       folder: entry.folder ?? '',
       photo_url: entry.photo ?? null,
-      visibility: 'private',
+      visibility: entry.visibility ?? 'private',
     }),
   });
   return fromServer(row);
@@ -130,6 +131,7 @@ export async function patchEntry(entry: DiaryEntry): Promise<DiaryEntry> {
       persona: entry.persona ?? '',
       folder: entry.folder ?? '',
       photo_url: entry.photo ?? null,
+      visibility: entry.visibility ?? 'private',
     }),
   });
   return fromServer(row);
