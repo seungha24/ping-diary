@@ -1,5 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getToken, getUserEmail, clearToken, hydrateToken, login as apiLogin, signup as apiSignup } from '../api';
+import { Platform } from 'react-native';
+import {
+  getToken, getUserEmail, setToken as apiSetToken, setUserEmail as apiSetUserEmail,
+  clearToken, hydrateToken, login as apiLogin, signup as apiSignup,
+} from '../api';
+import { supabase } from '../supabaseClient';
 
 /**
  * 인증 컨텍스트.
@@ -16,6 +21,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
   loginDemo: () => Promise<void>;
+  loginGoogle: () => Promise<void>;
   logout: () => void;
 }
 
@@ -27,6 +33,7 @@ const AuthContext = createContext<AuthContextValue>({
   login: async () => {},
   signup: async () => {},
   loginDemo: async () => {},
+  loginGoogle: async () => {},
   logout: () => {},
 });
 
@@ -35,18 +42,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [token, setTok] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
 
-  // 앱 시작 시 저장된 토큰 복원 (네이티브는 AsyncStorage에서 hydrate)
+  // 소셜 로그인(Supabase) 세션을 우리 토큰 저장소/상태에 반영
+  function adoptSession(session: any) {
+    const t = session?.access_token;
+    if (!t) return;
+    apiSetToken(t);
+    const em = session?.user?.email ?? null;
+    if (em) apiSetUserEmail(em);
+    setTok(t);
+    setUserEmail(em);
+  }
+
+  // 앱 시작 시 토큰 복원 + 소셜 로그인 세션 구독
   useEffect(() => {
     let cancelled = false;
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.access_token) adoptSession(session);
+    });
     (async () => {
       await hydrateToken();
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (data.session) adoptSession(data.session);
+      } catch {}
       if (!cancelled) {
         setTok(getToken());
         setUserEmail(getUserEmail());
         setReady(true);
       }
     })();
-    return () => { cancelled = true; };
+    return () => { cancelled = true; sub.subscription.unsubscribe(); };
   }, []);
 
   /** 로그인 → 토큰 저장 */
@@ -72,16 +97,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  /** 구글 계정으로 로그인 (웹: 리디렉트 방식) */
+  async function loginGoogle() {
+    const redirectTo =
+      Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.origin : undefined;
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo },
+    });
+    if (error) throw error;
+  }
+
   /** 로그아웃 */
   function logout() {
     clearToken();
     setTok(null);
     setUserEmail(null);
+    supabase.auth.signOut().catch(() => {});
   }
 
   return (
     <AuthContext.Provider
-      value={{ ready, authed: !!token, token, email: userEmail, login, signup, loginDemo, logout }}
+      value={{ ready, authed: !!token, token, email: userEmail, login, signup, loginDemo, loginGoogle, logout }}
     >
       {children}
     </AuthContext.Provider>

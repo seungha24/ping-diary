@@ -58,6 +58,11 @@ export function setToken(token: string) {
   storage.set(TOKEN_KEY, token);
 }
 
+/** 사용자 이메일 저장 */
+export function setUserEmail(email: string) {
+  storage.set(EMAIL_KEY, email);
+}
+
 /** 액세스 토큰·이메일 삭제 (로그아웃) */
 export function clearToken() {
   storage.remove(TOKEN_KEY);

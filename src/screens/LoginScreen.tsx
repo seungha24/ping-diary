@@ -12,7 +12,7 @@ import { useAuth } from '../context/AuthContext';
  */
 export default function LoginScreen() {
   const { accent } = useTheme();
-  const { login, signup, loginDemo } = useAuth();
+  const { login, signup, loginDemo, loginGoogle } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -45,6 +45,15 @@ export default function LoginScreen() {
       setError(e?.message ?? '데모 로그인에 실패했습니다.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function google() {
+    setError(null);
+    try {
+      await loginGoogle(); // 웹: 구글 페이지로 리디렉트됨
+    } catch (e: any) {
+      setError(e?.message ?? '구글 로그인을 시작하지 못했습니다. (Supabase 구글 provider 설정 필요)');
     }
   }
 
@@ -113,6 +122,19 @@ export default function LoginScreen() {
               : <Text style={styles.submitText}>{mode === 'login' ? '로그인' : '회원가입'}</Text>}
           </TouchableOpacity>
 
+          {/* 구분선 */}
+          <View style={styles.dividerRow}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>또는</Text>
+            <View style={styles.dividerLine} />
+          </View>
+
+          {/* 구글 로그인 */}
+          <TouchableOpacity style={styles.googleBtn} onPress={google} disabled={loading}>
+            <Text style={styles.googleG}>G</Text>
+            <Text style={styles.googleText}>구글로 계속하기</Text>
+          </TouchableOpacity>
+
           {/* 데모 */}
           <TouchableOpacity style={styles.demoBtn} onPress={demo} disabled={loading}>
             <Text style={styles.demoText}>데모 계정으로 둘러보기</Text>
@@ -143,4 +165,13 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.6 },
   demoBtn: { alignItems: 'center', paddingVertical: 10 },
   demoText: { color: '#6b7280', fontSize: 13, textDecorationLine: 'underline' },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginVertical: 2 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: '#e5e7eb' },
+  dividerText: { fontSize: 12, color: '#9ca3af' },
+  googleBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12, paddingVertical: 13, backgroundColor: '#ffffff',
+  },
+  googleG: { fontSize: 16, fontWeight: '800', color: '#4285F4' },
+  googleText: { fontSize: 14, fontWeight: '600', color: '#374151' },
 });
