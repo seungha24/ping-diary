@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getToken, setToken, clearToken, login as apiLogin, signup as apiSignup } from '../api';
+import { getToken, clearToken, hydrateToken, login as apiLogin, signup as apiSignup } from '../api';
 
 /**
  * 인증 컨텍스트.
@@ -32,10 +32,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [token, setTok] = useState<string | null>(null);
 
-  // 앱 시작 시 저장된 토큰 복원
+  // 앱 시작 시 저장된 토큰 복원 (네이티브는 AsyncStorage에서 hydrate)
   useEffect(() => {
-    setTok(getToken());
-    setReady(true);
+    let cancelled = false;
+    (async () => {
+      await hydrateToken();
+      if (!cancelled) {
+        setTok(getToken());
+        setReady(true);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   /** 로그인 → 토큰 저장 */

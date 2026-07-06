@@ -14,7 +14,9 @@ import IconChev from '../components/icons/IconChev';
 import IconPlus from '../components/icons/IconPlus';
 import { BAND_COLORS, DiaryEntry } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
-import { fetchGroupEntries } from '../api';
+import { useGroups } from '../context/GroupsContext';
+import { fetchGroupEntries, leaveGroup } from '../api';
+import { Platform } from 'react-native';
 
 /** 서버 그룹 피드 행 → DiaryEntry 매핑 */
 function mapGroupEntry(row: any): DiaryEntry {
@@ -26,7 +28,7 @@ function mapGroupEntry(row: any): DiaryEntry {
     tags: row.tags || [],
     photo: row.photo_url || null,
     persona: row.persona || '',
-    author: '멤버',
+    author: row.author || '멤버',
     avatar: '🙂',
     createdAt: row.created_at,
     aiComment: row.ai_comment || undefined,
@@ -213,7 +215,21 @@ export default function GroupScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { group } = useRoute<Route>().params;
   const { accent } = useTheme();
+  const { refresh: refreshGroups } = useGroups();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+
+  // 그룹 나가기
+  async function handleLeave() {
+    const ok = Platform.OS === 'web'
+      ? (typeof window !== 'undefined' && window.confirm(`'${group.name}' 그룹에서 나갈까요?`))
+      : true;
+    if (!ok) return;
+    try {
+      await leaveGroup(group.id);
+      await refreshGroups();
+      navigation.goBack();
+    } catch (_) {}
+  }
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const [sharedAiComments, setSharedAiComments] = useState<Set<number>>(new Set());
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
@@ -301,6 +317,11 @@ export default function GroupScreen() {
         </View>
 
         <View style={styles.headerRight}>
+          {/* 그룹 나가기 */}
+          <TouchableOpacity style={styles.leaveBtn} onPress={handleLeave}>
+            <Text style={styles.leaveBtnText}>나가기</Text>
+          </TouchableOpacity>
+
           {/* 알림 설정 버튼 */}
           <TouchableOpacity style={styles.bellBtn} onPress={openModal}>
             <IconBell hasNotif={hasNotif} accent={accent} />
@@ -496,6 +517,11 @@ const styles = StyleSheet.create({
     width: 36, height: 36, borderRadius: 10,
     backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
   },
+  leaveBtn: {
+    paddingHorizontal: 10, height: 30, borderRadius: 8,
+    backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
+  },
+  leaveBtnText: { fontSize: 12, color: '#6b7280', fontWeight: '600' },
   viewToggle: {
     flexDirection: 'row', backgroundColor: '#f3f4f6',
     borderRadius: 10, padding: 3, gap: 2,

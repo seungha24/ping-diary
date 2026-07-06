@@ -1,30 +1,48 @@
+import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_BASE_URL } from './config';
 import { DiaryEntry } from './data/types';
 
 /**
  * 서버 통신 클라이언트.
- * - 웹에서는 localStorage, 네이티브에서는 메모리에 토큰을 보관한다.
- *   (네이티브 영구 저장이 필요해지면 @react-native-async-storage/async-storage로 교체)
+ * 토큰은 메모리 캐시 + 영구 저장(웹 localStorage / 네이티브 AsyncStorage)에 write-through 한다.
+ * 읽기는 동기 유지(메모리 우선). 네이티브는 앱 시작 시 hydrateToken()으로 복원.
  */
 const mem: Record<string, string> = {};
+
+function webLocalStorage(): Storage | null {
+  try {
+    if (typeof localStorage !== 'undefined') return localStorage;
+  } catch {}
+  return null;
+}
+
 const storage = {
   get(key: string): string | null {
-    try {
-      if (typeof localStorage !== 'undefined') return localStorage.getItem(key);
-    } catch {}
+    const ls = webLocalStorage();
+    if (ls) {
+      const v = ls.getItem(key);
+      if (v != null) return v;
+    }
     return mem[key] ?? null;
   },
   set(key: string, value: string) {
-    try {
-      if (typeof localStorage !== 'undefined') localStorage.setItem(key, value);
-    } catch {}
     mem[key] = value;
+    const ls = webLocalStorage();
+    if (ls) ls.setItem(key, value);
+    if (Platform.OS !== 'web') AsyncStorage.setItem(key, value).catch(() => {});
+  },
+  remove(key: string) {
+    delete mem[key];
+    const ls = webLocalStorage();
+    if (ls) ls.removeItem(key);
+    if (Platform.OS !== 'web') AsyncStorage.removeItem(key).catch(() => {});
   },
 };
 
 const TOKEN_KEY = 'ping_diary_token';
 
-/** 저장된 액세스 토큰 반환 */
+/** 저장된 액세스 토큰 반환 (동기) */
 export function getToken(): string | null {
   return storage.get(TOKEN_KEY);
 }
@@ -36,10 +54,18 @@ export function setToken(token: string) {
 
 /** 액세스 토큰 삭제 (로그아웃) */
 export function clearToken() {
-  try {
-    if (typeof localStorage !== 'undefined') localStorage.removeItem(TOKEN_KEY);
-  } catch {}
-  delete mem[TOKEN_KEY];
+  storage.remove(TOKEN_KEY);
+}
+
+/** 앱 시작 시 네이티브 영구 저장소에서 토큰을 메모리로 복원 */
+export async function hydrateToken(): Promise<string | null> {
+  if (Platform.OS !== 'web') {
+    try {
+      const v = await AsyncStorage.getItem(TOKEN_KEY);
+      if (v) mem[TOKEN_KEY] = v;
+    } catch {}
+  }
+  return getToken();
 }
 
 /** 서버 원본(diary_entries 행)을 앱의 DiaryEntry로 변환 */
@@ -209,4 +235,9 @@ export async function joinGroup(inviteCode: string): Promise<{ id: number; name:
 export async function fetchGroupEntries(id: number): Promise<any[]> {
   const rows = await request(`/groups/${id}/entries`);
   return Array.isArray(rows) ? rows : [];
+}
+
+/** 그룹 나가기 */
+export async function leaveGroup(id: number): Promise<void> {
+  await request(`/groups/${id}/leave`, { method: 'POST' });
 }
