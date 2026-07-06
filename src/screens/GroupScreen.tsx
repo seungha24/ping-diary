@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  SafeAreaView, Pressable, TextInput, Image,
+  SafeAreaView, Pressable, TextInput, ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,6 +14,24 @@ import IconChev from '../components/icons/IconChev';
 import IconPlus from '../components/icons/IconPlus';
 import { BAND_COLORS, DiaryEntry } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
+import { fetchGroupEntries } from '../api';
+
+/** 서버 그룹 피드 행 → DiaryEntry 매핑 */
+function mapGroupEntry(row: any): DiaryEntry {
+  return {
+    id: row.id,
+    title: row.title || '',
+    body: row.content || '',
+    dates: row.dates || [],
+    tags: row.tags || [],
+    photo: row.photo_url || null,
+    persona: row.persona || '',
+    author: '멤버',
+    avatar: '🙂',
+    createdAt: row.created_at,
+    aiComment: row.ai_comment || undefined,
+  };
+}
 
 const PERSONA_EMOJI: Record<string, string> = {
   '선생님': '📖', '엄마': '🌸', '상담사': '💆', '미래의 나': '🔮',
@@ -198,6 +216,18 @@ export default function GroupScreen() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const [sharedAiComments, setSharedAiComments] = useState<Set<number>>(new Set());
+  const [entries, setEntries] = useState<DiaryEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 그룹 공유 피드(멤버들의 '친구 공개' 일기)를 서버에서 로드
+  useEffect(() => {
+    let cancelled = false;
+    fetchGroupEntries(group.id)
+      .then((rows) => { if (!cancelled) setEntries(rows.map(mapGroupEntry)); })
+      .catch(() => { if (!cancelled) setEntries([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [group.id]);
 
   function toggleShare(id: number) {
     setSharedAiComments((prev) => {
@@ -261,14 +291,12 @@ export default function GroupScreen() {
         </TouchableOpacity>
 
         <View style={styles.headerInfo}>
-          {group.photo ? (
-            <Image source={{ uri: group.photo }} style={styles.groupHeaderPhoto} />
-          ) : (
-            <Text style={{ fontSize: 18 }}>{group.emoji}</Text>
-          )}
+          <Text style={{ fontSize: 18 }}>👥</Text>
           <View style={styles.headerText}>
             <Text style={styles.groupName}>{group.name}</Text>
-            <Text style={styles.groupMembers} numberOfLines={1}>{group.members.join(', ')}</Text>
+            <Text style={styles.groupMembers} numberOfLines={1}>
+              멤버 {group.member_count ?? 1}명 · 코드 {group.invite_code}
+            </Text>
           </View>
         </View>
 
@@ -306,9 +334,19 @@ export default function GroupScreen() {
       )}
 
       {/* Feed */}
-      {viewMode === 'list' ? (
+      {loading ? (
+        <View style={styles.feedEmpty}>
+          <ActivityIndicator color={accent} />
+        </View>
+      ) : entries.length === 0 ? (
+        <View style={styles.feedEmpty}>
+          <Text style={styles.feedEmptyEmoji}>🌱</Text>
+          <Text style={styles.feedEmptyText}>아직 공유된 일기가 없어요.</Text>
+          <Text style={styles.feedEmptyHint}>일기를 '친구 공개'로 저장하면 그룹에 나타나요.</Text>
+        </View>
+      ) : viewMode === 'list' ? (
         <ScrollView contentContainerStyle={styles.listContent}>
-          {group.entries.map((entry) => (
+          {entries.map((entry) => (
             <ListCard
               key={entry.id}
               entry={entry}
@@ -321,7 +359,7 @@ export default function GroupScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.gridContent}>
           <View style={styles.gridLayout}>
-            {group.entries.map((entry, i) => (
+            {entries.map((entry, i) => (
               <GridCard
                 key={entry.id}
                 entry={entry}
@@ -353,7 +391,7 @@ export default function GroupScreen() {
           <View style={styles.sheetHandle} />
 
           <Text style={styles.sheetTitle}>알림 주기 설정</Text>
-          <Text style={styles.sheetSubtitle}>{group.emoji} {group.name}</Text>
+          <Text style={styles.sheetSubtitle}>👥 {group.name}</Text>
 
           {/* 주기 옵션 */}
           <View style={styles.freqList}>
@@ -478,6 +516,12 @@ const styles = StyleSheet.create({
   notifBannerEmoji: { fontSize: 14 },
   notifBannerText: { flex: 1, fontSize: 12, color: '#374151', fontWeight: '500' },
   notifBannerEdit: { fontSize: 12, color: '#6b7280', fontWeight: '600' },
+
+  // Feed empty/loading
+  feedEmpty: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 6, padding: 32 },
+  feedEmptyEmoji: { fontSize: 34 },
+  feedEmptyText: { fontSize: 14, color: '#6b7280', fontWeight: '600' },
+  feedEmptyHint: { fontSize: 12, color: '#9ca3af', textAlign: 'center' },
 
   // List / Grid
   listContent: { padding: 16, gap: 14, paddingBottom: 40 },

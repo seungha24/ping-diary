@@ -12,9 +12,10 @@ import IconPlus from '../components/icons/IconPlus';
 import IconBell from '../components/icons/IconBell';
 import { PhotoThumb } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
-import { GROUPS, FOLDERS, DiaryEntry, DiaryFolder } from '../data/types';
+import { FOLDERS, DiaryEntry, DiaryFolder } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
+import { useGroups } from '../context/GroupsContext';
 import Svg, { Path, Line, Circle } from 'react-native-svg';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -23,6 +24,7 @@ export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const { accent } = useTheme();
   const { entries } = useEntries();
+  const { groups } = useGroups();
   const [tab, setTab] = useState<'personal' | 'group'>('personal');
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const [zoomedGroup, setZoomedGroup] = useState<{ emoji: string; photo?: string; name: string } | null>(null);
@@ -296,51 +298,31 @@ export default function HomeScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.list}>
           <Text style={styles.sectionLabel}>참여 중인 그룹</Text>
-          {GROUPS.map((group) => (
+          {groups.length === 0 && (
+            <Text style={styles.groupEmptyHint}>아직 참여 중인 그룹이 없어요.{'\n'}새 그룹을 만들거나 초대 코드로 참여해보세요.</Text>
+          )}
+          {groups.map((group) => (
             <TouchableOpacity
-              key={group.name}
+              key={group.id}
               style={styles.groupCard}
               onPress={() => navigation.navigate('Group', { group })}
             >
               <View style={styles.groupTop}>
                 <View style={styles.groupLeft}>
-                  <TouchableOpacity
-                    style={styles.groupIconBox}
-                    onPress={(e) => { e.stopPropagation(); setZoomedGroup({ emoji: group.emoji, photo: group.photo, name: group.name }); }}
-                  >
-                    {group.photo
-                      ? <Image source={{ uri: group.photo }} style={{ width: 44, height: 44, borderRadius: 12 }} />
-                      : <Text style={{ fontSize: 20 }}>{group.emoji}</Text>
-                    }
-                  </TouchableOpacity>
+                  <View style={styles.groupIconBox}>
+                    <Text style={{ fontSize: 20 }}>👥</Text>
+                  </View>
                   <View>
-                    <Text style={styles.groupName}>{group.name} · {group.members.length}명</Text>
-                    <Text style={styles.groupSub}>최근 일기 {group.entries.length}개</Text>
+                    <Text style={styles.groupName}>{group.name} · {group.member_count ?? 1}명</Text>
+                    <Text style={styles.groupSub}>초대코드 {group.invite_code}</Text>
                   </View>
                 </View>
-                <View style={styles.memberAvatars}>
-                  {group.members.slice(0, 3).map((_, j) => (
-                    <View key={j} style={[styles.memberDot, { marginLeft: j > 0 ? -8 : 0 }]}>
-                      <Text style={{ fontSize: 11 }}>{['👩', '👨', '🙋'][j]}</Text>
-                    </View>
-                  ))}
-                  {group.members.length > 3 && (
-                    <View style={[styles.memberDot, styles.memberDotExtra, { marginLeft: -8 }]}>
-                      <Text style={styles.memberDotExtraText}>+{group.members.length - 3}</Text>
-                    </View>
-                  )}
-                </View>
               </View>
-              {group.entries[0] && (
-                <Text style={styles.groupPreview} numberOfLines={1}>
-                  {group.entries[0].author} · {group.entries[0].title}
-                </Text>
-              )}
             </TouchableOpacity>
           ))}
           <TouchableOpacity style={styles.newGroupCard} onPress={() => navigation.navigate('GroupCreate')}>
             <Text style={styles.newGroupPlus}>+</Text>
-            <Text style={styles.newGroupText}>새 그룹 만들기</Text>
+            <Text style={styles.newGroupText}>새 그룹 만들기 / 참여</Text>
           </TouchableOpacity>
         </ScrollView>
       )}
@@ -359,19 +341,23 @@ export default function HomeScreen() {
                 <Text style={styles.sheetClose}>✕</Text>
               </TouchableOpacity>
             </View>
-            {GROUPS.map((g) => {
-              const selected = sharedGroups.has(g.name);
+            {groups.length === 0 && (
+              <Text style={styles.groupEmptyHint}>참여 중인 그룹이 없어요.</Text>
+            )}
+            {groups.map((g) => {
+              const key = String(g.id);
+              const selected = sharedGroups.has(key);
               return (
                 <TouchableOpacity
-                  key={g.name}
+                  key={g.id}
                   style={[styles.groupRow, selected && { borderColor: accent, backgroundColor: `${accent}0d` }]}
-                  onPress={() => toggleGroup(g.name)}
+                  onPress={() => toggleGroup(key)}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.groupEmoji}>{g.emoji}</Text>
+                  <Text style={styles.groupEmoji}>👥</Text>
                   <View style={styles.groupInfo}>
                     <Text style={styles.groupName}>{g.name}</Text>
-                    <Text style={styles.groupMembers}>멤버 {g.members.length}명</Text>
+                    <Text style={styles.groupMembers}>멤버 {g.member_count ?? 1}명</Text>
                   </View>
                   <View style={[styles.checkbox, selected && { backgroundColor: accent, borderColor: accent }]}>
                     {selected && <Text style={styles.checkmark}>✓</Text>}
@@ -539,6 +525,7 @@ const styles = StyleSheet.create({
   },
   newGroupPlus: { fontSize: 24, color: '#9ca3af' },
   newGroupText: { fontSize: 13, color: '#9ca3af' },
+  groupEmptyHint: { fontSize: 13, color: '#9ca3af', textAlign: 'center', lineHeight: 20, paddingVertical: 16 },
   zoomOverlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.75)',
     alignItems: 'center', justifyContent: 'center',

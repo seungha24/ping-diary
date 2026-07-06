@@ -8,6 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { useTheme } from '../context/ThemeContext';
+import { useGroups } from '../context/GroupsContext';
 import { createGroup, joinGroup } from '../api';
 
 /** 웹/네이티브 공통 알림 */
@@ -31,6 +32,7 @@ const EMOJI_OPTIONS = [
 export default function GroupCreateScreen() {
   const navigation = useNavigation<Nav>();
   const { accent } = useTheme();
+  const { refresh } = useGroups();
   const [iconMode, setIconMode] = useState<'emoji' | 'photo'>('emoji');
   const [emoji, setEmoji] = useState('👨‍👩‍👧‍👦');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
@@ -71,6 +73,7 @@ export default function GroupCreateScreen() {
     setLoading(true);
     try {
       const group = await createGroup(name.trim());
+      await refresh();
       notify(`'${group.name}' 그룹이 만들어졌어요!\n초대 코드: ${group.invite_code}\n\n친구에게 이 코드를 공유하면 함께 쓸 수 있어요.`);
       navigation.goBack();
     } catch (e: any) {
@@ -87,6 +90,7 @@ export default function GroupCreateScreen() {
     setLoading(true);
     try {
       const group = await joinGroup(code);
+      await refresh();
       notify(`'${group.name}' 그룹에 참여했어요!`);
       navigation.goBack();
     } catch (e: any) {

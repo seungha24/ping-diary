@@ -5,6 +5,7 @@ import LoginScreen from './src/screens/LoginScreen';
 import { ThemeProvider } from './src/context/ThemeContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { EntriesProvider } from './src/context/EntriesContext';
+import { GroupsProvider } from './src/context/GroupsContext';
 
 /** 인증 상태에 따라 로그인 화면 또는 앱 본체를 렌더링 */
 function Gate() {
@@ -18,8 +19,10 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <EntriesProvider>
-          <StatusBar style="dark" />
-          <Gate />
+          <GroupsProvider>
+            <StatusBar style="dark" />
+            <Gate />
+          </GroupsProvider>
         </EntriesProvider>
       </AuthProvider>
     </ThemeProvider>

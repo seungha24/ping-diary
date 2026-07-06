@@ -22,15 +22,23 @@ import IconCal from '../components/icons/IconCal';
 import IconChart from '../components/icons/IconChart';
 import IconPerson from '../components/icons/IconPerson';
 
-import { DiaryEntry, Group } from '../data/types';
+import { DiaryEntry } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
+
+/** 네비게이션에서 넘기는 그룹 정보 (서버 그룹 기반) */
+export interface GroupNav {
+  id: number;
+  name: string;
+  member_count?: number;
+  invite_code?: string;
+}
 
 export type RootStackParamList = {
   Splash: undefined;
   Main: undefined;
   DiaryWrite: { entry?: DiaryEntry } | undefined;
   DiaryDetail: { entry: DiaryEntry };
-  Group: { group: Group };
+  Group: { group: GroupNav };
   GroupCreate: undefined;
   Notifications: undefined;
   NotifSettings: undefined;
