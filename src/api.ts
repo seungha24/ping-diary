@@ -136,6 +136,19 @@ export async function login(email: string, password: string): Promise<string> {
   return data.token;
 }
 
+/** 비밀번호 변경 (로그인 상태) */
+export async function changePassword(password: string): Promise<void> {
+  await request('/auth/password', {
+    method: 'POST',
+    body: JSON.stringify({ password }),
+  });
+}
+
+/** 계정 및 모든 데이터 삭제 (탈퇴) */
+export async function deleteAccount(): Promise<void> {
+  await request('/auth/account', { method: 'DELETE' });
+}
+
 /** 내 일기 목록 조회 */
 export async function fetchEntries(): Promise<DiaryEntry[]> {
   const rows = await request('/entries');

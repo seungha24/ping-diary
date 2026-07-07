@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  SafeAreaView, TextInput, Switch, Alert,
+  SafeAreaView, TextInput, Alert, Modal, ActivityIndicator, Platform,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import IconChev from '../components/icons/IconChev';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { changePassword, deleteAccount } from '../api';
+import { notify } from '../notify';
 
 function Row({ label, value, onPress }: { label: string; value?: string; onPress?: () => void }) {
   return (
@@ -30,18 +32,52 @@ export default function AccountSettingsScreen() {
   const [username] = useState(emailPrefix);
   const email = authEmail ?? '-';
   const [editingName, setEditingName] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
-  const [privateMode, setPrivateMode] = useState(false);
+
+  // 비밀번호 변경 모달
+  const [pwOpen, setPwOpen] = useState(false);
+  const [newPw, setNewPw] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
+  const [pwLoading, setPwLoading] = useState(false);
+  const [delLoading, setDelLoading] = useState(false);
+
+  async function submitPassword() {
+    if (newPw.length < 6) return notify('비밀번호는 6자 이상이어야 해요.');
+    if (newPw !== confirmPw) return notify('비밀번호가 서로 일치하지 않아요.');
+    setPwLoading(true);
+    try {
+      await changePassword(newPw);
+      setPwOpen(false);
+      setNewPw('');
+      setConfirmPw('');
+      notify('비밀번호가 변경됐어요.');
+    } catch (e: any) {
+      notify(e?.message ?? '비밀번호 변경에 실패했어요.');
+    } finally {
+      setPwLoading(false);
+    }
+  }
+
+  async function runDelete() {
+    setDelLoading(true);
+    try {
+      await deleteAccount();
+      logout(); // 삭제 후 로그아웃 → 로그인 화면
+    } catch (e: any) {
+      setDelLoading(false);
+      notify(e?.message ?? '계정 삭제에 실패했어요.');
+    }
+  }
 
   function handleDeleteAccount() {
-    Alert.alert(
-      '계정 삭제',
-      '정말 삭제하시겠어요? 모든 데이터가 영구적으로 삭제되며 복구할 수 없어요.',
-      [
-        { text: '취소', style: 'cancel' },
-        { text: '삭제', style: 'destructive', onPress: () => {} },
-      ]
-    );
+    const msg = '정말 삭제할까요? 모든 일기와 계정이 영구적으로 삭제되며 복구할 수 없어요.';
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm(msg)) runDelete();
+      return;
+    }
+    Alert.alert('계정 삭제', msg, [
+      { text: '취소', style: 'cancel' },
+      { text: '삭제', style: 'destructive', onPress: runDelete },
+    ]);
   }
 
   function handleLogout() {
@@ -93,26 +129,7 @@ export default function AccountSettingsScreen() {
             <View style={styles.divider} />
             <Row label="이메일" value={email} />
             <View style={styles.divider} />
-            <Row label="비밀번호 변경" onPress={() => {}} />
-          </View>
-        </View>
-
-        {/* 개인정보 */}
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>개인정보</Text>
-          <View style={styles.card}>
-            <View style={styles.row}>
-              <View style={{ flex: 1, gap: 2 }}>
-                <Text style={styles.rowLabel}>비공개 계정</Text>
-                <Text style={styles.rowDesc}>활성화하면 내 일기가 그룹 외부에 공개되지 않아요</Text>
-              </View>
-              <Switch
-                value={privateMode}
-                onValueChange={setPrivateMode}
-                trackColor={{ false: '#e5e7eb', true: accent }}
-                thumbColor="#ffffff"
-              />
-            </View>
+            <Row label="비밀번호 변경" onPress={() => setPwOpen(true)} />
           </View>
         </View>
 
@@ -120,17 +137,7 @@ export default function AccountSettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>앱 설정</Text>
           <View style={styles.card}>
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>다크 모드</Text>
-              <Switch
-                value={darkMode}
-                onValueChange={setDarkMode}
-                trackColor={{ false: '#e5e7eb', true: accent }}
-                thumbColor="#ffffff"
-              />
-            </View>
-            <View style={styles.divider} />
-            <Row label="언어" value="한국어" onPress={() => {}} />
+            <Row label="언어" value="한국어" />
             <View style={styles.divider} />
             <Row label="버전" value="1.0.0" />
           </View>
@@ -144,13 +151,61 @@ export default function AccountSettingsScreen() {
               <Text style={styles.rowLabelDanger}>로그아웃</Text>
             </TouchableOpacity>
             <View style={styles.divider} />
-            <TouchableOpacity style={styles.row} onPress={handleDeleteAccount}>
+            <TouchableOpacity style={styles.row} onPress={handleDeleteAccount} disabled={delLoading}>
               <Text style={[styles.rowLabelDanger, { color: '#ef4444' }]}>계정 삭제</Text>
-              <Text style={styles.rowDesc2}>탈퇴 시 모든 데이터가 삭제돼요</Text>
+              {delLoading
+                ? <ActivityIndicator size="small" color="#ef4444" />
+                : <Text style={styles.rowDesc2}>탈퇴 시 모든 데이터가 삭제돼요</Text>}
             </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
+
+      {/* 비밀번호 변경 모달 */}
+      <Modal visible={pwOpen} transparent animationType="fade" onRequestClose={() => setPwOpen(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>비밀번호 변경</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={newPw}
+              onChangeText={setNewPw}
+              placeholder="새 비밀번호 (6자 이상)"
+              placeholderTextColor="#9ca3af"
+              secureTextEntry
+              autoFocus
+            />
+            <TextInput
+              style={styles.modalInput}
+              value={confirmPw}
+              onChangeText={setConfirmPw}
+              placeholder="새 비밀번호 확인"
+              placeholderTextColor="#9ca3af"
+              secureTextEntry
+              onSubmitEditing={submitPassword}
+              returnKeyType="done"
+            />
+            <View style={styles.modalBtns}>
+              <TouchableOpacity
+                style={styles.modalCancel}
+                onPress={() => { setPwOpen(false); setNewPw(''); setConfirmPw(''); }}
+                disabled={pwLoading}
+              >
+                <Text style={styles.modalCancelText}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalConfirm, { backgroundColor: accent }, pwLoading && { opacity: 0.6 }]}
+                onPress={submitPassword}
+                disabled={pwLoading}
+              >
+                {pwLoading
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <Text style={styles.modalConfirmText}>변경</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -190,4 +245,25 @@ const styles = StyleSheet.create({
     paddingVertical: 2, minWidth: 80, textAlign: 'right',
   },
   saveText: { fontSize: 13, fontWeight: '700', color: '#111827' },
+  modalBackdrop: {
+    flex: 1, backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center', justifyContent: 'center', padding: 28,
+  },
+  modalCard: {
+    width: '100%', maxWidth: 360, backgroundColor: '#ffffff',
+    borderRadius: 18, padding: 22, gap: 12,
+  },
+  modalTitle: { fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 2 },
+  modalInput: {
+    borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: '#111827',
+  },
+  modalBtns: { flexDirection: 'row', gap: 10, marginTop: 6 },
+  modalCancel: {
+    flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center',
+    backgroundColor: '#f3f4f6',
+  },
+  modalCancelText: { fontSize: 14, fontWeight: '600', color: '#374151' },
+  modalConfirm: { flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
+  modalConfirmText: { fontSize: 14, fontWeight: '700', color: '#ffffff' },
 });
