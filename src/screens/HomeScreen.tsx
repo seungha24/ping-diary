@@ -733,7 +733,7 @@ const styles = StyleSheet.create({
   folderHeaderTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
   folderList: { padding: 16, paddingBottom: 80 },
   folderHint: { fontSize: 11, color: '#b8bcc4', marginBottom: 12, paddingHorizontal: 2 },
-  folderGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  folderGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
   folderCard: {
     width: '47%',
     backgroundColor: '#ffffff', borderRadius: 18,
@@ -742,7 +742,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   // 카드에서 배경으로 은은하게 번지는 글로우 (accent 색이 밖으로 퍼져 사라짐, 색은 인라인 주입)
-  gridCell: { width: '47%' },
+  gridCell: { width: '48%' },
   glowCard: {
     backgroundColor: '#ffffff',
     borderRadius: 18,

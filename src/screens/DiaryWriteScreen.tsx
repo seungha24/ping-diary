@@ -495,7 +495,7 @@ const styles = StyleSheet.create({
   aiSub: { fontSize: 11, color: '#9ca3af' },
   personaRow: { flexDirection: 'row', gap: 8 },
   personaCard: {
-    flexGrow: 1, flexBasis: '28%', minWidth: 72, alignItems: 'center', paddingVertical: 10,
+    flexGrow: 1, flexBasis: '44%', minWidth: 72, alignItems: 'center', paddingVertical: 12,
     borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb',
     backgroundColor: '#f9fafb', gap: 4,
   },

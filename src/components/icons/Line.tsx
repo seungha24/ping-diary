@@ -74,7 +74,10 @@ export function IconClock({ color, size }: IconProps) {
 export function IconFeather({ color, size }: IconProps) {
   return <Base size={size} color={color}><Path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z" /><Line x1="16" y1="8" x2="2" y2="22" /><Line x1="17.5" y1="15" x2="9" y2="15" /></Base>;
 }
-/** 페르소나별 라인 아이콘 (선생님/엄마/상담사/미래의 나/소설가) */
+export function IconAward({ color, size }: IconProps) {
+  return <Base size={size} color={color}><Circle cx="12" cy="8" r="7" /><Polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" /></Base>;
+}
+/** 페르소나별 라인 아이콘 */
 export function PersonaIcon({ persona, color, size }: { persona: string; color?: string; size?: number }) {
   switch (persona) {
     case '선생님': return <IconBook color={color} size={size} />;
@@ -82,6 +85,7 @@ export function PersonaIcon({ persona, color, size }: { persona: string; color?:
     case '상담사': return <IconMessage color={color} size={size} />;
     case '미래의 나': return <IconClock color={color} size={size} />;
     case '소설가': return <IconFeather color={color} size={size} />;
+    case '전기 작가': return <IconAward color={color} size={size} />;
     default: return <IconMessage color={color} size={size} />;
   }
 }
