@@ -262,7 +262,7 @@ export default function HomeScreen() {
                           </View>
                         )}
                       </View>
-                      <View style={styles.folderCardBody}>
+                      <View style={[styles.folderCardBody, { backgroundColor: hexToRgba(accent, 0.1) }]}>
                         <Text style={styles.folderName} numberOfLines={1}>{folder.name}</Text>
                         <Text style={styles.folderCount}>{count}개</Text>
                       </View>
@@ -362,7 +362,7 @@ export default function HomeScreen() {
                       </Svg>
                     </TouchableOpacity>
                   </View>
-                  <View style={styles.folderCardBody}>
+                  <View style={[styles.folderCardBody, { backgroundColor: hexToRgba(accent, 0.1) }]}>
                     <Text style={styles.folderName} numberOfLines={1}>{group.name}</Text>
                     <Text style={styles.folderCount}>{group.member_count ?? 1}명 · {group.invite_code}</Text>
                   </View>
