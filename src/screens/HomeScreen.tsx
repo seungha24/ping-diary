@@ -526,7 +526,7 @@ export default function HomeScreen() {
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setFabMenuOpen(false)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.fabSheetTitle}>새로 만들기</Text>
+            <View style={{ height: 8 }} />
             <TouchableOpacity
               style={styles.fabChoice}
               onPress={() => { setFabMenuOpen(false); navigation.navigate('DiaryWrite'); }}
