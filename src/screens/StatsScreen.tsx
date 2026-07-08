@@ -9,6 +9,7 @@ import { RootStackParamList } from '../navigation/RootNavigator';
 import { MONTH_COUNTS, MONTHS } from '../data/types';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
+import { IconX } from '../components/icons/Line';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -119,7 +120,7 @@ export default function StatsScreen() {
             />
             {searchTag.length > 0 && (
               <TouchableOpacity onPress={clearSearch} style={styles.clearBtn}>
-                <Text style={styles.clearBtnText}>✕</Text>
+                <IconX size={12} color="#9ca3af" />
               </TouchableOpacity>
             )}
           </View>
@@ -201,7 +202,7 @@ export default function StatsScreen() {
             <View style={styles.sheetHeader}>
               <Text style={styles.sheetTitle}>이번 달 p!ng · {entries.length}개</Text>
               <TouchableOpacity onPress={() => setMonthOpen(false)}>
-                <Text style={styles.sheetClose}>✕</Text>
+                <IconX size={18} color="#9ca3af" />
               </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -235,7 +236,7 @@ export default function StatsScreen() {
             <View style={styles.sheetHeader}>
               <Text style={styles.sheetTitle}>전체 p!ng · {entries.length}개</Text>
               <TouchableOpacity onPress={() => setListOpen(false)}>
-                <Text style={styles.sheetClose}>✕</Text>
+                <IconX size={18} color="#9ca3af" />
               </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>

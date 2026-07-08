@@ -7,6 +7,7 @@ import IconChev from '../components/icons/IconChev';
 import { MONTHS, DAYS } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
+import { IconPencil } from '../components/icons/Line';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type CalendarRoute = RouteProp<TabParamList, 'Calendar'>;
@@ -98,7 +99,7 @@ export default function CalendarScreen() {
                 onPress={() => navigation.navigate('DiaryDetail', { entry: e })}
               >
                 <View style={styles.previewIcon}>
-                  <Text style={{ fontSize: 16 }}>📖</Text>
+                  <IconPencil size={15} color="#9ca3af" />
                 </View>
                 <View>
                   <Text style={styles.previewTitle}>{e.title}</Text>

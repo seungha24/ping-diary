@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import IconChev from '../components/icons/IconChev';
+import { IconBellOff } from '../components/icons/Line';
 
 interface Notif {
   id: number;
@@ -73,7 +74,7 @@ export default function NotificationScreen() {
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
         {notifs.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyEmoji}>🔕</Text>
+            <IconBellOff size={40} color="#d1d5db" />
             <Text style={styles.emptyText}>알림이 없어요</Text>
           </View>
         ) : (

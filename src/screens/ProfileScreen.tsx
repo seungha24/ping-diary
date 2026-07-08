@@ -8,6 +8,7 @@ import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import { useTheme, THEMES } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { IconUser, IconCamera, IconPencil } from '../components/icons/Line';
 
 const INTEREST_TAGS = ['일상', '산책', '독서', '커피', '여행', '음악', '요리', '영화'];
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -54,11 +55,11 @@ export default function ProfileScreen() {
               <Image source={{ uri: avatarUri }} style={styles.avatarImage} />
             ) : (
               <View style={styles.avatarCircle}>
-                <Text style={{ fontSize: 32 }}>👤</Text>
+                <IconUser size={34} color="#9ca3af" />
               </View>
             )}
             <View style={styles.avatarBadge}>
-              <Text style={styles.avatarBadgeText}>📷</Text>
+              <IconCamera size={13} color="#ffffff" />
             </View>
           </TouchableOpacity>
 
@@ -80,7 +81,7 @@ export default function ProfileScreen() {
               </View>
             ) : (
               <TouchableOpacity onPress={() => { setTempName(displayName); setEditingName(true); }}>
-                <Text style={styles.displayName}>{displayName} ✎</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><Text style={styles.displayName}>{displayName}</Text><IconPencil size={14} color="#9ca3af" /></View>
               </TouchableOpacity>
             )}
 
@@ -102,7 +103,7 @@ export default function ProfileScreen() {
               </View>
             ) : (
               <TouchableOpacity onPress={() => { setTempUsername(username); setEditingUsername(true); }}>
-                <Text style={styles.usernameText}>@{username} ✎</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}><Text style={styles.usernameText}>@{username}</Text><IconPencil size={12} color="#9ca3af" /></View>
               </TouchableOpacity>
             )}
           </View>

@@ -20,6 +20,7 @@ import { useAuth } from '../context/AuthContext';
 import { uploadPhoto, updateGroupPhoto, getMe, setFolderCover, saveFolders } from '../api';
 import { notify } from '../notify';
 import Svg, { Path, Line, Circle } from 'react-native-svg';
+import { IconFolder, IconList, IconUsers, IconPencil, IconX } from '../components/icons/Line';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -312,13 +313,19 @@ export default function HomeScreen() {
                     style={[styles.viewToggleBtn, personalView === 'folder' && { backgroundColor: accent }]}
                     onPress={() => setPersonalView('folder')}
                   >
-                    <Text style={[styles.viewToggleText, personalView === 'folder' && { color: '#fff' }]}>📁  폴더</Text>
+                    <View style={styles.viewToggleInner}>
+                      <IconFolder size={14} color={personalView === 'folder' ? '#fff' : '#9ca3af'} />
+                      <Text style={[styles.viewToggleText, personalView === 'folder' && { color: '#fff' }]}>폴더</Text>
+                    </View>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.viewToggleBtn, personalView === 'all' && { backgroundColor: accent }]}
                     onPress={() => setPersonalView('all')}
                   >
-                    <Text style={[styles.viewToggleText, personalView === 'all' && { color: '#fff' }]}>📋  전체</Text>
+                    <View style={styles.viewToggleInner}>
+                      <IconList size={14} color={personalView === 'all' ? '#fff' : '#9ca3af'} />
+                      <Text style={[styles.viewToggleText, personalView === 'all' && { color: '#fff' }]}>전체</Text>
+                    </View>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -434,7 +441,7 @@ export default function HomeScreen() {
                       <Image source={{ uri: cover }} style={styles.folderCoverImg} />
                     ) : (
                       <View style={styles.folderCoverEmpty}>
-                        <Text style={styles.folderCoverEmoji}>👥</Text>
+                        <IconUsers size={30} color="#9ca3af" />
                       </View>
                     )}
                     <TouchableOpacity
@@ -474,7 +481,7 @@ export default function HomeScreen() {
                 <Text style={styles.sheetSub} numberOfLines={1}>{shareEntry.title}</Text>
               </View>
               <TouchableOpacity onPress={() => setShareEntry(null)}>
-                <Text style={styles.sheetClose}>✕</Text>
+                <IconX size={18} color="#9ca3af" />
               </TouchableOpacity>
             </View>
             <Text style={styles.sheetSub}>
@@ -509,7 +516,7 @@ export default function HomeScreen() {
               style={styles.fabChoice}
               onPress={() => { setFabMenuOpen(false); navigation.navigate('DiaryWrite'); }}
             >
-              <Text style={styles.fabChoiceEmoji}>📝</Text>
+              <View style={styles.fabChoiceIcon}><IconPencil size={22} color={accent} /></View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.fabChoiceTitle}>p!ng</Text>
                 <Text style={styles.fabChoiceSub}>새 p!ng를 작성해요</Text>
@@ -519,7 +526,7 @@ export default function HomeScreen() {
               style={styles.fabChoice}
               onPress={() => { setFabMenuOpen(false); setFolderModalOpen(true); }}
             >
-              <Text style={styles.fabChoiceEmoji}>📁</Text>
+              <View style={styles.fabChoiceIcon}><IconFolder size={22} color={accent} /></View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.fabChoiceTitle}>폴더 만들기</Text>
                 <Text style={styles.fabChoiceSub}>p!ng를 정리할 폴더를 추가해요</Text>
@@ -681,6 +688,7 @@ const styles = StyleSheet.create({
   viewToggleBtn: {
     paddingHorizontal: 18, paddingVertical: 7, borderRadius: 10,
   },
+  viewToggleInner: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   viewToggleText: { fontSize: 13, fontWeight: '600', color: '#9ca3af' },
   folderHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -836,6 +844,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9fafb', marginBottom: 10,
   },
   fabChoiceEmoji: { fontSize: 26 },
+  fabChoiceIcon: { width: 30, alignItems: 'center' },
   fabChoiceTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
   fabChoiceSub: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
 

@@ -9,6 +9,7 @@ import { RootStackParamList } from '../navigation/RootNavigator';
 import { useTheme } from '../context/ThemeContext';
 import { useGroups } from '../context/GroupsContext';
 import { createGroup, joinGroup } from '../api';
+import { IconUsers } from '../components/icons/Line';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -96,7 +97,7 @@ export default function GroupCreateScreen() {
           {/* 그룹 이름 */}
           <View style={styles.topSection}>
             <View style={styles.emojiPreview}>
-              <Text style={styles.emojiPreviewText}>👥</Text>
+              <IconUsers size={30} color="#9ca3af" />
             </View>
             <TextInput
               style={styles.nameInput}

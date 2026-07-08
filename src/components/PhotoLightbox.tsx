@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { getPhotoPlaceholder } from '../data/types';
 import PHOTO_ASSETS from '../data/photoAssets';
+import { IconX } from './icons/Line';
 
 const { width: SW } = Dimensions.get('window');
 
@@ -52,7 +53,7 @@ export default function PhotoLightbox({ photo, onClose }: Props) {
           )}
 
           <TouchableOpacity style={styles.closeBtn} onPress={close}>
-            <Text style={styles.closeBtnText}>✕</Text>
+            <IconX size={20} color="#ffffff" />
           </TouchableOpacity>
         </Animated.View>
       </Animated.View>

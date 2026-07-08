@@ -16,6 +16,7 @@ import { useEntries } from '../context/EntriesContext';
 import { generateComment } from '../api';
 import { notify } from '../notify';
 import Svg, { Path, Line } from 'react-native-svg';
+import { IconLock, IconX, IconSparkle, IconTrash as IconTrashLine } from '../components/icons/Line';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -143,7 +144,7 @@ export default function DiaryDetailScreen() {
             </View>
           ) : (
             <View style={styles.aiLockedBox}>
-              <Text style={styles.aiLockedEmoji}>{isUnlocked ? '✨' : '🔒'}</Text>
+              {isUnlocked ? <IconSparkle size={26} color={accent} /> : <IconLock size={26} color="#9ca3af" />}
               <Text style={styles.aiLockedText}>
                 {isUnlocked ? '아직 코멘트가 없어요' : 'p!ng 작성 24시간 후 공개돼요'}
               </Text>
@@ -170,7 +171,7 @@ export default function DiaryDetailScreen() {
             <View style={styles.sheetHeader}>
               <Text style={styles.sheetTitle}>그룹에 공유</Text>
               <TouchableOpacity onPress={() => setShareOpen(false)}>
-                <Text style={styles.sheetClose}>✕</Text>
+                <IconX size={18} color="#9ca3af" />
               </TouchableOpacity>
             </View>
             <Text style={styles.sheetSub}>
@@ -197,7 +198,7 @@ export default function DiaryDetailScreen() {
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
             <View style={styles.deleteContent}>
-              <Text style={styles.deleteEmoji}>🗑️</Text>
+              <IconTrashLine size={30} color="#ef4444" />
               <Text style={styles.deleteTitle}>p!ng를 삭제할까요?</Text>
               <Text style={styles.deleteSub}>삭제하면 되돌릴 수 없어요</Text>
               <TouchableOpacity

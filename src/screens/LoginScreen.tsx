@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { IconMessage } from '../components/icons/Line';
 
 /**
  * 로그인 / 회원가입 화면.
@@ -146,7 +147,7 @@ export default function LoginScreen() {
 
           {/* 카카오 로그인 */}
           <TouchableOpacity style={styles.kakaoBtn} onPress={kakao} disabled={loading}>
-            <Text style={styles.kakaoIcon}>💬</Text>
+            <IconMessage size={18} color="#3c1e1e" />
             <Text style={styles.kakaoText}>카카오로 계속하기</Text>
           </TouchableOpacity>
 

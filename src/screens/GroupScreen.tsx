@@ -18,6 +18,7 @@ import { useGroups } from '../context/GroupsContext';
 import { fetchGroupEntries, leaveGroup } from '../api';
 import { notify } from '../notify';
 import { Platform } from 'react-native';
+import { IconUsers, IconBell as IconBellLine, IconSprout } from '../components/icons/Line';
 
 /** 서버 그룹 피드 행 → DiaryEntry 매핑 */
 function mapGroupEntry(row: any): DiaryEntry {
@@ -143,7 +144,7 @@ function ListCard({
             <Text style={styles.aiCommentText}>{entry.aiComment}</Text>
           ) : (
             <TouchableOpacity style={styles.aiLocked} onPress={onToggleShare}>
-              <Text style={styles.aiLockedText}>🔒  비공개 · 탭하여 그룹에 공개하기</Text>
+              <Text style={styles.aiLockedText}>비공개 · 탭하여 그룹에 공개하기</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -203,7 +204,7 @@ function GridCard({
             <Text style={styles.gridAiText} numberOfLines={3}>{entry.aiComment}</Text>
           ) : (
             <TouchableOpacity onPress={onToggleShare}>
-              <Text style={styles.gridAiLocked}>🔒 탭하여 공개</Text>
+              <Text style={styles.gridAiLocked}>탭하여 공개</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -310,7 +311,7 @@ export default function GroupScreen() {
         </TouchableOpacity>
 
         <View style={styles.headerInfo}>
-          <Text style={{ fontSize: 18 }}>👥</Text>
+          <IconUsers size={20} color="#6b7280" />
           <View style={styles.headerText}>
             <Text style={styles.groupName}>{group.name}</Text>
             <Text style={styles.groupMembers} numberOfLines={1}>
@@ -351,7 +352,7 @@ export default function GroupScreen() {
       {/* 현재 알림 주기 표시 배너 */}
       {frequency !== 'off' && (
         <TouchableOpacity style={styles.notifBanner} onPress={openModal}>
-          <Text style={styles.notifBannerEmoji}>🔔</Text>
+          <IconBellLine size={16} color={accent} />
           <Text style={styles.notifBannerText}>{freqSummary()} p!ng 알림 중</Text>
           <Text style={styles.notifBannerEdit}>변경</Text>
         </TouchableOpacity>
@@ -364,7 +365,7 @@ export default function GroupScreen() {
         </View>
       ) : entries.length === 0 ? (
         <View style={styles.feedEmpty}>
-          <Text style={styles.feedEmptyEmoji}>🌱</Text>
+          <IconSprout size={34} color="#d1d5db" />
           <Text style={styles.feedEmptyText}>아직 공유된 p!ng가 없어요.</Text>
           <Text style={styles.feedEmptyHint}>p!ng를 '친구 공개'로 저장하면 그룹에 나타나요.</Text>
         </View>
@@ -415,7 +416,7 @@ export default function GroupScreen() {
           <View style={styles.sheetHandle} />
 
           <Text style={styles.sheetTitle}>알림 주기 설정</Text>
-          <Text style={styles.sheetSubtitle}>👥 {group.name}</Text>
+          <Text style={styles.sheetSubtitle}>{group.name}</Text>
 
           {/* 주기 옵션 */}
           <View style={styles.freqList}>
