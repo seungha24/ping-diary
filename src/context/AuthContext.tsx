@@ -5,6 +5,7 @@ import {
   clearToken, hydrateToken, login as apiLogin, signup as apiSignup,
 } from '../api';
 import { supabase } from '../supabaseClient';
+import { API_BASE_URL } from '../config';
 
 /**
  * 인증 컨텍스트.
@@ -70,6 +71,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!cancelled) { setTok(null); setUserEmail(null); setReady(true); }
         return;
       }
+      // 카카오 커스텀 OAuth 콜백: 서버가 해시로 넘긴 토큰으로 세션 세팅
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location.hash.includes('kakao_at=')) {
+        const hp = new URLSearchParams(window.location.hash.slice(1));
+        const at = hp.get('kakao_at');
+        const rt = hp.get('kakao_rt');
+        // 해시 제거 (토큰 노출 방지)
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        if (at && rt) {
+          try {
+            const { data } = await supabase.auth.setSession({ access_token: at, refresh_token: rt });
+            if (data.session) adoptSession(data.session);
+          } catch {}
+        }
+      }
       await hydrateToken();
       try {
         const { data } = await supabase.auth.getSession();
@@ -107,14 +122,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  /** 소셜 계정으로 로그인 (구글/카카오, 웹: 리디렉트 방식) */
+  /** 소셜 계정으로 로그인 (구글: Supabase OAuth / 카카오: 서버 커스텀 OAuth) */
   async function loginOAuth(provider: OAuthProvider) {
+    // 카카오는 이메일 scope 강제 문제로 서버 커스텀 OAuth 사용 (닉네임만). 웹 리디렉트.
+    if (provider === 'kakao' && Platform.OS === 'web' && typeof window !== 'undefined') {
+      const ret = encodeURIComponent(window.location.origin);
+      window.location.href = `${API_BASE_URL}/auth/kakao/start?return=${ret}`;
+      return;
+    }
     const redirectTo =
       Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.origin : undefined;
-    const options: { redirectTo?: string; scopes?: string } = { redirectTo };
-    // 카카오는 이메일 동의항목이 비즈니스 검수를 요구하므로 닉네임만 요청 (KOE205 방지)
-    if (provider === 'kakao') options.scopes = 'profile_nickname';
-    const { error } = await supabase.auth.signInWithOAuth({ provider, options });
+    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo } });
     if (error) throw error;
   }
 
