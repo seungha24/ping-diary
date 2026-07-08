@@ -20,7 +20,7 @@ import { useAuth } from '../context/AuthContext';
 import { uploadPhoto, updateGroupPhoto, getMe, setFolderCover, saveFolders } from '../api';
 import { notify } from '../notify';
 import Svg, { Path, Line, Circle } from 'react-native-svg';
-import { IconFolder, IconList, IconUsers, IconPencil, IconX } from '../components/icons/Line';
+import { IconFolder, IconList, IconUsers, IconPencil, IconX, IconCamera } from '../components/icons/Line';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -126,6 +126,21 @@ export default function HomeScreen() {
       await saveFolders(next);
     } catch (e: any) {
       notify(e?.message ?? '폴더 저장에 실패했어요.');
+    }
+  }
+
+  /** 폴더 커버 사진 제거 → 이모지 아이콘으로 복귀 */
+  async function removeFolderCover(folderId: string) {
+    setFolderCovers((prev) => {
+      const next = { ...prev };
+      delete next[folderId];
+      return next;
+    });
+    try {
+      const covers = await setFolderCover(folderId, '');
+      setFolderCovers(covers);
+    } catch (e: any) {
+      notify(e?.message ?? '커버 제거에 실패했어요.');
     }
   }
 
@@ -589,7 +604,25 @@ export default function HomeScreen() {
               placeholderTextColor="#9ca3af"
               maxLength={20}
             />
-            <Text style={styles.folderEmojiLabel}>아이콘</Text>
+            <Text style={styles.folderEmojiLabel}>커버 사진</Text>
+            <View style={styles.coverEditRow}>
+              {folderCovers[editFolder.id] ? (
+                <Image source={{ uri: folderCovers[editFolder.id] }} style={styles.coverThumb} />
+              ) : (
+                <View style={styles.coverThumbEmpty}>
+                  <IconCamera size={20} color="#9ca3af" />
+                </View>
+              )}
+              <TouchableOpacity style={styles.coverPickBtn} onPress={() => pickFolderCover(editFolder.id)}>
+                <Text style={styles.coverPickText}>{folderCovers[editFolder.id] ? '사진 변경' : '사진 선택'}</Text>
+              </TouchableOpacity>
+              {folderCovers[editFolder.id] && (
+                <TouchableOpacity style={styles.coverRemoveBtn} onPress={() => removeFolderCover(editFolder.id)}>
+                  <Text style={styles.coverRemoveText}>제거</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+            <Text style={styles.folderEmojiLabel}>아이콘 <Text style={styles.folderEmojiHint}>(커버 사진이 없을 때 표시)</Text></Text>
             <View style={styles.emojiGrid}>
               {FOLDER_EMOJIS.map((em) => (
                 <TouchableOpacity
@@ -855,6 +888,20 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   folderEmojiLabel: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  folderEmojiHint: { fontSize: 11, fontWeight: '400', color: '#9ca3af' },
+  coverEditRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 18 },
+  coverThumb: { width: 56, height: 40, borderRadius: 8, backgroundColor: '#f3f4f6' },
+  coverThumbEmpty: {
+    width: 56, height: 40, borderRadius: 8, backgroundColor: '#f3f4f6',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  coverPickBtn: {
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10,
+    borderWidth: 1.5, borderColor: '#e5e7eb', backgroundColor: '#f9fafb',
+  },
+  coverPickText: { fontSize: 13, color: '#374151', fontWeight: '600' },
+  coverRemoveBtn: { paddingHorizontal: 8, paddingVertical: 8 },
+  coverRemoveText: { fontSize: 13, color: '#ef4444', fontWeight: '600' },
   emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 18 },
   emojiChip: {
     width: 44, height: 44, borderRadius: 12,
