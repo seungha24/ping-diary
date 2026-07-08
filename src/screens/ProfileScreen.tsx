@@ -4,7 +4,6 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import { RootStackParamList } from '../navigation/RootNavigator';
-import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import { useTheme, THEMES } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -12,7 +11,6 @@ import { getMe, saveProfile } from '../api';
 import { notify } from '../notify';
 import { IconUser, IconCamera, IconPencil } from '../components/icons/Line';
 
-const INTEREST_TAGS = ['일상', '산책', '독서', '커피', '여행', '음악', '요리', '영화'];
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export default function ProfileScreen() {
@@ -143,18 +141,6 @@ export default function ProfileScreen() {
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}><Text style={styles.usernameText}>@{username}</Text><IconPencil size={12} color="#9ca3af" /></View>
               </TouchableOpacity>
             )}
-          </View>
-        </View>
-
-        <View style={styles.divider} />
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>관심사 태그</Text>
-          <View style={styles.tagWrap}>
-            {INTEREST_TAGS.map((t) => <Tag key={t} label={t} />)}
-            <TouchableOpacity style={styles.addTagBtn}>
-              <Text style={styles.addTagText}>+ 추가</Text>
-            </TouchableOpacity>
           </View>
         </View>
 
