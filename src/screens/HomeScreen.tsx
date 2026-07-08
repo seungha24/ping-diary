@@ -506,8 +506,8 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     overflow: 'hidden',
-    shadowOpacity: 0.3, shadowRadius: 18, shadowOffset: { width: 0, height: 0 },
-    elevation: 6,
+    shadowOpacity: 0.5, shadowRadius: 24, shadowOffset: { width: 0, height: 0 },
+    elevation: 9,
   },
   folderCoverWrap: {
     width: '100%', height: 90,
