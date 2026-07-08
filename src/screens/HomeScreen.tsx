@@ -46,9 +46,20 @@ export default function HomeScreen() {
   const [folderModalOpen, setFolderModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [newFolderEmoji, setNewFolderEmoji] = useState('📁');
+  // 폴더 이름/아이콘 수정
+  const [editFolder, setEditFolder] = useState<DiaryFolder | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editEmoji, setEditEmoji] = useState('📁');
 
-  // 기본 폴더 + 사용자가 만든 폴더
-  const allFolders: DiaryFolder[] = [...FOLDERS, ...customFolders];
+  // 기본 폴더(이름/아이콘 override 반영) + 사용자가 만든 폴더
+  const createdFolders = customFolders.filter((f) => f.id.startsWith('c_'));
+  const allFolders: DiaryFolder[] = [
+    ...FOLDERS.map((f) => {
+      const ov = customFolders.find((c) => c.id === f.id);
+      return ov ? { ...f, name: ov.name, emoji: ov.emoji } : f;
+    }),
+    ...createdFolders,
+  ];
 
   // 폴더 커버·사용자 폴더(서버 저장분)를 로그인(토큰 준비) 후 불러오기 — 토큰 늦게 붙어도 재실행
   useEffect(() => {
@@ -68,6 +79,48 @@ export default function HomeScreen() {
     setFolderModalOpen(false);
     setNewFolderName('');
     setNewFolderEmoji('📁');
+    try {
+      await saveFolders(next);
+    } catch (e: any) {
+      notify(e?.message ?? '폴더 저장에 실패했어요.');
+    }
+  }
+
+  /** 폴더 수정 시트 열기 */
+  function openEditFolder(folder: DiaryFolder) {
+    setEditFolder(folder);
+    setEditName(folder.name);
+    setEditEmoji(folder.emoji);
+  }
+
+  /** 폴더 이름/아이콘 저장 (기본 폴더는 override로, 사용자 폴더는 직접 수정) → DB 저장 */
+  async function saveFolderEdit() {
+    if (!editFolder) return;
+    const name = editName.trim();
+    if (!name) return;
+    const id = editFolder.id;
+    const exists = customFolders.some((f) => f.id === id);
+    const next = exists
+      ? customFolders.map((f) => (f.id === id ? { ...f, name, emoji: editEmoji } : f))
+      : [...customFolders, { id, name, emoji: editEmoji }];
+    setCustomFolders(next);
+    if (selectedFolder?.id === id) setSelectedFolder({ ...selectedFolder, name, emoji: editEmoji });
+    setEditFolder(null);
+    try {
+      await saveFolders(next);
+    } catch (e: any) {
+      notify(e?.message ?? '폴더 저장에 실패했어요.');
+    }
+  }
+
+  /** 폴더 삭제(사용자 폴더) / 기본 이름 복원(기본 폴더 override 제거) → DB 저장 */
+  async function removeFolder() {
+    if (!editFolder) return;
+    const id = editFolder.id;
+    const next = customFolders.filter((f) => f.id !== id);
+    setCustomFolders(next);
+    if (selectedFolder?.id === id) setSelectedFolder(null);
+    setEditFolder(null);
     try {
       await saveFolders(next);
     } catch (e: any) {
@@ -272,6 +325,7 @@ export default function HomeScreen() {
 
               {personalView === 'folder' ? (
             <ScrollView contentContainerStyle={styles.folderList}>
+              <Text style={styles.folderHint}>폴더를 길게 누르면 이름·아이콘을 수정할 수 있어요</Text>
               <View style={styles.folderGrid}>
                 {allFolders.map((folder) => {
                   const count = entries.filter((e) => e.folder === folder.id).length;
@@ -282,6 +336,8 @@ export default function HomeScreen() {
                       style={[styles.gridCell, styles.glowCard, { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) }]}
                       activeOpacity={0.85}
                       onPress={() => setSelectedFolder(folder)}
+                      onLongPress={() => openEditFolder(folder)}
+                      delayLongPress={300}
                     >
                       <View style={styles.folderCoverWrap}>
                         {cover ? (
@@ -510,6 +566,51 @@ export default function HomeScreen() {
           </View>
         </View>
       )}
+
+      {/* 폴더 수정 시트 */}
+      {editFolder && (
+        <View style={styles.overlayWrap}>
+          <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setEditFolder(null)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.fabSheetTitle}>폴더 수정</Text>
+            <TextInput
+              style={styles.folderInput}
+              value={editName}
+              onChangeText={setEditName}
+              placeholder="폴더 이름"
+              placeholderTextColor="#9ca3af"
+              maxLength={20}
+            />
+            <Text style={styles.folderEmojiLabel}>아이콘</Text>
+            <View style={styles.emojiGrid}>
+              {FOLDER_EMOJIS.map((em) => (
+                <TouchableOpacity
+                  key={em}
+                  style={[styles.emojiChip, editEmoji === em && { borderColor: accent, backgroundColor: hexToRgba(accent, 0.1) }]}
+                  onPress={() => setEditEmoji(em)}
+                >
+                  <Text style={{ fontSize: 20 }}>{em}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity
+              style={[styles.confirmBtn, { backgroundColor: editName.trim() ? accent : '#e5e7eb' }]}
+              disabled={!editName.trim()}
+              onPress={saveFolderEdit}
+            >
+              <Text style={[styles.confirmBtnText, { color: editName.trim() ? '#fff' : '#9ca3af' }]}>저장</Text>
+            </TouchableOpacity>
+            {(editFolder.id.startsWith('c_') || customFolders.some((f) => f.id === editFolder.id)) && (
+              <TouchableOpacity style={styles.deleteFolderBtn} onPress={removeFolder}>
+                <Text style={styles.deleteFolderText}>
+                  {editFolder.id.startsWith('c_') ? '폴더 삭제' : '기본 이름으로 되돌리기'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -590,6 +691,7 @@ const styles = StyleSheet.create({
   folderBackText: { fontSize: 13, color: '#6b7280' },
   folderHeaderTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
   folderList: { padding: 16, paddingBottom: 80 },
+  folderHint: { fontSize: 11, color: '#b8bcc4', marginBottom: 12, paddingHorizontal: 2 },
   folderGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
   folderCard: {
     width: '47%',
@@ -722,6 +824,8 @@ const styles = StyleSheet.create({
   checkmark: { fontSize: 12, color: '#fff', fontWeight: '700' },
   confirmBtn: { marginTop: 8, borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
   confirmBtnText: { fontSize: 14, fontWeight: '700' },
+  deleteFolderBtn: { marginTop: 12, alignItems: 'center', paddingVertical: 4 },
+  deleteFolderText: { fontSize: 13, color: '#ef4444', fontWeight: '600' },
 
   // + 선택 시트
   fabSheetTitle: { fontSize: 16, fontWeight: '800', color: '#111827', marginTop: 4, marginBottom: 14 },

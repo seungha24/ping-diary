@@ -177,6 +177,10 @@ export default function DiaryWriteScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{editEntry ? 'p!ng 수정' : '오늘의 p!ng'}</Text>
         <View style={styles.headerRight}>
+          <View style={styles.autoSaveBadge}>
+            <View style={styles.autoSaveDot} />
+            <Text style={styles.autoSaveText}>자동저장됨</Text>
+          </View>
           <TouchableOpacity
             style={[styles.saveBtn, { backgroundColor: accent }]}
             onPress={() => {
@@ -201,10 +205,6 @@ export default function DiaryWriteScreen() {
           >
             <Text style={styles.saveBtnText}>{editEntry ? '저장' : 'p!ng'}</Text>
           </TouchableOpacity>
-          <View style={styles.autoSaveBadge}>
-            <View style={styles.autoSaveDot} />
-            <Text style={styles.autoSaveText}>자동저장됨</Text>
-          </View>
         </View>
       </View>
 
@@ -409,13 +409,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingTop: 12, paddingBottom: 18,
+    paddingHorizontal: 20, paddingTop: 12, paddingBottom: 12,
     borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
   },
   cancelText: { fontSize: 14, color: '#9ca3af' },
   headerTitle: { fontSize: 14, fontWeight: '700', color: '#1f2937' },
-  headerRight: { alignItems: 'flex-end', gap: 3 },
-  autoSaveBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: -17 },
+  headerRight: { alignItems: 'flex-end', gap: 6 },
+  autoSaveBadge: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   autoSaveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4ade80' },
   autoSaveText: { fontSize: 11, color: '#9ca3af' },
   saveBtn: { paddingHorizontal: 22, paddingVertical: 9, borderRadius: 999, backgroundColor: '#111827' },
