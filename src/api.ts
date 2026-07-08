@@ -287,6 +287,8 @@ export async function getMe(): Promise<{
   folder_covers: Record<string, string>;
   theme: string | null;
   folders: UserFolder[];
+  display_name: string | null;
+  username: string | null;
 }> {
   const r = await request('/auth/me');
   return {
@@ -294,7 +296,15 @@ export async function getMe(): Promise<{
     folder_covers: r?.folder_covers ?? {},
     theme: r?.theme ?? null,
     folders: Array.isArray(r?.folders) ? r.folders : [],
+    display_name: r?.display_name ?? null,
+    username: r?.username ?? null,
   };
+}
+
+/** 표시 이름·아이디 저장 (내 계정 user_metadata, DB) */
+export async function saveProfile(p: { display_name?: string; username?: string }): Promise<{ display_name: string | null; username: string | null }> {
+  const r = await request('/auth/profile', { method: 'PATCH', body: JSON.stringify(p) });
+  return { display_name: r?.display_name ?? null, username: r?.username ?? null };
 }
 
 /** 사용자가 만든 폴더 목록 저장 (user_metadata, DB) */

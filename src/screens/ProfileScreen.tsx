@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image, TextInput } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -8,6 +8,8 @@ import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import { useTheme, THEMES } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { getMe, saveProfile } from '../api';
+import { notify } from '../notify';
 import { IconUser, IconCamera, IconPencil } from '../components/icons/Line';
 
 const INTEREST_TAGS = ['일상', '산책', '독서', '커피', '여행', '음악', '요리', '영화'];
@@ -16,7 +18,7 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 export default function ProfileScreen() {
   const navigation = useNavigation<Nav>();
   const { accent, themeKey, setTheme } = useTheme();
-  const { email, logout } = useAuth();
+  const { email, token, logout } = useAuth();
   const emailPrefix = (email ?? '').split('@')[0] || '사용자';
 
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
@@ -26,6 +28,41 @@ export default function ProfileScreen() {
   const [username, setUsername] = useState(emailPrefix);
   const [tempName, setTempName] = useState(displayName);
   const [tempUsername, setTempUsername] = useState(username);
+
+  // 로그인 후 DB에 저장된 이름/아이디 불러오기 (없으면 이메일 앞부분)
+  useEffect(() => {
+    if (!token) return;
+    getMe()
+      .then((me) => {
+        if (me.display_name) setDisplayName(me.display_name);
+        if (me.username) setUsername(me.username);
+      })
+      .catch(() => {});
+  }, [token]);
+
+  /** 표시 이름 저장 → DB */
+  async function commitName() {
+    const name = tempName.trim() || emailPrefix;
+    setDisplayName(name);
+    setEditingName(false);
+    try {
+      await saveProfile({ display_name: name });
+    } catch (e: any) {
+      notify(e?.message ?? '이름 저장에 실패했어요.');
+    }
+  }
+
+  /** 아이디 저장 → DB */
+  async function commitUsername() {
+    const name = tempUsername.trim() || emailPrefix;
+    setUsername(name);
+    setEditingUsername(false);
+    try {
+      await saveProfile({ username: name });
+    } catch (e: any) {
+      notify(e?.message ?? '아이디 저장에 실패했어요.');
+    }
+  }
 
   async function pickAvatar() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -73,9 +110,9 @@ export default function ProfileScreen() {
                   onChangeText={setTempName}
                   autoFocus
                   returnKeyType="done"
-                  onSubmitEditing={() => { setDisplayName(tempName); setEditingName(false); }}
+                  onSubmitEditing={commitName}
                 />
-                <TouchableOpacity onPress={() => { setDisplayName(tempName); setEditingName(false); }}>
+                <TouchableOpacity onPress={commitName}>
                   <Text style={styles.saveBtn}>저장</Text>
                 </TouchableOpacity>
               </View>
@@ -95,9 +132,9 @@ export default function ProfileScreen() {
                   autoFocus
                   returnKeyType="done"
                   autoCapitalize="none"
-                  onSubmitEditing={() => { setUsername(tempUsername); setEditingUsername(false); }}
+                  onSubmitEditing={commitUsername}
                 />
-                <TouchableOpacity onPress={() => { setUsername(tempUsername); setEditingUsername(false); }}>
+                <TouchableOpacity onPress={commitUsername}>
                   <Text style={styles.saveBtn}>저장</Text>
                 </TouchableOpacity>
               </View>
