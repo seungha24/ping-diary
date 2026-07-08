@@ -168,7 +168,7 @@ export default function HomeScreen() {
       {tab === 'personal' ? (
         <>
           {selectedFolder ? (
-            /* ── 폴더 내 일기 목록 ── */
+            /* ── 폴더 내 p!ng 목록 ── */
             <>
               {folderCovers[selectedFolder.id] ? (
                 <TouchableOpacity onPress={() => pickFolderCover(selectedFolder.id)} activeOpacity={0.9}>
@@ -208,8 +208,8 @@ export default function HomeScreen() {
               <ScrollView contentContainerStyle={styles.list}>
                 {entries.filter((e) => e.folder === selectedFolder.id).length === 0 && (
                   <View style={styles.emptyState}>
-                    <Text style={styles.emptyText}>아직 일기가 없어요</Text>
-                    <Text style={styles.emptySubText}>오른쪽 아래 버튼을 눌러 첫 일기를 써보세요</Text>
+                    <Text style={styles.emptyText}>아직 p!ng가 없어요</Text>
+                    <Text style={styles.emptySubText}>오른쪽 아래 버튼을 눌러 첫 p!ng를 써보세요</Text>
                   </View>
                 )}
                 {entries.filter((e) => e.folder === selectedFolder.id).map((entry) => (
@@ -305,8 +305,8 @@ export default function HomeScreen() {
               <ScrollView contentContainerStyle={styles.list}>
                 {entries.length === 0 && (
                   <View style={styles.emptyState}>
-                    <Text style={styles.emptyText}>아직 일기가 없어요</Text>
-                    <Text style={styles.emptySubText}>오른쪽 아래 버튼을 눌러 첫 일기를 써보세요</Text>
+                    <Text style={styles.emptyText}>아직 p!ng가 없어요</Text>
+                    <Text style={styles.emptySubText}>오른쪽 아래 버튼을 눌러 첫 p!ng를 써보세요</Text>
                   </View>
                 )}
                 {entries.map((entry) => (
@@ -424,7 +424,7 @@ export default function HomeScreen() {
             <Text style={styles.sheetSub}>
               {shareEntry.visibility === 'friends'
                 ? '이미 참여 중인 그룹 피드에 공개돼 있어요.'
-                : '공개하면 참여 중인 모든 그룹 피드에 이 일기가 표시돼요.'}
+                : '공개하면 참여 중인 모든 그룹 피드에 이 p!ng가 표시돼요.'}
             </Text>
             <TouchableOpacity
               style={[styles.confirmBtn, { backgroundColor: shareEntry.visibility === 'friends' ? '#e5e7eb' : accent }]}
@@ -442,7 +442,7 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* + 버튼 선택 시트: 일기 / 폴더 */}
+      {/* + 버튼 선택 시트: p!ng / 폴더 */}
       {fabMenuOpen && (
         <View style={styles.overlayWrap}>
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setFabMenuOpen(false)} />
@@ -455,8 +455,8 @@ export default function HomeScreen() {
             >
               <Text style={styles.fabChoiceEmoji}>📝</Text>
               <View style={{ flex: 1 }}>
-                <Text style={styles.fabChoiceTitle}>일기 쓰기</Text>
-                <Text style={styles.fabChoiceSub}>새 일기를 작성해요</Text>
+                <Text style={styles.fabChoiceTitle}>p!ng 쓰기</Text>
+                <Text style={styles.fabChoiceSub}>새 p!ng를 작성해요</Text>
               </View>
             </TouchableOpacity>
             <TouchableOpacity
@@ -466,7 +466,7 @@ export default function HomeScreen() {
               <Text style={styles.fabChoiceEmoji}>📁</Text>
               <View style={{ flex: 1 }}>
                 <Text style={styles.fabChoiceTitle}>폴더 만들기</Text>
-                <Text style={styles.fabChoiceSub}>일기를 정리할 폴더를 추가해요</Text>
+                <Text style={styles.fabChoiceSub}>p!ng를 정리할 폴더를 추가해요</Text>
               </View>
             </TouchableOpacity>
           </View>

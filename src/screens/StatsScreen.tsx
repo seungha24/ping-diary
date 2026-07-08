@@ -72,7 +72,7 @@ export default function StatsScreen() {
         <View style={styles.statsGrid}>
           <TouchableOpacity style={styles.statCard} onPress={() => setListOpen(true)} activeOpacity={0.7}>
             <Text style={[styles.statVal, { color: accent }]}>{entries.length}개</Text>
-            <Text style={styles.statLabel}>총 일기</Text>
+            <Text style={styles.statLabel}>총 p!ng</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.statCard} onPress={() => setMonthOpen(true)} activeOpacity={0.7}>
             <Text style={[styles.statVal, { color: accent }]}>{entries.length}개</Text>
@@ -160,7 +160,7 @@ export default function StatsScreen() {
               #{query} 검색 결과 · {filteredEntries.length}개
             </Text>
             {filteredEntries.length === 0 ? (
-              <Text style={styles.emptyText}>일치하는 일기가 없어요</Text>
+              <Text style={styles.emptyText}>일치하는 p!ng가 없어요</Text>
             ) : (
               <View style={styles.resultList}>
                 {filteredEntries.map((e) => (
@@ -192,14 +192,14 @@ export default function StatsScreen() {
         )}
       </ScrollView>
 
-      {/* 전체 일기 목록 — 화면 안에서 올라오는 시트 */}
+      {/* 전체 p!ng 목록 — 화면 안에서 올라오는 시트 */}
       {monthOpen && (
         <View style={styles.overlay}>
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setMonthOpen(false)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
             <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>이번 달 일기 · {entries.length}개</Text>
+              <Text style={styles.sheetTitle}>이번 달 p!ng · {entries.length}개</Text>
               <TouchableOpacity onPress={() => setMonthOpen(false)}>
                 <Text style={styles.sheetClose}>✕</Text>
               </TouchableOpacity>
@@ -233,7 +233,7 @@ export default function StatsScreen() {
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
             <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>전체 일기 · {entries.length}개</Text>
+              <Text style={styles.sheetTitle}>전체 p!ng · {entries.length}개</Text>
               <TouchableOpacity onPress={() => setListOpen(false)}>
                 <Text style={styles.sheetClose}>✕</Text>
               </TouchableOpacity>

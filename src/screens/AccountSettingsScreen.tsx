@@ -69,7 +69,7 @@ export default function AccountSettingsScreen() {
   }
 
   function handleDeleteAccount() {
-    const msg = '정말 삭제할까요? 모든 일기와 계정이 영구적으로 삭제되며 복구할 수 없어요.';
+    const msg = '정말 삭제할까요? 모든 p!ng와 계정이 영구적으로 삭제되며 복구할 수 없어요.';
     if (Platform.OS === 'web') {
       if (typeof window !== 'undefined' && window.confirm(msg)) runDelete();
       return;

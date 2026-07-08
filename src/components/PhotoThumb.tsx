@@ -14,7 +14,7 @@ function resolveSource(photo: string) {
   return { uri: photo };
 }
 
-/** 작은 썸네일 (일기 목록 카드용) */
+/** 작은 썸네일 (p!ng 목록 카드용) */
 export function PhotoThumb({ photo, size = 48, radius = 10 }: Props) {
   if (!photo) return null;
   if (photo.startsWith('ph:')) {

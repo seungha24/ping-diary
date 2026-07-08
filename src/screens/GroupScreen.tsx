@@ -238,7 +238,7 @@ export default function GroupScreen() {
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 그룹 공유 피드(멤버들의 '친구 공개' 일기)를 서버에서 로드
+  // 그룹 공유 피드(멤버들의 '친구 공개' p!ng)를 서버에서 로드
   useEffect(() => {
     let cancelled = false;
     fetchGroupEntries(group.id)
@@ -352,7 +352,7 @@ export default function GroupScreen() {
       {frequency !== 'off' && (
         <TouchableOpacity style={styles.notifBanner} onPress={openModal}>
           <Text style={styles.notifBannerEmoji}>🔔</Text>
-          <Text style={styles.notifBannerText}>{freqSummary()} 일기 알림 중</Text>
+          <Text style={styles.notifBannerText}>{freqSummary()} p!ng 알림 중</Text>
           <Text style={styles.notifBannerEdit}>변경</Text>
         </TouchableOpacity>
       )}
@@ -365,8 +365,8 @@ export default function GroupScreen() {
       ) : entries.length === 0 ? (
         <View style={styles.feedEmpty}>
           <Text style={styles.feedEmptyEmoji}>🌱</Text>
-          <Text style={styles.feedEmptyText}>아직 공유된 일기가 없어요.</Text>
-          <Text style={styles.feedEmptyHint}>일기를 '친구 공개'로 저장하면 그룹에 나타나요.</Text>
+          <Text style={styles.feedEmptyText}>아직 공유된 p!ng가 없어요.</Text>
+          <Text style={styles.feedEmptyHint}>p!ng를 '친구 공개'로 저장하면 그룹에 나타나요.</Text>
         </View>
       ) : viewMode === 'list' ? (
         <ScrollView contentContainerStyle={styles.listContent}>

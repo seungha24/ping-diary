@@ -85,8 +85,8 @@ export default function NotifSettingsScreen() {
           <Text style={styles.sectionLabel}>알림 종류</Text>
           <View style={styles.card}>
             <ToggleRow
-              label="새 일기 알림"
-              desc="그룹 멤버가 일기를 쓰면 알림"
+              label="새 p!ng 알림"
+              desc="그룹 멤버가 p!ng를 쓰면 알림"
               value={newDiary}
               onChange={setNewDiary}
               disabled={!allOn}
@@ -109,7 +109,7 @@ export default function NotifSettingsScreen() {
             />
             <View style={styles.divider} />
             <ToggleRow
-              label="일기 리마인더"
+              label="p!ng 리마인더"
               desc="그룹별로 설정한 주기에 맞춰 알림"
               value={reminder}
               onChange={setReminder}

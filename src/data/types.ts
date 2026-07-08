@@ -80,7 +80,7 @@ export const INITIAL_ENTRIES: DiaryEntry[] = [
 
 export const GROUPS: Group[] = [
   {
-    name: '가족 일기', emoji: '🏠', members: ['엄마', '아빠', '지연', '동생'],
+    name: '가족 p!ng', emoji: '🏠', members: ['엄마', '아빠', '지연', '동생'],
     entries: [
       { id: 101, title: '가족 외식한 날', body: '오랜만에 온 가족이 함께 밥을 먹었다.', dates: [9], tags: ['가족', '외식'], photo: 'ph:0', persona: '엄마', author: '엄마', avatar: '👩', createdAt: '2026-06-09T19:00:00', aiComment: '온 가족이 함께하는 식사 자리가 얼마나 소중한지 느껴져. 바쁜 일상 속에서도 이런 시간을 만들어낸 게 정말 대견하고, 그 온기가 오래오래 이어지길 바란단다.' },
       { id: 102, title: '주말 드라이브', body: '아빠가 드라이브를 제안해서 한강 변을 달렸다.', dates: [7], tags: ['드라이브', '일상'], photo: 'ph:1', persona: '선생님', author: '아빠', avatar: '👨', createdAt: '2026-06-07T16:00:00', aiComment: '한강을 따라 달리는 드라이브는 단순한 이동이 아니라 일상의 리셋이에요. 창문 너머 풍경을 함께 바라보는 그 순간이 가족 사이의 거리를 좁혀주는 특별한 시간이 됐을 거예요.' },

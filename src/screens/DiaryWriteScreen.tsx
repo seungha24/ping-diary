@@ -110,7 +110,7 @@ export default function DiaryWriteScreen() {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.cancelText}>취소</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{editEntry ? '일기 수정' : '오늘의 일기'}</Text>
+        <Text style={styles.headerTitle}>{editEntry ? 'p!ng 수정' : '오늘의 p!ng'}</Text>
         <View style={styles.headerRight}>
           <View style={styles.autoSaveBadge}>
             <View style={styles.autoSaveDot} />
@@ -235,7 +235,7 @@ export default function DiaryWriteScreen() {
           </TouchableOpacity>
         </View>
         {visibility === 'friends' && (
-          <Text style={styles.visHint}>참여 중인 그룹의 피드에 이 일기가 공개돼요.</Text>
+          <Text style={styles.visHint}>참여 중인 그룹의 피드에 이 p!ng가 공개돼요.</Text>
         )}
 
         {/* AI comment section */}

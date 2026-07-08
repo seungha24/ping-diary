@@ -63,7 +63,7 @@ export default function DiaryDetailScreen() {
     navigation.navigate('DiaryWrite', { entry });
   }
 
-  // 이 일기를 참여 중인 그룹에 공개/비공개 전환 (visibility)
+  // 이 p!ng를 참여 중인 그룹에 공개/비공개 전환 (visibility)
   function togglePublish() {
     const next: 'private' | 'friends' = published ? 'private' : 'friends';
     setPublishing(true);
@@ -145,7 +145,7 @@ export default function DiaryDetailScreen() {
             <View style={styles.aiLockedBox}>
               <Text style={styles.aiLockedEmoji}>{isUnlocked ? '✨' : '🔒'}</Text>
               <Text style={styles.aiLockedText}>
-                {isUnlocked ? '아직 코멘트가 없어요' : '일기 작성 24시간 후 공개돼요'}
+                {isUnlocked ? '아직 코멘트가 없어요' : 'p!ng 작성 24시간 후 공개돼요'}
               </Text>
               {!isUnlocked && <Text style={styles.aiCountdown}>{formatRemaining(remaining)}</Text>}
               <TouchableOpacity
@@ -175,8 +175,8 @@ export default function DiaryDetailScreen() {
             </View>
             <Text style={styles.sheetSub}>
               {published
-                ? '이 일기는 참여 중인 그룹의 피드에 공개돼 있어요.'
-                : '공개하면 참여 중인 모든 그룹의 피드에 이 일기가 표시돼요.'}
+                ? '이 p!ng는 참여 중인 그룹의 피드에 공개돼 있어요.'
+                : '공개하면 참여 중인 모든 그룹의 피드에 이 p!ng가 표시돼요.'}
             </Text>
             <TouchableOpacity
               style={[styles.confirmBtn, { backgroundColor: published ? '#e5e7eb' : accent }]}
@@ -198,7 +198,7 @@ export default function DiaryDetailScreen() {
             <View style={styles.sheetHandle} />
             <View style={styles.deleteContent}>
               <Text style={styles.deleteEmoji}>🗑️</Text>
-              <Text style={styles.deleteTitle}>일기를 삭제할까요?</Text>
+              <Text style={styles.deleteTitle}>p!ng를 삭제할까요?</Text>
               <Text style={styles.deleteSub}>삭제하면 되돌릴 수 없어요</Text>
               <TouchableOpacity
                 style={styles.deleteConfirmBtn}

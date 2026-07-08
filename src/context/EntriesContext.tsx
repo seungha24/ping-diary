@@ -27,7 +27,7 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 인증 완료 후 서버에서 일기 로드 (비어 있으면 데모 데이터로 최초 1회 시드)
+  // 인증 완료 후 서버에서 p!ng 로드 (비어 있으면 데모 데이터로 최초 1회 시드)
   useEffect(() => {
     let cancelled = false;
     if (!ready) return;
@@ -41,7 +41,7 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
       try {
         let list = await fetchEntries();
         if (list.length === 0) {
-          // 데모 계정 최초 접속 — 기본 일기를 서버에 시드
+          // 데모 계정 최초 접속 — 기본 p!ng를 서버에 시드
           for (const seed of [...INITIAL_ENTRIES].reverse()) {
             try { await createEntry(seed); } catch {}
           }
@@ -67,7 +67,7 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
       .catch(() => {
         // 저장 실패 시 낙관적 항목 롤백
         setEntries((prev) => prev.filter((e) => e.id !== entry.id));
-        notify('일기 저장에 실패했어요. 네트워크를 확인해주세요.');
+        notify('p!ng 저장에 실패했어요. 네트워크를 확인해주세요.');
       });
   }
 

@@ -149,13 +149,13 @@ export async function deleteAccount(): Promise<void> {
   await request('/auth/account', { method: 'DELETE' });
 }
 
-/** 내 일기 목록 조회 */
+/** 내 p!ng 목록 조회 */
 export async function fetchEntries(): Promise<DiaryEntry[]> {
   const rows = await request('/entries');
   return Array.isArray(rows) ? rows.map(fromServer) : [];
 }
 
-/** 일기 작성 (서버 저장 후 저장된 엔트리 반환) */
+/** p!ng 작성 (서버 저장 후 저장된 엔트리 반환) */
 export async function createEntry(entry: DiaryEntry): Promise<DiaryEntry> {
   const row = await request('/entries', {
     method: 'POST',
@@ -173,7 +173,7 @@ export async function createEntry(entry: DiaryEntry): Promise<DiaryEntry> {
   return fromServer(row);
 }
 
-/** 일기 수정 (서버 저장 후 갱신된 엔트리 반환) */
+/** p!ng 수정 (서버 저장 후 갱신된 엔트리 반환) */
 export async function patchEntry(entry: DiaryEntry): Promise<DiaryEntry> {
   const row = await request(`/entries/${entry.id}`, {
     method: 'PATCH',
@@ -191,7 +191,7 @@ export async function patchEntry(entry: DiaryEntry): Promise<DiaryEntry> {
   return fromServer(row);
 }
 
-/** 일기 삭제 */
+/** p!ng 삭제 */
 export async function removeEntry(id: number): Promise<void> {
   await request(`/entries/${id}`, { method: 'DELETE' });
 }
@@ -260,7 +260,7 @@ export async function joinGroup(inviteCode: string): Promise<{ id: number; name:
   });
 }
 
-/** 그룹에 공유된 일기 조회 */
+/** 그룹에 공유된 p!ng 조회 */
 export async function fetchGroupEntries(id: number): Promise<any[]> {
   const rows = await request(`/groups/${id}/entries`);
   return Array.isArray(rows) ? rows : [];

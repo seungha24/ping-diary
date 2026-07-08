@@ -18,7 +18,7 @@ export default function SplashScreen({ navigation }: Props) {
         </View>
 
         <View style={styles.taglineContainer}>
-          <Text style={styles.tagline}>나만의 감정 일기</Text>
+          <Text style={styles.tagline}>나만의 감정 p!ng</Text>
           <Text style={styles.subtitle}>매일의 순간을 기록하고{'\n'}AI 친구와 함께 대화해보세요</Text>
         </View>
 
