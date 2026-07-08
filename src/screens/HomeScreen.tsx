@@ -746,10 +746,10 @@ const styles = StyleSheet.create({
   glowCard: {
     backgroundColor: '#ffffff',
     borderRadius: 18,
-    borderWidth: 2,
+    borderWidth: 0,
     overflow: 'hidden',
-    shadowOpacity: 0.5, shadowRadius: 24, shadowOffset: { width: 0, height: 0 },
-    elevation: 9,
+    shadowOpacity: 0.28, shadowRadius: 16, shadowOffset: { width: 0, height: 3 },
+    elevation: 5,
   },
   folderCoverWrap: {
     width: '100%', height: 112,
