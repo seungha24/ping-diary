@@ -16,7 +16,7 @@ import { useEntries } from '../context/EntriesContext';
 import { generateComment } from '../api';
 import { notify } from '../notify';
 import Svg, { Path, Line } from 'react-native-svg';
-import { IconLock, IconX, IconSparkle, IconTrash as IconTrashLine } from '../components/icons/Line';
+import { IconLock, IconX, IconSparkle, IconTrash as IconTrashLine, PersonaIcon } from '../components/icons/Line';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -133,9 +133,12 @@ export default function DiaryDetailScreen() {
         {/* AI 코멘트 */}
         <View style={styles.aiSection}>
           <View style={styles.aiTitleRow}>
-            <View style={styles.aiDot}><View style={styles.aiDotInner} /></View>
+            <IconSparkle size={15} color={accent} />
             <Text style={styles.aiTitle}>AI 코멘트</Text>
-            <Text style={styles.aiPersona}>{PERSONA_EMOJI[entry.persona]} {entry.persona}</Text>
+            <View style={styles.aiPersonaRow}>
+              <PersonaIcon persona={entry.persona} size={13} color="#9ca3af" />
+              <Text style={styles.aiPersona}>{entry.persona}</Text>
+            </View>
           </View>
 
           {aiComment ? (
@@ -249,6 +252,7 @@ const styles = StyleSheet.create({
   aiDotInner: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#ffffff' },
   aiTitle: { fontSize: 13, fontWeight: '700', color: '#374151', flex: 1 },
   aiPersona: { fontSize: 12, color: '#9ca3af' },
+  aiPersonaRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   aiCommentBox: {
     backgroundColor: '#f9fafb', borderRadius: 14,
     borderWidth: 1, borderColor: '#e5e7eb', padding: 16,

@@ -18,7 +18,7 @@ import { useGroups } from '../context/GroupsContext';
 import { fetchGroupEntries, leaveGroup } from '../api';
 import { notify } from '../notify';
 import { Platform } from 'react-native';
-import { IconUsers, IconBell as IconBellLine, IconSprout } from '../components/icons/Line';
+import { IconUsers, IconBell as IconBellLine, IconSprout, IconSparkle, PersonaIcon } from '../components/icons/Line';
 
 /** 서버 그룹 피드 행 → DiaryEntry 매핑 */
 function mapGroupEntry(row: any): DiaryEntry {
@@ -126,11 +126,12 @@ function ListCard({
       {entry.aiComment && (
         <View style={styles.aiSection}>
           <View style={styles.aiSectionHeader}>
-            <View style={styles.aiDotWrap}><View style={styles.aiDotInner} /></View>
+            <IconSparkle size={13} color={accent} />
             <Text style={styles.aiSectionLabel}>AI 코멘트</Text>
-            <Text style={styles.aiPersona}>
-              {PERSONA_EMOJI[entry.persona] ?? '🤖'} {entry.persona}
-            </Text>
+            <View style={styles.aiPersonaRow}>
+              <PersonaIcon persona={entry.persona} size={12} color="#9ca3af" />
+              <Text style={styles.aiPersonaText}>{entry.persona}</Text>
+            </View>
             <TouchableOpacity
               style={[styles.shareToggle, isShared && { borderColor: accent, backgroundColor: accent }]}
               onPress={onToggleShare}
@@ -674,6 +675,8 @@ const styles = StyleSheet.create({
   aiDotInner: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#ffffff' },
   aiSectionLabel: { fontSize: 11, fontWeight: '700', color: '#374151' },
   aiPersona: { flex: 1, fontSize: 11, color: '#9ca3af' },
+  aiPersonaRow: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 4 },
+  aiPersonaText: { fontSize: 11, color: '#9ca3af' },
   shareToggle: {
     paddingHorizontal: 8, paddingVertical: 3, borderRadius: 99,
     borderWidth: 1, borderColor: '#d1d5db', backgroundColor: '#ffffff',

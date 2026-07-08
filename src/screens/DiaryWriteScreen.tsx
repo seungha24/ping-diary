@@ -10,6 +10,7 @@ import Svg, { Path, Rect, Circle, Polyline } from 'react-native-svg';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import { PERSONAS, MONTHS, DAYS } from '../data/types';
+import { PersonaIcon } from '../components/icons/Line';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { uploadPhoto } from '../api';
@@ -337,7 +338,7 @@ export default function DiaryWriteScreen() {
                     style={[styles.personaCard, persona === p.label && { backgroundColor: accent, borderColor: accent }]}
                     onPress={() => { setPersona(p.label); setPersonaModalOpen(false); }}
                   >
-                    <Text style={styles.personaEmoji}>{p.emoji}</Text>
+                    <PersonaIcon persona={p.label} size={20} color={persona === p.label ? '#ffffff' : '#6b7280'} />
                     <Text style={[styles.personaLabel, persona === p.label && styles.personaLabelActive]}>{p.label}</Text>
                   </TouchableOpacity>
                 ))}
@@ -494,7 +495,7 @@ const styles = StyleSheet.create({
   aiSub: { fontSize: 11, color: '#9ca3af' },
   personaRow: { flexDirection: 'row', gap: 8 },
   personaCard: {
-    flex: 1, alignItems: 'center', paddingVertical: 10,
+    flexGrow: 1, flexBasis: '28%', minWidth: 72, alignItems: 'center', paddingVertical: 10,
     borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb',
     backgroundColor: '#f9fafb', gap: 4,
   },

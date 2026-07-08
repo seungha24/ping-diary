@@ -113,6 +113,7 @@ export const PERSONAS = [
   { emoji: '🌸', label: '엄마' },
   { emoji: '💆', label: '상담사' },
   { emoji: '🔮', label: '미래의 나' },
+  { emoji: '🖋️', label: '소설가' },
 ];
 
 export const MONTH_COUNTS = [18, 12, 25, 8, 30, 10, 0, 0, 0, 0, 0, 0];

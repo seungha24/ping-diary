@@ -62,3 +62,26 @@ export function IconSparkle({ color = '#6b7280', size = 16 }: IconProps) {
     </Svg>
   );
 }
+export function IconBook({ color, size }: IconProps) {
+  return <Base size={size} color={color}><Path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><Path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></Base>;
+}
+export function IconHeart({ color, size }: IconProps) {
+  return <Base size={size} color={color}><Path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></Base>;
+}
+export function IconClock({ color, size }: IconProps) {
+  return <Base size={size} color={color}><Circle cx="12" cy="12" r="10" /><Polyline points="12 6 12 12 16 14" /></Base>;
+}
+export function IconFeather({ color, size }: IconProps) {
+  return <Base size={size} color={color}><Path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z" /><Line x1="16" y1="8" x2="2" y2="22" /><Line x1="17.5" y1="15" x2="9" y2="15" /></Base>;
+}
+/** 페르소나별 라인 아이콘 (선생님/엄마/상담사/미래의 나/소설가) */
+export function PersonaIcon({ persona, color, size }: { persona: string; color?: string; size?: number }) {
+  switch (persona) {
+    case '선생님': return <IconBook color={color} size={size} />;
+    case '엄마': return <IconHeart color={color} size={size} />;
+    case '상담사': return <IconMessage color={color} size={size} />;
+    case '미래의 나': return <IconClock color={color} size={size} />;
+    case '소설가': return <IconFeather color={color} size={size} />;
+    default: return <IconMessage color={color} size={size} />;
+  }
+}
