@@ -316,9 +316,9 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 13, fontWeight: '700', color: '#374151' },
 
   // 월별
-  monthGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  monthGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10 },
   monthCell: {
-    width: '21%', borderRadius: 12,
+    width: '22%', borderRadius: 12,
     paddingVertical: 10, paddingHorizontal: 4,
     alignItems: 'center', gap: 2,
   },

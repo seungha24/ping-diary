@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   SafeAreaView, TextInput, Alert, Modal, ActivityIndicator, Platform,
@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import IconChev from '../components/icons/IconChev';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { changePassword, deleteAccount } from '../api';
+import { changePassword, deleteAccount, getMe, saveProfile } from '../api';
 import { notify } from '../notify';
 
 function Row({ label, value, onPress }: { label: string; value?: string; onPress?: () => void }) {
@@ -25,13 +25,38 @@ function Row({ label, value, onPress }: { label: string; value?: string; onPress
 export default function AccountSettingsScreen() {
   const navigation = useNavigation();
   const { accent } = useTheme();
-  const { logout, email: authEmail } = useAuth();
+  const { logout, token, email: authEmail } = useAuth();
 
   const emailPrefix = (authEmail ?? '').split('@')[0] || '사용자';
   const [name, setName] = useState(emailPrefix);
-  const [username] = useState(emailPrefix);
+  const [username, setUsername] = useState(emailPrefix);
   const email = authEmail ?? '-';
   const [editingName, setEditingName] = useState(false);
+  const [editingUsername, setEditingUsername] = useState(false);
+
+  // DB에 저장된 이름/아이디 불러오기
+  useEffect(() => {
+    if (!token) return;
+    getMe().then((me) => {
+      if (me.display_name) setName(me.display_name);
+      if (me.username) setUsername(me.username);
+    }).catch(() => {});
+  }, [token]);
+
+  /** 이름 저장 → DB */
+  async function commitName() {
+    const v = name.trim() || emailPrefix;
+    setName(v);
+    setEditingName(false);
+    try { await saveProfile({ display_name: v }); } catch (e: any) { notify(e?.message ?? '이름 저장에 실패했어요.'); }
+  }
+  /** 아이디 저장 → DB */
+  async function commitUsername() {
+    const v = username.trim() || emailPrefix;
+    setUsername(v);
+    setEditingUsername(false);
+    try { await saveProfile({ username: v }); } catch (e: any) { notify(e?.message ?? '아이디 저장에 실패했어요.'); }
+  }
 
   // 비밀번호 변경 모달
   const [pwOpen, setPwOpen] = useState(false);
@@ -111,9 +136,9 @@ export default function AccountSettingsScreen() {
                     onChangeText={setName}
                     autoFocus
                     returnKeyType="done"
-                    onSubmitEditing={() => setEditingName(false)}
+                    onSubmitEditing={commitName}
                   />
-                  <TouchableOpacity onPress={() => setEditingName(false)}>
+                  <TouchableOpacity onPress={commitName}>
                     <Text style={styles.saveText}>저장</Text>
                   </TouchableOpacity>
                 </View>
@@ -125,7 +150,32 @@ export default function AccountSettingsScreen() {
               )}
             </View>
             <View style={styles.divider} />
-            <Row label="아이디" value={`@${username}`} />
+            {/* 아이디 */}
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>아이디</Text>
+              {editingUsername ? (
+                <View style={styles.inlineEditRow}>
+                  <Text style={styles.atSign}>@</Text>
+                  <TextInput
+                    style={styles.inlineInput}
+                    value={username}
+                    onChangeText={setUsername}
+                    autoFocus
+                    returnKeyType="done"
+                    autoCapitalize="none"
+                    onSubmitEditing={commitUsername}
+                  />
+                  <TouchableOpacity onPress={commitUsername}>
+                    <Text style={styles.saveText}>저장</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity style={styles.rowRight} onPress={() => setEditingUsername(true)}>
+                  <Text style={styles.rowValue}>@{username}</Text>
+                  <IconChev dir="right" size={16} color="#d1d5db" />
+                </TouchableOpacity>
+              )}
+            </View>
             <View style={styles.divider} />
             <Row label="이메일" value={email} />
             <View style={styles.divider} />
@@ -238,7 +288,8 @@ const styles = StyleSheet.create({
   rowDesc2: { fontSize: 12, color: '#9ca3af' },
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   rowValue: { fontSize: 14, color: '#9ca3af' },
-  inlineEditRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  inlineEditRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  atSign: { fontSize: 14, color: '#9ca3af' },
   inlineInput: {
     fontSize: 14, color: '#111827',
     borderBottomWidth: 1.5, borderBottomColor: '#111827',

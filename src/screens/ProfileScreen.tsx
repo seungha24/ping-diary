@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
@@ -7,9 +7,8 @@ import { RootStackParamList } from '../navigation/RootNavigator';
 import IconChev from '../components/icons/IconChev';
 import { useTheme, THEMES } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { getMe, saveProfile } from '../api';
-import { notify } from '../notify';
-import { IconUser, IconCamera, IconPencil } from '../components/icons/Line';
+import { getMe } from '../api';
+import { IconUser, IconCamera } from '../components/icons/Line';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -20,12 +19,8 @@ export default function ProfileScreen() {
   const emailPrefix = (email ?? '').split('@')[0] || '사용자';
 
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
-  const [editingName, setEditingName] = useState(false);
   const [displayName, setDisplayName] = useState(emailPrefix);
-  const [editingUsername, setEditingUsername] = useState(false);
   const [username, setUsername] = useState(emailPrefix);
-  const [tempName, setTempName] = useState(displayName);
-  const [tempUsername, setTempUsername] = useState(username);
 
   // 로그인 후 DB에 저장된 이름/아이디 불러오기 (없으면 이메일 앞부분)
   useEffect(() => {
@@ -37,30 +32,6 @@ export default function ProfileScreen() {
       })
       .catch(() => {});
   }, [token]);
-
-  /** 표시 이름 저장 → DB */
-  async function commitName() {
-    const name = tempName.trim() || emailPrefix;
-    setDisplayName(name);
-    setEditingName(false);
-    try {
-      await saveProfile({ display_name: name });
-    } catch (e: any) {
-      notify(e?.message ?? '이름 저장에 실패했어요.');
-    }
-  }
-
-  /** 아이디 저장 → DB */
-  async function commitUsername() {
-    const name = tempUsername.trim() || emailPrefix;
-    setUsername(name);
-    setEditingUsername(false);
-    try {
-      await saveProfile({ username: name });
-    } catch (e: any) {
-      notify(e?.message ?? '아이디 저장에 실패했어요.');
-    }
-  }
 
   async function pickAvatar() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -100,47 +71,8 @@ export default function ProfileScreen() {
 
           {/* 이름 / 아이디 */}
           <View style={styles.profileInfo}>
-            {editingName ? (
-              <View style={styles.inlineRow}>
-                <TextInput
-                  style={styles.inlineInput}
-                  value={tempName}
-                  onChangeText={setTempName}
-                  autoFocus
-                  returnKeyType="done"
-                  onSubmitEditing={commitName}
-                />
-                <TouchableOpacity onPress={commitName}>
-                  <Text style={styles.saveBtn}>저장</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <TouchableOpacity onPress={() => { setTempName(displayName); setEditingName(true); }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}><Text style={styles.displayName}>{displayName}</Text><IconPencil size={14} color="#9ca3af" /></View>
-              </TouchableOpacity>
-            )}
-
-            {editingUsername ? (
-              <View style={styles.inlineRow}>
-                <Text style={styles.atSign}>@</Text>
-                <TextInput
-                  style={[styles.inlineInput, { fontSize: 13 }]}
-                  value={tempUsername}
-                  onChangeText={setTempUsername}
-                  autoFocus
-                  returnKeyType="done"
-                  autoCapitalize="none"
-                  onSubmitEditing={commitUsername}
-                />
-                <TouchableOpacity onPress={commitUsername}>
-                  <Text style={styles.saveBtn}>저장</Text>
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <TouchableOpacity onPress={() => { setTempUsername(username); setEditingUsername(true); }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}><Text style={styles.usernameText}>@{username}</Text><IconPencil size={12} color="#9ca3af" /></View>
-              </TouchableOpacity>
-            )}
+            <Text style={styles.displayName}>{displayName}</Text>
+            <Text style={styles.usernameText}>@{username}</Text>
           </View>
         </View>
 
@@ -151,13 +83,14 @@ export default function ProfileScreen() {
           <Text style={styles.sectionTitle}>테마 색상</Text>
           <View style={styles.themeRow}>
             {THEMES.map((t) => (
-              <TouchableOpacity
-                key={t.key}
-                onPress={() => setTheme(t.key)}
-                style={[styles.themeCircle, { backgroundColor: t.color }, themeKey === t.key && styles.themeCircleActive]}
-              >
-                {themeKey === t.key && <View style={styles.themeCheck} />}
-              </TouchableOpacity>
+              <View key={t.key} style={styles.themeCell}>
+                <TouchableOpacity
+                  onPress={() => setTheme(t.key)}
+                  style={[styles.themeCircle, { backgroundColor: t.color }, themeKey === t.key && styles.themeCircleActive]}
+                >
+                  {themeKey === t.key && <View style={styles.themeCheck} />}
+                </TouchableOpacity>
+              </View>
             ))}
           </View>
         </View>
@@ -236,7 +169,8 @@ const styles = StyleSheet.create({
   },
   menuText: { fontSize: 14, color: '#374151' },
   menuTextDanger: { color: '#ef4444' },
-  themeRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
+  themeRow: { flexDirection: 'row', flexWrap: 'wrap' },
+  themeCell: { width: '20%', alignItems: 'center', marginBottom: 14 },
   themeCircle: {
     width: 36, height: 36, borderRadius: 18,
     alignItems: 'center', justifyContent: 'center',
