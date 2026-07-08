@@ -33,6 +33,8 @@ export default function HomeScreen() {
   const [folderCovers, setFolderCovers] = useState<Record<string, string>>({});
   const [shareEntry, setShareEntry] = useState<DiaryEntry | null>(null);
 
+  const [groupCovers, setGroupCovers] = useState<Record<number, string>>({});
+
   async function pickFolderCover(folderId: string) {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') return;
@@ -44,6 +46,21 @@ export default function HomeScreen() {
     });
     if (!result.canceled && result.assets[0]) {
       setFolderCovers((prev) => ({ ...prev, [folderId]: result.assets[0].uri }));
+    }
+  }
+
+  /** 그룹 커버 사진 변경 (폴더 커버와 동일 방식, 기기 로컬 저장) */
+  async function pickGroupCover(groupId: number) {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [3, 2],
+      quality: 0.8,
+    });
+    if (!result.canceled && result.assets[0]) {
+      setGroupCovers((prev) => ({ ...prev, [groupId]: result.assets[0].uri }));
     }
   }
   function openShare(entry: DiaryEntry) {
@@ -210,7 +227,7 @@ export default function HomeScreen() {
                       style={styles.folderCard}
                       onPress={() => setSelectedFolder(folder)}
                     >
-                      <View style={styles.folderCoverWrap}>
+                      <View style={[styles.folderCoverWrap, styles.coverBorder, { borderColor: accent }]}>
                         {cover ? (
                           <Image source={{ uri: cover }} style={styles.folderCoverImg} />
                         ) : (
@@ -285,34 +302,51 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </>
       ) : (
-        <ScrollView contentContainerStyle={styles.list}>
-          <Text style={styles.sectionLabel}>참여 중인 그룹</Text>
+        <ScrollView contentContainerStyle={styles.folderList}>
+          <Text style={[styles.sectionLabel, { marginBottom: 10 }]}>참여 중인 그룹</Text>
           {groups.length === 0 && (
             <Text style={styles.groupEmptyHint}>아직 참여 중인 그룹이 없어요.{'\n'}새 그룹을 만들거나 초대 코드로 참여해보세요.</Text>
           )}
-          {groups.map((group) => (
-            <TouchableOpacity
-              key={group.id}
-              style={styles.groupCard}
-              onPress={() => navigation.navigate('Group', { group })}
-            >
-              <View style={styles.groupTop}>
-                <View style={styles.groupLeft}>
-                  <View style={styles.groupIconBox}>
-                    <Text style={{ fontSize: 20 }}>👥</Text>
+          <View style={styles.folderGrid}>
+            {groups.map((group) => {
+              const cover = groupCovers[group.id];
+              return (
+                <TouchableOpacity
+                  key={group.id}
+                  style={styles.folderCard}
+                  onPress={() => navigation.navigate('Group', { group })}
+                >
+                  <View style={[styles.folderCoverWrap, styles.coverBorder, { borderColor: accent }]}>
+                    {cover ? (
+                      <Image source={{ uri: cover }} style={styles.folderCoverImg} />
+                    ) : (
+                      <View style={styles.folderCoverEmpty}>
+                        <Text style={styles.folderCoverEmoji}>👥</Text>
+                      </View>
+                    )}
+                    <TouchableOpacity
+                      style={styles.groupCamBtn}
+                      onPress={(e) => { e.stopPropagation(); pickGroupCover(group.id); }}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                        <Circle cx="12" cy="13" r="4" />
+                      </Svg>
+                    </TouchableOpacity>
                   </View>
-                  <View>
-                    <Text style={styles.groupName}>{group.name} · {group.member_count ?? 1}명</Text>
-                    <Text style={styles.groupSub}>초대코드 {group.invite_code}</Text>
+                  <View style={styles.folderCardBody}>
+                    <Text style={styles.folderName} numberOfLines={1}>{group.name}</Text>
+                    <Text style={styles.folderCount}>{group.member_count ?? 1}명 · {group.invite_code}</Text>
                   </View>
-                </View>
-              </View>
+                </TouchableOpacity>
+              );
+            })}
+            <TouchableOpacity style={[styles.folderCard, styles.groupAddCard]} onPress={() => navigation.navigate('GroupCreate')}>
+              <Text style={styles.newGroupPlus}>+</Text>
+              <Text style={styles.newGroupText}>새 그룹{'\n'}만들기 / 참여</Text>
             </TouchableOpacity>
-          ))}
-          <TouchableOpacity style={styles.newGroupCard} onPress={() => navigation.navigate('GroupCreate')}>
-            <Text style={styles.newGroupPlus}>+</Text>
-            <Text style={styles.newGroupText}>새 그룹 만들기 / 참여</Text>
-          </TouchableOpacity>
+          </View>
         </ScrollView>
       )}
 
@@ -439,8 +473,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   folderCoverWrap: {
-    width: '100%', height: 90,
+    height: 90,
     position: 'relative',
+  },
+  // 커버 사진 얇은 색 테두리 프레임 (accent 색은 인라인으로 주입)
+  coverBorder: {
+    margin: 8, marginBottom: 4,
+    borderWidth: 1.5, borderRadius: 12,
+    overflow: 'hidden',
   },
   folderCoverImg: { width: '100%', height: '100%' },
   folderCoverEmpty: {
@@ -497,7 +537,21 @@ const styles = StyleSheet.create({
     borderRadius: 16, paddingVertical: 24, alignItems: 'center', gap: 6,
   },
   newGroupPlus: { fontSize: 24, color: '#9ca3af' },
-  newGroupText: { fontSize: 13, color: '#9ca3af' },
+  newGroupText: { fontSize: 13, color: '#9ca3af', textAlign: 'center', lineHeight: 18 },
+  // 그룹 커버 위 카메라(사진 변경) 버튼
+  groupCamBtn: {
+    position: 'absolute', top: 6, right: 6,
+    width: 26, height: 26, borderRadius: 13,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  // 폴더 그리드 톤에 맞춘 '새 그룹' 추가 카드
+  groupAddCard: {
+    minHeight: 140,
+    alignItems: 'center', justifyContent: 'center', gap: 6,
+    borderWidth: 2, borderColor: '#e5e7eb', borderStyle: 'dashed',
+    backgroundColor: '#ffffff',
+  },
   groupEmptyHint: { fontSize: 13, color: '#9ca3af', textAlign: 'center', lineHeight: 20, paddingVertical: 16 },
   zoomOverlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.75)',
