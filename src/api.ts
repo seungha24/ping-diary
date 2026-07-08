@@ -238,6 +238,7 @@ export interface ServerGroup {
   invite_code: string;
   member_count?: number;
   created_at?: string;
+  photo_url?: string | null;
 }
 
 /** 내가 속한 그룹 목록 */
@@ -268,4 +269,32 @@ export async function fetchGroupEntries(id: number): Promise<any[]> {
 /** 그룹 나가기 */
 export async function leaveGroup(id: number): Promise<void> {
   await request(`/groups/${id}/leave`, { method: 'POST' });
+}
+
+/** 그룹 커버 사진 변경 (멤버 공유, DB 저장) */
+export async function updateGroupPhoto(id: number, photo_url: string | null): Promise<ServerGroup> {
+  return request(`/groups/${id}/photo`, {
+    method: 'PATCH',
+    body: JSON.stringify({ photo_url }),
+  });
+}
+
+/** 내 프로필 (폴더 커버·테마 등 user_metadata) */
+export async function getMe(): Promise<{ email: string | null; folder_covers: Record<string, string>; theme: string | null }> {
+  const r = await request('/auth/me');
+  return { email: r?.email ?? null, folder_covers: r?.folder_covers ?? {}, theme: r?.theme ?? null };
+}
+
+/** 선택한 테마를 내 계정(user_metadata)에 저장 */
+export async function setThemeServer(theme: string): Promise<void> {
+  await request('/auth/theme', { method: 'PATCH', body: JSON.stringify({ theme }) });
+}
+
+/** 폴더 커버 사진 저장 (내 계정 user_metadata, DB 저장) */
+export async function setFolderCover(folder_id: string, photo_url: string | null): Promise<Record<string, string>> {
+  const r = await request('/auth/folder-covers', {
+    method: 'PATCH',
+    body: JSON.stringify({ folder_id, photo_url }),
+  });
+  return r?.folder_covers ?? {};
 }

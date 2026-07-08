@@ -2,10 +2,11 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import {
   getToken, getUserEmail, setToken as apiSetToken, setUserEmail as apiSetUserEmail,
-  clearToken, hydrateToken, login as apiLogin, signup as apiSignup,
+  clearToken, hydrateToken, login as apiLogin, signup as apiSignup, getMe,
 } from '../api';
 import { supabase } from '../supabaseClient';
 import { API_BASE_URL } from '../config';
+import { useTheme } from './ThemeContext';
 
 /**
  * 인증 컨텍스트.
@@ -45,6 +46,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [token, setTok] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const { hydrateTheme } = useTheme();
+
+  // 로그인되면 내 계정에 저장된 테마를 불러와 적용
+  useEffect(() => {
+    if (!token) return;
+    getMe().then((me) => { if (me.theme) hydrateTheme(me.theme as any); }).catch(() => {});
+  }, [token]);
 
   // 소셜 로그인(Supabase) 세션을 우리 토큰 저장소/상태에 반영
   function adoptSession(session: any) {

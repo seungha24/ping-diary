@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView,
   Modal, Pressable, Image,
@@ -13,9 +13,11 @@ import IconBell from '../components/icons/IconBell';
 import { PhotoThumb } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
 import { FOLDERS, DiaryEntry, DiaryFolder } from '../data/types';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { useGroups } from '../context/GroupsContext';
+import { uploadPhoto, updateGroupPhoto, getMe, setFolderCover } from '../api';
+import { notify } from '../notify';
 import Svg, { Path, Line, Circle } from 'react-native-svg';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -24,7 +26,7 @@ export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const { accent } = useTheme();
   const { entries, updateEntry } = useEntries();
-  const { groups } = useGroups();
+  const { groups, refresh: refreshGroups } = useGroups();
   const [tab, setTab] = useState<'personal' | 'group'>('personal');
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const [zoomedGroup, setZoomedGroup] = useState<{ emoji: string; photo?: string; name: string } | null>(null);
@@ -35,6 +37,12 @@ export default function HomeScreen() {
 
   const [groupCovers, setGroupCovers] = useState<Record<number, string>>({});
 
+  // 폴더 커버(서버 저장분)를 앱 시작 시 불러오기
+  useEffect(() => {
+    getMe().then((me) => setFolderCovers(me.folder_covers)).catch(() => {});
+  }, []);
+
+  /** 폴더 커버 사진 변경 → Storage 업로드 후 내 계정(user_metadata)에 저장 */
   async function pickFolderCover(folderId: string) {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') return;
@@ -44,12 +52,19 @@ export default function HomeScreen() {
       aspect: [3, 2],
       quality: 0.8,
     });
-    if (!result.canceled && result.assets[0]) {
-      setFolderCovers((prev) => ({ ...prev, [folderId]: result.assets[0].uri }));
+    if (result.canceled || !result.assets[0]) return;
+    const localUri = result.assets[0].uri;
+    setFolderCovers((prev) => ({ ...prev, [folderId]: localUri })); // 낙관적 표시
+    try {
+      const url = await uploadPhoto(localUri);
+      const covers = await setFolderCover(folderId, url);
+      setFolderCovers(covers);
+    } catch (e: any) {
+      notify(e?.message ?? '커버 저장에 실패했어요.');
     }
   }
 
-  /** 그룹 커버 사진 변경 (폴더 커버와 동일 방식, 기기 로컬 저장) */
+  /** 그룹 커버 사진 변경 → Storage 업로드 후 DB 저장 (모든 멤버 공유) */
   async function pickGroupCover(groupId: number) {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') return;
@@ -59,8 +74,15 @@ export default function HomeScreen() {
       aspect: [3, 2],
       quality: 0.8,
     });
-    if (!result.canceled && result.assets[0]) {
-      setGroupCovers((prev) => ({ ...prev, [groupId]: result.assets[0].uri }));
+    if (result.canceled || !result.assets[0]) return;
+    const localUri = result.assets[0].uri;
+    setGroupCovers((prev) => ({ ...prev, [groupId]: localUri })); // 낙관적 표시
+    try {
+      const url = await uploadPhoto(localUri);
+      await updateGroupPhoto(groupId, url);
+      await refreshGroups(); // group.photo_url 갱신
+    } catch (e: any) {
+      notify(e?.message ?? '그룹 커버 저장에 실패했어요.');
     }
   }
   function openShare(entry: DiaryEntry) {
@@ -224,7 +246,7 @@ export default function HomeScreen() {
                   return (
                     <TouchableOpacity
                       key={folder.id}
-                      style={[styles.folderCard, { borderColor: accent, borderWidth: 1.5 }]}
+                      style={[styles.folderCard, styles.softFrame, { borderColor: hexToRgba(accent, 0.3), shadowColor: accent }]}
                       onPress={() => setSelectedFolder(folder)}
                     >
                       <View style={styles.folderCoverWrap}>
@@ -309,11 +331,11 @@ export default function HomeScreen() {
           )}
           <View style={styles.folderGrid}>
             {groups.map((group) => {
-              const cover = groupCovers[group.id];
+              const cover = group.photo_url ?? groupCovers[group.id];
               return (
                 <TouchableOpacity
                   key={group.id}
-                  style={[styles.folderCard, { borderColor: accent, borderWidth: 1.5 }]}
+                  style={[styles.folderCard, styles.softFrame, { borderColor: hexToRgba(accent, 0.3), shadowColor: accent }]}
                   onPress={() => navigation.navigate('Group', { group })}
                 >
                   <View style={styles.folderCoverWrap}>
@@ -471,6 +493,12 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#f3f4f6',
     shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1,
     overflow: 'hidden',
+  },
+  // 은은한 테두리 프레임: 반투명 accent 테두리 + 부드러운 accent 그림자 (색은 인라인 주입)
+  softFrame: {
+    borderWidth: 1.5,
+    shadowOpacity: 0.12, shadowRadius: 8, shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   folderCoverWrap: {
     width: '100%', height: 90,
