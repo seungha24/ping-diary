@@ -156,15 +156,15 @@ export default function DiaryWriteScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        {/* Date picker button */}
-        <TouchableOpacity style={styles.dateBtn} onPress={() => setCalOpen(true)}>
-          <View style={styles.dateDot} />
-          <Text style={styles.dateBtnText}>{dateLabel()}</Text>
-          <IconChev dir="right" size={14} color="#9ca3af" />
-        </TouchableOpacity>
+        {/* Date + Tags (같은 줄) */}
+        <View style={styles.dateTagRow}>
+          <TouchableOpacity style={styles.dateBtn} onPress={() => setCalOpen(true)}>
+            <View style={styles.dateDot} />
+            <Text style={styles.dateBtnText}>{dateLabel()}</Text>
+            <IconChev dir="right" size={14} color="#9ca3af" />
+          </TouchableOpacity>
 
-        {/* Tags */}
-        <View style={styles.tagRow}>
+          <View style={[styles.tagRow, styles.tagRowInline]}>
           {tags.map((t) => (
             <TouchableOpacity key={t} onPress={() => setTags(tags.filter((x) => x !== t))}>
               <View style={[styles.tagRemovable, { backgroundColor: hexToRgba(accent, 0.12), borderColor: hexToRgba(accent, 0.28) }]}>
@@ -183,6 +183,7 @@ export default function DiaryWriteScreen() {
             placeholderTextColor="#9ca3af"
             returnKeyType="done"
           />
+          </View>
         </View>
 
         {/* AI prompt */}
@@ -371,7 +372,9 @@ const styles = StyleSheet.create({
   },
   dateDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#1f2937' },
   dateBtnText: { fontSize: 13, color: '#374151', fontWeight: '500' },
+  dateTagRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' },
+  tagRowInline: { flex: 1, paddingTop: 2 },
   tagRemovable: {
     flexDirection: 'row', alignItems: 'center', gap: 2,
     paddingHorizontal: 10, paddingVertical: 4,
