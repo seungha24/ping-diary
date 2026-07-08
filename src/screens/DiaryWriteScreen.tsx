@@ -9,13 +9,23 @@ import * as ImagePicker from 'expo-image-picker';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import { PERSONAS, MONTHS, DAYS } from '../data/types';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { uploadPhoto } from '../api';
 import { notify } from '../notify';
 import { RootStackParamList } from '../navigation/RootNavigator';
 
 type WriteRoute = RouteProp<RootStackParamList, 'DiaryWrite'>;
+
+/** AI 프롬프트 질문 (새로고침으로 순환) */
+const PROMPTS = [
+  '오늘 가장 기억에 남는 순간은 무엇인가요?',
+  '오늘 나를 웃게 한 일이 있었나요?',
+  '지금 가장 고마운 사람은 누구인가요?',
+  '오늘의 나에게 한마디 해준다면?',
+  '요즘 가장 신경 쓰이는 일은 무엇인가요?',
+  '오늘 하루를 색으로 표현한다면?',
+];
 
 async function playPing() {
   try {
@@ -52,6 +62,8 @@ export default function DiaryWriteScreen() {
   const [uploading, setUploading] = useState(false);
   const [visibility, setVisibility] = useState<'private' | 'friends'>(editEntry?.visibility ?? 'private');
   const [calOpen, setCalOpen] = useState(false);
+  const [promptIndex, setPromptIndex] = useState(0);
+  const [personaModalOpen, setPersonaModalOpen] = useState(false);
   const [calYear] = useState(2026);
   const [calMonth, setCalMonth] = useState(5);
   const [selectedDates, setSelectedDates] = useState<number[]>(editEntry?.dates ?? [today.getDate()]);
@@ -112,10 +124,6 @@ export default function DiaryWriteScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{editEntry ? 'p!ng 수정' : '오늘의 p!ng'}</Text>
         <View style={styles.headerRight}>
-          <View style={styles.autoSaveBadge}>
-            <View style={styles.autoSaveDot} />
-            <Text style={styles.autoSaveText}>자동저장</Text>
-          </View>
           <TouchableOpacity
             style={[styles.saveBtn, { backgroundColor: accent }]}
             onPress={() => {
@@ -140,6 +148,10 @@ export default function DiaryWriteScreen() {
           >
             <Text style={styles.saveBtnText}>{editEntry ? '저장' : 'p!ng'}</Text>
           </TouchableOpacity>
+          <View style={styles.autoSaveBadge}>
+            <View style={styles.autoSaveDot} />
+            <Text style={styles.autoSaveText}>자동저장됨</Text>
+          </View>
         </View>
       </View>
 
@@ -155,10 +167,10 @@ export default function DiaryWriteScreen() {
         <View style={styles.tagRow}>
           {tags.map((t) => (
             <TouchableOpacity key={t} onPress={() => setTags(tags.filter((x) => x !== t))}>
-              <View style={styles.tagRemovable}>
-                <Text style={styles.tagHash}>#</Text>
-                <Text style={styles.tagLabel}>{t}</Text>
-                <Text style={styles.tagX}>×</Text>
+              <View style={[styles.tagRemovable, { backgroundColor: hexToRgba(accent, 0.12), borderColor: hexToRgba(accent, 0.28) }]}>
+                <Text style={[styles.tagHash, { color: accent }]}>#</Text>
+                <Text style={[styles.tagLabel, { color: accent }]}>{t}</Text>
+                <Text style={[styles.tagX, { color: accent }]}>×</Text>
               </View>
             </TouchableOpacity>
           ))}
@@ -167,16 +179,19 @@ export default function DiaryWriteScreen() {
             value={tagInput}
             onChangeText={setTagInput}
             onSubmitEditing={addTag}
-            placeholder="# 태그 추가"
+            placeholder="+ 태그 추가"
             placeholderTextColor="#9ca3af"
             returnKeyType="done"
           />
         </View>
 
         {/* AI prompt */}
-        <View style={styles.promptCard}>
-          <Text style={styles.promptQ}>Q.</Text>
-          <Text style={styles.promptText}>오늘 가장 기억에 남는 순간은 무엇인가요?</Text>
+        <View style={[styles.promptCard, { backgroundColor: hexToRgba(accent, 0.1), borderColor: hexToRgba(accent, 0.2) }]}>
+          <Text style={[styles.promptQuote, { color: accent }]}>❝</Text>
+          <Text style={styles.promptText}>{PROMPTS[promptIndex]}</Text>
+          <TouchableOpacity onPress={() => setPromptIndex((i) => (i + 1) % PROMPTS.length)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Text style={[styles.promptRefresh, { color: accent }]}>↻</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Title */}
@@ -189,17 +204,15 @@ export default function DiaryWriteScreen() {
         />
 
         {/* Body */}
-        <View style={styles.bodyCard}>
-          <TextInput
-            style={styles.bodyInput}
-            value={body}
-            onChangeText={setBody}
-            placeholder="오늘의 일상을 자유롭게 p!ng해보세요..."
-            placeholderTextColor="#d1d5db"
-            multiline
-            textAlignVertical="top"
-          />
-        </View>
+        <TextInput
+          style={styles.bodyInput}
+          value={body}
+          onChangeText={setBody}
+          placeholder="오늘의 일상을 자유롭게 p!ng해보세요..."
+          placeholderTextColor="#d1d5db"
+          multiline
+          textAlignVertical="top"
+        />
 
         {/* Photo */}
         {photo ? (
@@ -238,27 +251,44 @@ export default function DiaryWriteScreen() {
           <Text style={styles.visHint}>참여 중인 그룹의 피드에 이 p!ng가 공개돼요.</Text>
         )}
 
-        {/* AI comment section */}
-        <View style={styles.aiSection}>
-          <View style={styles.aiTitleRow}>
-            <View style={styles.aiDot}><View style={styles.aiDotInner} /></View>
-            <Text style={styles.aiTitle}>AI 코멘트</Text>
-            <Text style={styles.aiSub}>24시간 뒤 공개돼요!</Text>
+        {/* AI comment card */}
+        <TouchableOpacity style={styles.aiCard} onPress={() => setPersonaModalOpen(true)} activeOpacity={0.85}>
+          <View style={[styles.aiCardIcon, { backgroundColor: hexToRgba(accent, 0.12) }]}>
+            <Text style={{ fontSize: 15 }}>💬</Text>
           </View>
-          <View style={styles.personaRow}>
-            {PERSONAS.map((p) => (
-              <TouchableOpacity
-                key={p.label}
-                style={[styles.personaCard, persona === p.label && { backgroundColor: accent, borderColor: accent }]}
-                onPress={() => setPersona(p.label)}
-              >
-                <Text style={styles.personaEmoji}>{p.emoji}</Text>
-                <Text style={[styles.personaLabel, persona === p.label && styles.personaLabelActive]}>{p.label}</Text>
-              </TouchableOpacity>
-            ))}
+          <View style={{ flex: 1 }}>
+            <Text style={styles.aiCardTitle}>AI 코멘트</Text>
+            <Text style={styles.aiCardSub}>
+              {PERSONAS.find((p) => p.label === persona)?.emoji} {persona} · 24시간 뒤 도착
+            </Text>
           </View>
-        </View>
+          <IconChev dir="right" size={16} color="#9ca3af" />
+        </TouchableOpacity>
       </ScrollView>
+
+      {/* 페르소나 선택 모달 */}
+      <Modal visible={personaModalOpen} transparent animationType="fade">
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setPersonaModalOpen(false)}>
+          <TouchableOpacity activeOpacity={1}>
+            <View style={styles.personaModal}>
+              <Text style={styles.personaModalTitle}>AI 코멘트 페르소나</Text>
+              <Text style={styles.personaModalSub}>어떤 말투로 코멘트를 받을까요?</Text>
+              <View style={styles.personaGrid}>
+                {PERSONAS.map((p) => (
+                  <TouchableOpacity
+                    key={p.label}
+                    style={[styles.personaCard, persona === p.label && { backgroundColor: accent, borderColor: accent }]}
+                    onPress={() => { setPersona(p.label); setPersonaModalOpen(false); }}
+                  >
+                    <Text style={styles.personaEmoji}>{p.emoji}</Text>
+                    <Text style={[styles.personaLabel, persona === p.label && styles.personaLabelActive]}>{p.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
 
       {/* Calendar modal */}
       <Modal visible={calOpen} transparent animationType="fade">
@@ -327,16 +357,12 @@ const styles = StyleSheet.create({
   },
   cancelText: { fontSize: 14, color: '#9ca3af' },
   headerTitle: { fontSize: 14, fontWeight: '700', color: '#1f2937' },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  autoSaveBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 5,
-    paddingHorizontal: 10, paddingVertical: 5,
-    backgroundColor: '#f3f4f6', borderRadius: 8,
-  },
+  headerRight: { alignItems: 'flex-end', gap: 5 },
+  autoSaveBadge: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   autoSaveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4ade80' },
-  autoSaveText: { fontSize: 11, color: '#6b7280' },
-  saveBtn: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 9, backgroundColor: '#111827' },
-  saveBtnText: { fontSize: 12, fontWeight: '700', color: '#ffffff' },
+  autoSaveText: { fontSize: 11, color: '#9ca3af' },
+  saveBtn: { paddingHorizontal: 22, paddingVertical: 9, borderRadius: 999, backgroundColor: '#111827' },
+  saveBtnText: { fontSize: 14, fontWeight: '800', color: '#ffffff' },
   content: { padding: 20, gap: 14, paddingBottom: 48 },
   dateBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
@@ -361,12 +387,12 @@ const styles = StyleSheet.create({
     minWidth: 80,
   },
   promptCard: {
-    flexDirection: 'row', gap: 6,
-    backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#e5e7eb',
-    borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12,
   },
-  promptQ: { fontSize: 12, color: '#9ca3af', marginTop: 1 },
-  promptText: { fontSize: 12, color: '#4b5563', flex: 1, lineHeight: 18 },
+  promptQuote: { fontSize: 16, fontWeight: '800', marginTop: -2 },
+  promptText: { fontSize: 13, color: '#4b5563', flex: 1, lineHeight: 19, fontWeight: '500' },
+  promptRefresh: { fontSize: 17, fontWeight: '700' },
   titleInput: {
     fontSize: 18, fontWeight: '700', color: '#1f2937',
     borderBottomWidth: 1, borderBottomColor: '#e5e7eb', paddingVertical: 6,
@@ -375,7 +401,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9fafb', borderRadius: 16, borderWidth: 1, borderColor: '#e5e7eb',
     padding: 14, minHeight: 140,
   },
-  bodyInput: { fontSize: 14, color: '#374151', lineHeight: 22, minHeight: 120 },
+  bodyInput: { fontSize: 15, color: '#374151', lineHeight: 24, minHeight: 180, paddingVertical: 4 },
   photoBox: { position: 'relative', borderRadius: 14, overflow: 'hidden' },
   photoImg: { width: '100%', height: 180 },
   photoRemove: {
@@ -416,6 +442,26 @@ const styles = StyleSheet.create({
   personaEmoji: { fontSize: 18 },
   personaLabel: { fontSize: 11, color: '#6b7280' },
   personaLabelActive: { color: '#ffffff' },
+  // AI 코멘트 컴팩트 카드
+  aiCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#f9fafb', borderWidth: 1, borderColor: '#f3f4f6',
+    borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, marginTop: 4,
+  },
+  aiCardIcon: {
+    width: 34, height: 34, borderRadius: 17,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  aiCardTitle: { fontSize: 14, fontWeight: '700', color: '#1f2937' },
+  aiCardSub: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
+  // 페르소나 모달
+  personaModal: {
+    backgroundColor: '#ffffff', borderRadius: 20, padding: 20, width: 300,
+    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 8,
+  },
+  personaModalTitle: { fontSize: 16, fontWeight: '800', color: '#111827' },
+  personaModalSub: { fontSize: 12, color: '#9ca3af', marginTop: 3, marginBottom: 16 },
+  personaGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   // Calendar modal
   modalOverlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.4)',
