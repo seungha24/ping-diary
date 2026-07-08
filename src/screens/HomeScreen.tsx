@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
     elevation: 9,
   },
   folderCoverWrap: {
-    width: '100%', height: 90,
+    width: '100%', height: 112,
     position: 'relative',
   },
   folderCoverImg: { width: '100%', height: '100%' },
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
   },
   // 폴더 그리드 톤에 맞춘 '새 그룹' 추가 카드
   groupAddCard: {
-    minHeight: 152,
+    minHeight: 168,
     alignItems: 'center', justifyContent: 'center', gap: 6,
     borderWidth: 2, borderColor: '#e5e7eb', borderStyle: 'dashed',
     borderRadius: 20, backgroundColor: '#ffffff',
