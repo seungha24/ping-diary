@@ -263,7 +263,7 @@ export default function HomeScreen() {
                         )}
                       </View>
                       <View style={styles.folderCardBody}>
-                        <Text style={styles.folderName}>{folder.name}</Text>
+                        <Text style={styles.folderName} numberOfLines={1}>{folder.name}</Text>
                         <Text style={styles.folderCount}>{count}개</Text>
                       </View>
                     </TouchableOpacity>
@@ -536,9 +536,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9fafb',
   },
   folderAddCoverText: { fontSize: 11, color: '#6b7280', fontWeight: '600' },
-  folderCardBody: { padding: 12, gap: 3 },
-  folderName: { fontSize: 14, fontWeight: '700', color: '#111827' },
-  folderCount: { fontSize: 12, color: '#9ca3af' },
+  folderCardBody: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    gap: 6, paddingHorizontal: 11, paddingVertical: 8,
+  },
+  folderName: { flex: 1, fontSize: 14, fontWeight: '700', color: '#111827' },
+  folderCount: { flexShrink: 0, fontSize: 12, color: '#9ca3af' },
   sectionLabel: { fontSize: 12, color: '#9ca3af', marginBottom: 2, paddingHorizontal: 4 },
   groupCard: {
     backgroundColor: '#ffffff', borderRadius: 16, padding: 16,
