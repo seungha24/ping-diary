@@ -6,6 +6,7 @@ import {
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Audio } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
+import Svg, { Path, Rect, Circle, Polyline } from 'react-native-svg';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import { PERSONAS, MONTHS, DAYS } from '../data/types';
@@ -16,6 +17,58 @@ import { notify } from '../notify';
 import { RootStackParamList } from '../navigation/RootNavigator';
 
 type WriteRoute = RouteProp<RootStackParamList, 'DiaryWrite'>;
+
+/** 단순 라인 아이콘들 (Feather 스타일) */
+type IconProps = { color: string; size?: number };
+function IconCamera({ color, size = 16 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+      <Circle cx="12" cy="13" r="4" />
+    </Svg>
+  );
+}
+function IconLock({ color, size = 16 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <Rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <Path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </Svg>
+  );
+}
+function IconUsers({ color, size = 16 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <Circle cx="9" cy="7" r="4" />
+      <Path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <Path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </Svg>
+  );
+}
+function IconMessage({ color, size = 16 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+    </Svg>
+  );
+}
+function IconRefresh({ color, size = 16 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <Polyline points="23 4 23 10 17 10" />
+      <Polyline points="1 20 1 14 7 14" />
+      <Path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+    </Svg>
+  );
+}
+function IconQuote({ color, size = 16 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+      <Path d="M7 7h5v5c0 2.4-1.7 4.3-4.1 4.9l-.4-1.5c1.3-.3 2.2-1.1 2.4-2.3H7V7zm7 0h5v5c0 2.4-1.7 4.3-4.1 4.9l-.4-1.5c1.3-.3 2.2-1.1 2.4-2.3H14V7z" />
+    </Svg>
+  );
+}
 
 /** AI 프롬프트 질문 (새로고침으로 순환) */
 const PROMPTS = [
@@ -188,10 +241,10 @@ export default function DiaryWriteScreen() {
 
         {/* AI prompt */}
         <View style={[styles.promptCard, { backgroundColor: hexToRgba(accent, 0.1), borderColor: hexToRgba(accent, 0.2) }]}>
-          <Text style={[styles.promptQuote, { color: accent }]}>❝</Text>
+          <IconQuote color={accent} size={15} />
           <Text style={styles.promptText}>{PROMPTS[promptIndex]}</Text>
           <TouchableOpacity onPress={() => setPromptIndex((i) => (i + 1) % PROMPTS.length)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text style={[styles.promptRefresh, { color: accent }]}>↻</Text>
+            <IconRefresh color={accent} size={16} />
           </TouchableOpacity>
         </View>
 
@@ -227,7 +280,12 @@ export default function DiaryWriteScreen() {
           <TouchableOpacity style={styles.photoAddBtn} onPress={pickPhoto} disabled={uploading}>
             {uploading
               ? <ActivityIndicator color="#9ca3af" size="small" />
-              : <Text style={styles.photoAddText}>📷 사진 추가</Text>}
+              : (
+                <View style={styles.photoAddInner}>
+                  <IconCamera color="#6b7280" size={16} />
+                  <Text style={styles.photoAddText}>사진 추가</Text>
+                </View>
+              )}
           </TouchableOpacity>
         )}
 
@@ -237,14 +295,14 @@ export default function DiaryWriteScreen() {
             style={[styles.visBtn, visibility === 'private' && { borderColor: accent, backgroundColor: `${accent}0d` }]}
             onPress={() => setVisibility('private')}
           >
-            <Text style={styles.visEmoji}>🔒</Text>
+            <IconLock color={visibility === 'private' ? accent : '#6b7280'} size={15} />
             <Text style={[styles.visLabel, visibility === 'private' && { color: accent, fontWeight: '700' }]}>나만 보기</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.visBtn, visibility === 'friends' && { borderColor: accent, backgroundColor: `${accent}0d` }]}
             onPress={() => setVisibility('friends')}
           >
-            <Text style={styles.visEmoji}>👥</Text>
+            <IconUsers color={visibility === 'friends' ? accent : '#6b7280'} size={15} />
             <Text style={[styles.visLabel, visibility === 'friends' && { color: accent, fontWeight: '700' }]}>그룹 공개</Text>
           </TouchableOpacity>
         </View>
@@ -255,13 +313,11 @@ export default function DiaryWriteScreen() {
         {/* AI comment card */}
         <TouchableOpacity style={styles.aiCard} onPress={() => setPersonaModalOpen(true)} activeOpacity={0.85}>
           <View style={[styles.aiCardIcon, { backgroundColor: hexToRgba(accent, 0.12) }]}>
-            <Text style={{ fontSize: 15 }}>💬</Text>
+            <IconMessage color={accent} size={16} />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.aiCardTitle}>AI 코멘트</Text>
-            <Text style={styles.aiCardSub}>
-              {PERSONAS.find((p) => p.label === persona)?.emoji} {persona} · 24시간 뒤 도착
-            </Text>
+            <Text style={styles.aiCardSub}>{persona} · 24시간 뒤 도착</Text>
           </View>
           <IconChev dir="right" size={16} color="#9ca3af" />
         </TouchableOpacity>
@@ -353,13 +409,13 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 12,
+    paddingHorizontal: 20, paddingTop: 12, paddingBottom: 18,
     borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
   },
   cancelText: { fontSize: 14, color: '#9ca3af' },
   headerTitle: { fontSize: 14, fontWeight: '700', color: '#1f2937' },
-  headerRight: { alignItems: 'flex-end', gap: 5 },
-  autoSaveBadge: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  headerRight: { alignItems: 'flex-end', gap: 3 },
+  autoSaveBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: -17 },
   autoSaveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4ade80' },
   autoSaveText: { fontSize: 11, color: '#9ca3af' },
   saveBtn: { paddingHorizontal: 22, paddingVertical: 9, borderRadius: 999, backgroundColor: '#111827' },
@@ -417,6 +473,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: '#e5e7eb', borderStyle: 'dashed',
     borderRadius: 14, paddingVertical: 16, alignItems: 'center',
   },
+  photoAddInner: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   photoAddText: { fontSize: 13, color: '#6b7280', fontWeight: '500' },
   visRow: { flexDirection: 'row', gap: 8 },
   visBtn: {
