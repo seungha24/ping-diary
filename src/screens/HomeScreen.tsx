@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView,
-  Modal, Pressable, Image,
+  Modal, Pressable, Image, TextInput,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,11 +17,14 @@ import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { useGroups } from '../context/GroupsContext';
 import { useAuth } from '../context/AuthContext';
-import { uploadPhoto, updateGroupPhoto, getMe, setFolderCover } from '../api';
+import { uploadPhoto, updateGroupPhoto, getMe, setFolderCover, saveFolders } from '../api';
 import { notify } from '../notify';
 import Svg, { Path, Line, Circle } from 'react-native-svg';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
+
+/** 폴더 만들기 시 고를 수 있는 아이콘들 */
+const FOLDER_EMOJIS = ['📁', '📔', '✈️', '📚', '🍜', '🎵', '💼', '🏃', '🎨', '❤️', '🌱', '⭐', '☕', '🐾', '🎮', '🌸'];
 
 export default function HomeScreen() {
   const navigation = useNavigation<Nav>();
@@ -38,12 +41,39 @@ export default function HomeScreen() {
   const [shareEntry, setShareEntry] = useState<DiaryEntry | null>(null);
 
   const [groupCovers, setGroupCovers] = useState<Record<number, string>>({});
+  const [customFolders, setCustomFolders] = useState<DiaryFolder[]>([]);
+  const [fabMenuOpen, setFabMenuOpen] = useState(false);
+  const [folderModalOpen, setFolderModalOpen] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
+  const [newFolderEmoji, setNewFolderEmoji] = useState('📁');
 
-  // 폴더 커버(서버 저장분)를 로그인(토큰 준비) 후 불러오기 — 토큰 늦게 붙어도 재실행
+  // 기본 폴더 + 사용자가 만든 폴더
+  const allFolders: DiaryFolder[] = [...FOLDERS, ...customFolders];
+
+  // 폴더 커버·사용자 폴더(서버 저장분)를 로그인(토큰 준비) 후 불러오기 — 토큰 늦게 붙어도 재실행
   useEffect(() => {
     if (!token) return;
-    getMe().then((me) => setFolderCovers(me.folder_covers)).catch(() => {});
+    getMe()
+      .then((me) => { setFolderCovers(me.folder_covers); setCustomFolders(me.folders); })
+      .catch(() => {});
   }, [token]);
+
+  /** 새 폴더 만들기 → DB(user_metadata) 저장 */
+  async function createFolder() {
+    const name = newFolderName.trim();
+    if (!name) return;
+    const folder: DiaryFolder = { id: `c_${Date.now()}`, name, emoji: newFolderEmoji };
+    const next = [...customFolders, folder];
+    setCustomFolders(next);
+    setFolderModalOpen(false);
+    setNewFolderName('');
+    setNewFolderEmoji('📁');
+    try {
+      await saveFolders(next);
+    } catch (e: any) {
+      notify(e?.message ?? '폴더 저장에 실패했어요.');
+    }
+  }
 
   /** 폴더 커버 사진 변경 → Storage 업로드 후 내 계정(user_metadata)에 저장 */
   async function pickFolderCover(folderId: string) {
@@ -243,7 +273,7 @@ export default function HomeScreen() {
               {personalView === 'folder' ? (
             <ScrollView contentContainerStyle={styles.folderList}>
               <View style={styles.folderGrid}>
-                {FOLDERS.map((folder) => {
+                {allFolders.map((folder) => {
                   const count = entries.filter((e) => e.folder === folder.id).length;
                   const cover = folderCovers[folder.id];
                   return (
@@ -322,7 +352,7 @@ export default function HomeScreen() {
 
           <TouchableOpacity
             style={[styles.fab, { backgroundColor: accent }]}
-            onPress={() => navigation.navigate('DiaryWrite')}
+            onPress={() => setFabMenuOpen(true)}
           >
             <IconPlus color="#ffffff" size={22} />
           </TouchableOpacity>
@@ -407,6 +437,75 @@ export default function HomeScreen() {
               <Text style={[styles.confirmBtnText, { color: shareEntry.visibility === 'friends' ? '#374151' : '#fff' }]}>
                 {shareEntry.visibility === 'friends' ? '그룹 공개 해제' : '그룹에 공개하기'}
               </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* + 버튼 선택 시트: 일기 / 폴더 */}
+      {fabMenuOpen && (
+        <View style={styles.overlayWrap}>
+          <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setFabMenuOpen(false)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.fabSheetTitle}>새로 만들기</Text>
+            <TouchableOpacity
+              style={styles.fabChoice}
+              onPress={() => { setFabMenuOpen(false); navigation.navigate('DiaryWrite'); }}
+            >
+              <Text style={styles.fabChoiceEmoji}>📝</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.fabChoiceTitle}>일기 쓰기</Text>
+                <Text style={styles.fabChoiceSub}>새 일기를 작성해요</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.fabChoice}
+              onPress={() => { setFabMenuOpen(false); setFolderModalOpen(true); }}
+            >
+              <Text style={styles.fabChoiceEmoji}>📁</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.fabChoiceTitle}>폴더 만들기</Text>
+                <Text style={styles.fabChoiceSub}>일기를 정리할 폴더를 추가해요</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* 새 폴더 만들기 모달 */}
+      {folderModalOpen && (
+        <View style={styles.overlayWrap}>
+          <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setFolderModalOpen(false)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.fabSheetTitle}>새 폴더</Text>
+            <TextInput
+              style={styles.folderInput}
+              value={newFolderName}
+              onChangeText={setNewFolderName}
+              placeholder="폴더 이름 (예: 운동, 회고)"
+              placeholderTextColor="#9ca3af"
+              maxLength={20}
+            />
+            <Text style={styles.folderEmojiLabel}>아이콘</Text>
+            <View style={styles.emojiGrid}>
+              {FOLDER_EMOJIS.map((em) => (
+                <TouchableOpacity
+                  key={em}
+                  style={[styles.emojiChip, newFolderEmoji === em && { borderColor: accent, backgroundColor: hexToRgba(accent, 0.1) }]}
+                  onPress={() => setNewFolderEmoji(em)}
+                >
+                  <Text style={{ fontSize: 20 }}>{em}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity
+              style={[styles.confirmBtn, { backgroundColor: newFolderName.trim() ? accent : '#e5e7eb' }]}
+              disabled={!newFolderName.trim()}
+              onPress={createFolder}
+            >
+              <Text style={[styles.confirmBtnText, { color: newFolderName.trim() ? '#fff' : '#9ca3af' }]}>폴더 만들기</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -623,4 +722,30 @@ const styles = StyleSheet.create({
   checkmark: { fontSize: 12, color: '#fff', fontWeight: '700' },
   confirmBtn: { marginTop: 8, borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
   confirmBtnText: { fontSize: 14, fontWeight: '700' },
+
+  // + 선택 시트
+  fabSheetTitle: { fontSize: 16, fontWeight: '800', color: '#111827', marginTop: 4, marginBottom: 14 },
+  fabChoice: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
+    paddingVertical: 14, paddingHorizontal: 14,
+    borderRadius: 14, borderWidth: 1, borderColor: '#f3f4f6',
+    backgroundColor: '#f9fafb', marginBottom: 10,
+  },
+  fabChoiceEmoji: { fontSize: 26 },
+  fabChoiceTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
+  fabChoiceSub: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
+
+  // 폴더 만들기 모달
+  folderInput: {
+    borderWidth: 1.5, borderColor: '#e5e7eb', borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#111827',
+    marginBottom: 16,
+  },
+  folderEmojiLabel: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  emojiGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 18 },
+  emojiChip: {
+    width: 44, height: 44, borderRadius: 12,
+    borderWidth: 1.5, borderColor: '#f3f4f6', backgroundColor: '#f9fafb',
+    alignItems: 'center', justifyContent: 'center',
+  },
 });

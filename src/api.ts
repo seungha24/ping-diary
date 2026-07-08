@@ -279,10 +279,28 @@ export async function updateGroupPhoto(id: number, photo_url: string | null): Pr
   });
 }
 
-/** 내 프로필 (폴더 커버·테마 등 user_metadata) */
-export async function getMe(): Promise<{ email: string | null; folder_covers: Record<string, string>; theme: string | null }> {
+export interface UserFolder { id: string; name: string; emoji: string }
+
+/** 내 프로필 (폴더 커버·테마·사용자 폴더 등 user_metadata) */
+export async function getMe(): Promise<{
+  email: string | null;
+  folder_covers: Record<string, string>;
+  theme: string | null;
+  folders: UserFolder[];
+}> {
   const r = await request('/auth/me');
-  return { email: r?.email ?? null, folder_covers: r?.folder_covers ?? {}, theme: r?.theme ?? null };
+  return {
+    email: r?.email ?? null,
+    folder_covers: r?.folder_covers ?? {},
+    theme: r?.theme ?? null,
+    folders: Array.isArray(r?.folders) ? r.folders : [],
+  };
+}
+
+/** 사용자가 만든 폴더 목록 저장 (user_metadata, DB) */
+export async function saveFolders(folders: UserFolder[]): Promise<UserFolder[]> {
+  const r = await request('/auth/folders', { method: 'PATCH', body: JSON.stringify({ folders }) });
+  return Array.isArray(r?.folders) ? r.folders : [];
 }
 
 /** 선택한 테마를 내 계정(user_metadata)에 저장 */
