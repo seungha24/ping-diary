@@ -20,7 +20,6 @@ import { useAuth } from '../context/AuthContext';
 import { uploadPhoto, updateGroupPhoto, getMe, setFolderCover } from '../api';
 import { notify } from '../notify';
 import Svg, { Path, Line, Circle } from 'react-native-svg';
-import { LinearGradient } from 'expo-linear-gradient';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -250,31 +249,23 @@ export default function HomeScreen() {
                   return (
                     <TouchableOpacity
                       key={folder.id}
-                      style={styles.gridCell}
+                      style={[styles.gridCell, styles.glowCard, { shadowColor: accent, borderColor: hexToRgba(accent, 0.22) }]}
                       activeOpacity={0.85}
                       onPress={() => setSelectedFolder(folder)}
                     >
-                      <LinearGradient
-                        colors={[hexToRgba(accent, 0.55), hexToRgba(accent, 0.12)]}
-                        start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                        style={[styles.gradFrame, { shadowColor: accent }]}
-                      >
-                        <View style={styles.cardInner}>
-                          <View style={styles.folderCoverWrap}>
-                            {cover ? (
-                              <Image source={{ uri: cover }} style={styles.folderCoverImg} />
-                            ) : (
-                              <View style={styles.folderCoverEmpty}>
-                                <Text style={styles.folderCoverEmoji}>{folder.emoji}</Text>
-                              </View>
-                            )}
+                      <View style={styles.folderCoverWrap}>
+                        {cover ? (
+                          <Image source={{ uri: cover }} style={styles.folderCoverImg} />
+                        ) : (
+                          <View style={styles.folderCoverEmpty}>
+                            <Text style={styles.folderCoverEmoji}>{folder.emoji}</Text>
                           </View>
-                          <View style={styles.folderCardBody}>
-                            <Text style={styles.folderName}>{folder.name}</Text>
-                            <Text style={styles.folderCount}>{count}개</Text>
-                          </View>
-                        </View>
-                      </LinearGradient>
+                        )}
+                      </View>
+                      <View style={styles.folderCardBody}>
+                        <Text style={styles.folderName}>{folder.name}</Text>
+                        <Text style={styles.folderCount}>{count}개</Text>
+                      </View>
                     </TouchableOpacity>
                   );
                 })}
@@ -348,41 +339,33 @@ export default function HomeScreen() {
               return (
                 <TouchableOpacity
                   key={group.id}
-                  style={styles.gridCell}
+                  style={[styles.gridCell, styles.glowCard, { shadowColor: accent, borderColor: hexToRgba(accent, 0.22) }]}
                   activeOpacity={0.85}
                   onPress={() => navigation.navigate('Group', { group })}
                 >
-                  <LinearGradient
-                    colors={[hexToRgba(accent, 0.55), hexToRgba(accent, 0.12)]}
-                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
-                    style={[styles.gradFrame, { shadowColor: accent }]}
-                  >
-                    <View style={styles.cardInner}>
-                      <View style={styles.folderCoverWrap}>
-                        {cover ? (
-                          <Image source={{ uri: cover }} style={styles.folderCoverImg} />
-                        ) : (
-                          <View style={styles.folderCoverEmpty}>
-                            <Text style={styles.folderCoverEmoji}>👥</Text>
-                          </View>
-                        )}
-                        <TouchableOpacity
-                          style={styles.groupCamBtn}
-                          onPress={(e) => { e.stopPropagation(); pickGroupCover(group.id); }}
-                          hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                        >
-                          <Svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                            <Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                            <Circle cx="12" cy="13" r="4" />
-                          </Svg>
-                        </TouchableOpacity>
+                  <View style={styles.folderCoverWrap}>
+                    {cover ? (
+                      <Image source={{ uri: cover }} style={styles.folderCoverImg} />
+                    ) : (
+                      <View style={styles.folderCoverEmpty}>
+                        <Text style={styles.folderCoverEmoji}>👥</Text>
                       </View>
-                      <View style={styles.folderCardBody}>
-                        <Text style={styles.folderName} numberOfLines={1}>{group.name}</Text>
-                        <Text style={styles.folderCount}>{group.member_count ?? 1}명 · {group.invite_code}</Text>
-                      </View>
-                    </View>
-                  </LinearGradient>
+                    )}
+                    <TouchableOpacity
+                      style={styles.groupCamBtn}
+                      onPress={(e) => { e.stopPropagation(); pickGroupCover(group.id); }}
+                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                    >
+                      <Svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                        <Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                        <Circle cx="12" cy="13" r="4" />
+                      </Svg>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.folderCardBody}>
+                    <Text style={styles.folderName} numberOfLines={1}>{group.name}</Text>
+                    <Text style={styles.folderCount}>{group.member_count ?? 1}명 · {group.invite_code}</Text>
+                  </View>
                 </TouchableOpacity>
               );
             })}
@@ -516,17 +499,15 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1,
     overflow: 'hidden',
   },
-  // 그라데이션 프레임: accent 진한쪽→옅은쪽 대각선, 존재감 있되 은은하게 (색은 인라인 주입)
+  // 카드에서 배경으로 은은하게 번지는 글로우 (accent 색이 밖으로 퍼져 사라짐, 색은 인라인 주입)
   gridCell: { width: '47%' },
-  gradFrame: {
-    borderRadius: 20, padding: 3,
-    shadowOpacity: 0.22, shadowRadius: 10, shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
-  cardInner: {
+  glowCard: {
     backgroundColor: '#ffffff',
-    borderRadius: 17,
+    borderRadius: 18,
+    borderWidth: 1,
     overflow: 'hidden',
+    shadowOpacity: 0.3, shadowRadius: 18, shadowOffset: { width: 0, height: 0 },
+    elevation: 6,
   },
   folderCoverWrap: {
     width: '100%', height: 90,
