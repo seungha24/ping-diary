@@ -455,7 +455,7 @@ export default function HomeScreen() {
             >
               <Text style={styles.fabChoiceEmoji}>📝</Text>
               <View style={{ flex: 1 }}>
-                <Text style={styles.fabChoiceTitle}>p!ng 쓰기</Text>
+                <Text style={styles.fabChoiceTitle}>p!ng</Text>
                 <Text style={styles.fabChoiceSub}>새 p!ng를 작성해요</Text>
               </View>
             </TouchableOpacity>
