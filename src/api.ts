@@ -287,6 +287,7 @@ export async function getMe(): Promise<{
   folder_covers: Record<string, string>;
   theme: string | null;
   folders: UserFolder[];
+  hidden_folders: string[];
   display_name: string | null;
   username: string | null;
 }> {
@@ -296,9 +297,16 @@ export async function getMe(): Promise<{
     folder_covers: r?.folder_covers ?? {},
     theme: r?.theme ?? null,
     folders: Array.isArray(r?.folders) ? r.folders : [],
+    hidden_folders: Array.isArray(r?.hidden_folders) ? r.hidden_folders : [],
     display_name: r?.display_name ?? null,
     username: r?.username ?? null,
   };
+}
+
+/** 숨긴(삭제한) 기본 폴더 id 목록 저장 */
+export async function saveHiddenFolders(hidden: string[]): Promise<string[]> {
+  const r = await request('/auth/hidden-folders', { method: 'PATCH', body: JSON.stringify({ hidden }) });
+  return Array.isArray(r?.hidden_folders) ? r.hidden_folders : [];
 }
 
 /** 표시 이름·아이디 저장 (내 계정 user_metadata, DB) */

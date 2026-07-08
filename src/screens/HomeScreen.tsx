@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView,
-  Modal, Pressable, Image, TextInput,
+  Modal, Pressable, Image, TextInput, Platform, Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,7 +17,7 @@ import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { useGroups } from '../context/GroupsContext';
 import { useAuth } from '../context/AuthContext';
-import { uploadPhoto, updateGroupPhoto, getMe, setFolderCover, saveFolders } from '../api';
+import { uploadPhoto, updateGroupPhoto, getMe, setFolderCover, saveFolders, saveHiddenFolders } from '../api';
 import { notify } from '../notify';
 import Svg, { Path, Line, Circle } from 'react-native-svg';
 import { IconFolder, IconList, IconUsers, IconPencil, IconX, IconCamera } from '../components/icons/Line';
@@ -43,6 +43,7 @@ export default function HomeScreen() {
 
   const [groupCovers, setGroupCovers] = useState<Record<number, string>>({});
   const [customFolders, setCustomFolders] = useState<DiaryFolder[]>([]);
+  const [hiddenFolders, setHiddenFolders] = useState<string[]>([]);
   const [fabMenuOpen, setFabMenuOpen] = useState(false);
   const [folderModalOpen, setFolderModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
@@ -52,10 +53,10 @@ export default function HomeScreen() {
   const [editName, setEditName] = useState('');
   const [editEmoji, setEditEmoji] = useState('📁');
 
-  // 기본 폴더(이름/아이콘 override 반영) + 사용자가 만든 폴더
+  // 기본 폴더(이름/아이콘 override 반영, 숨긴 폴더 제외) + 사용자가 만든 폴더
   const createdFolders = customFolders.filter((f) => f.id.startsWith('c_'));
   const allFolders: DiaryFolder[] = [
-    ...FOLDERS.map((f) => {
+    ...FOLDERS.filter((f) => !hiddenFolders.includes(f.id)).map((f) => {
       const ov = customFolders.find((c) => c.id === f.id);
       return ov ? { ...f, name: ov.name, emoji: ov.emoji } : f;
     }),
@@ -66,7 +67,7 @@ export default function HomeScreen() {
   useEffect(() => {
     if (!token) return;
     getMe()
-      .then((me) => { setFolderCovers(me.folder_covers); setCustomFolders(me.folders); })
+      .then((me) => { setFolderCovers(me.folder_covers); setCustomFolders(me.folders); setHiddenFolders(me.hidden_folders); })
       .catch(() => {});
   }, [token]);
 
@@ -114,18 +115,43 @@ export default function HomeScreen() {
     }
   }
 
-  /** 폴더 삭제(사용자 폴더) / 기본 이름 복원(기본 폴더 override 제거) → DB 저장 */
-  async function removeFolder() {
+  /** 삭제 확인창 (웹: confirm / 네이티브: Alert) */
+  function confirmDelete(msg: string): Promise<boolean> {
+    if (Platform.OS === 'web') {
+      return Promise.resolve(typeof window !== 'undefined' ? window.confirm(msg) : true);
+    }
+    return new Promise((resolve) => {
+      Alert.alert('폴더 삭제', msg, [
+        { text: '취소', style: 'cancel', onPress: () => resolve(false) },
+        { text: '삭제', style: 'destructive', onPress: () => resolve(true) },
+      ]);
+    });
+  }
+
+  /** 폴더 삭제 — 사용자 폴더는 제거, 기본 폴더는 숨김 처리 → DB 저장 */
+  async function deleteFolder() {
     if (!editFolder) return;
     const id = editFolder.id;
-    const next = customFolders.filter((f) => f.id !== id);
-    setCustomFolders(next);
+    const isCustom = id.startsWith('c_');
+    const ok = await confirmDelete(
+      `'${editFolder.name}' 폴더를 삭제할까요?` +
+      (isCustom ? '' : '\n(기본 폴더는 숨겨지고, 담긴 p!ng는 전체 목록에서 볼 수 있어요.)')
+    );
+    if (!ok) return;
+    const nextCustom = customFolders.filter((f) => f.id !== id);
+    setCustomFolders(nextCustom);
+    let nextHidden = hiddenFolders;
+    if (!isCustom) {
+      nextHidden = [...hiddenFolders.filter((h) => h !== id), id];
+      setHiddenFolders(nextHidden);
+    }
     if (selectedFolder?.id === id) setSelectedFolder(null);
     setEditFolder(null);
     try {
-      await saveFolders(next);
+      await saveFolders(nextCustom);
+      if (!isCustom) await saveHiddenFolders(nextHidden);
     } catch (e: any) {
-      notify(e?.message ?? '폴더 저장에 실패했어요.');
+      notify(e?.message ?? '폴더 삭제에 실패했어요.');
     }
   }
 
@@ -347,7 +373,7 @@ export default function HomeScreen() {
 
               {personalView === 'folder' ? (
             <ScrollView contentContainerStyle={styles.folderList}>
-              <Text style={styles.folderHint}>폴더를 길게 누르면 이름·아이콘을 수정할 수 있어요</Text>
+              <Text style={styles.folderHint}>폴더를 길게 누르면 이름·아이콘 수정, 삭제를 할 수 있어요</Text>
               <View style={styles.folderGrid}>
                 {allFolders.map((folder) => {
                   const count = entries.filter((e) => e.folder === folder.id).length;
@@ -641,13 +667,9 @@ export default function HomeScreen() {
             >
               <Text style={[styles.confirmBtnText, { color: editName.trim() ? '#fff' : '#9ca3af' }]}>저장</Text>
             </TouchableOpacity>
-            {(editFolder.id.startsWith('c_') || customFolders.some((f) => f.id === editFolder.id)) && (
-              <TouchableOpacity style={styles.deleteFolderBtn} onPress={removeFolder}>
-                <Text style={styles.deleteFolderText}>
-                  {editFolder.id.startsWith('c_') ? '폴더 삭제' : '기본 이름으로 되돌리기'}
-                </Text>
-              </TouchableOpacity>
-            )}
+            <TouchableOpacity style={styles.deleteFolderBtn} onPress={deleteFolder}>
+              <Text style={styles.deleteFolderText}>폴더 삭제</Text>
+            </TouchableOpacity>
           </View>
         </View>
       )}
