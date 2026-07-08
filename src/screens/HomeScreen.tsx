@@ -224,10 +224,10 @@ export default function HomeScreen() {
                   return (
                     <TouchableOpacity
                       key={folder.id}
-                      style={styles.folderCard}
+                      style={[styles.folderCard, { borderColor: accent, borderWidth: 1.5 }]}
                       onPress={() => setSelectedFolder(folder)}
                     >
-                      <View style={[styles.folderCoverWrap, styles.coverBorder, { borderColor: accent }]}>
+                      <View style={styles.folderCoverWrap}>
                         {cover ? (
                           <Image source={{ uri: cover }} style={styles.folderCoverImg} />
                         ) : (
@@ -313,10 +313,10 @@ export default function HomeScreen() {
               return (
                 <TouchableOpacity
                   key={group.id}
-                  style={styles.folderCard}
+                  style={[styles.folderCard, { borderColor: accent, borderWidth: 1.5 }]}
                   onPress={() => navigation.navigate('Group', { group })}
                 >
-                  <View style={[styles.folderCoverWrap, styles.coverBorder, { borderColor: accent }]}>
+                  <View style={styles.folderCoverWrap}>
                     {cover ? (
                       <Image source={{ uri: cover }} style={styles.folderCoverImg} />
                     ) : (
@@ -473,14 +473,8 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   folderCoverWrap: {
-    height: 90,
+    width: '100%', height: 90,
     position: 'relative',
-  },
-  // 커버 사진 얇은 색 테두리 프레임 (accent 색은 인라인으로 주입)
-  coverBorder: {
-    margin: 8, marginBottom: 4,
-    borderWidth: 1.5, borderRadius: 12,
-    overflow: 'hidden',
   },
   folderCoverImg: { width: '100%', height: '100%' },
   folderCoverEmpty: {
