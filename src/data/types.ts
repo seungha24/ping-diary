@@ -111,8 +111,6 @@ export const GROUPS: Group[] = [
 export const PERSONAS = [
   { emoji: '📖', label: '선생님' },
   { emoji: '🌸', label: '엄마' },
-  { emoji: '💆', label: '상담사' },
-  { emoji: '🔮', label: '미래의 나' },
   { emoji: '🖋️', label: '소설가' },
 ];
 
