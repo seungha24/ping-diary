@@ -249,7 +249,7 @@ export default function HomeScreen() {
                   return (
                     <TouchableOpacity
                       key={folder.id}
-                      style={[styles.gridCell, styles.glowCard, { shadowColor: accent, borderColor: hexToRgba(accent, 0.22) }]}
+                      style={[styles.gridCell, styles.glowCard, { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) }]}
                       activeOpacity={0.85}
                       onPress={() => setSelectedFolder(folder)}
                     >
@@ -339,7 +339,7 @@ export default function HomeScreen() {
               return (
                 <TouchableOpacity
                   key={group.id}
-                  style={[styles.gridCell, styles.glowCard, { shadowColor: accent, borderColor: hexToRgba(accent, 0.22) }]}
+                  style={[styles.gridCell, styles.glowCard, { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) }]}
                   activeOpacity={0.85}
                   onPress={() => navigation.navigate('Group', { group })}
                 >
@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
   glowCard: {
     backgroundColor: '#ffffff',
     borderRadius: 18,
-    borderWidth: 1,
+    borderWidth: 2,
     overflow: 'hidden',
     shadowOpacity: 0.5, shadowRadius: 24, shadowOffset: { width: 0, height: 0 },
     elevation: 9,
