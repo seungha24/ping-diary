@@ -111,10 +111,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function loginOAuth(provider: OAuthProvider) {
     const redirectTo =
       Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.origin : undefined;
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo },
-    });
+    const options: { redirectTo?: string; scopes?: string } = { redirectTo };
+    // 카카오는 이메일 동의항목이 비즈니스 검수를 요구하므로 닉네임만 요청 (KOE205 방지)
+    if (provider === 'kakao') options.scopes = 'profile_nickname';
+    const { error } = await supabase.auth.signInWithOAuth({ provider, options });
     if (error) throw error;
   }
 
