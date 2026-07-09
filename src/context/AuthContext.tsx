@@ -7,6 +7,7 @@ import {
 import { supabase } from '../supabaseClient';
 import { API_BASE_URL } from '../config';
 import { useTheme } from './ThemeContext';
+import { notify } from '../notify';
 
 /**
  * 인증 컨텍스트.
@@ -78,6 +79,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await supabase.auth.signOut().catch(() => {});
         if (!cancelled) { setTok(null); setUserEmail(null); setReady(true); }
         return;
+      }
+      // 카카오 로그인 실패 시 서버가 넘긴 에러 표시
+      if (Platform.OS === 'web' && typeof window !== 'undefined' && /[?&]kakao_error=/.test(window.location.search)) {
+        const ep = new URLSearchParams(window.location.search);
+        const err = ep.get('kakao_error');
+        window.history.replaceState(null, '', window.location.pathname);
+        notify(`카카오 로그인에 실패했어요 (${err}). 잠시 후 다시 시도해주세요.`);
       }
       // 카카오 커스텀 OAuth 콜백: 서버가 해시로 넘긴 토큰으로 세션 세팅
       if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location.hash.includes('kakao_at=')) {
