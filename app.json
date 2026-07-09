@@ -7,19 +7,44 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.seungha.pingdiary",
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "일기에 사진을 첨부하기 위해 사진 보관함 접근이 필요합니다.",
+        "NSCameraUsageDescription": "일기에 사진을 촬영해 첨부하기 위해 카메라 접근이 필요합니다.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
+      "package": "com.seungha.pingdiary",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "일기에 사진을 첨부하기 위해 사진 보관함 접근이 필요합니다.",
+          "cameraPermission": "일기에 사진을 촬영해 첨부하기 위해 카메라 접근이 필요합니다."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "849142d5-a5ce-43e8-b9af-08c41f5f226b"
+      }
+    },
+    "owner": "seungha24"
   }
 }
