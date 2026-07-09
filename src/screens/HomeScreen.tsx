@@ -452,6 +452,9 @@ export default function HomeScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.folderList}>
           <Text style={[styles.sectionLabel, { marginBottom: 10 }]}>참여 중인 그룹</Text>
+          {groups.length > 0 && (
+            <Text style={styles.folderHint}>그룹을 길게 누르면 대표 사진을 바꿀 수 있어요</Text>
+          )}
           {groups.length === 0 && (
             <Text style={styles.groupEmptyHint}>아직 참여 중인 그룹이 없어요.{'\n'}새 그룹을 만들거나 초대 코드로 참여해보세요.</Text>
           )}
@@ -464,6 +467,8 @@ export default function HomeScreen() {
                   style={[styles.gridCell, styles.glowCard, { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) }]}
                   activeOpacity={0.85}
                   onPress={() => navigation.navigate('Group', { group })}
+                  onLongPress={() => pickGroupCover(group.id)}
+                  delayLongPress={300}
                 >
                   <View style={styles.folderCoverWrap}>
                     {cover ? (
@@ -473,16 +478,6 @@ export default function HomeScreen() {
                         <IconUsers size={30} color="#9ca3af" />
                       </View>
                     )}
-                    <TouchableOpacity
-                      style={styles.groupCamBtn}
-                      onPress={(e) => { e.stopPropagation(); pickGroupCover(group.id); }}
-                      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
-                    >
-                      <Svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                        <Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                        <Circle cx="12" cy="13" r="4" />
-                      </Svg>
-                    </TouchableOpacity>
                   </View>
                   <View style={[styles.groupCardBody, { backgroundColor: hexToRgba(accent, 0.1) }]}>
                     <Text style={styles.groupCardName} numberOfLines={1}>{group.name}</Text>
