@@ -10,6 +10,7 @@ import { RootStackParamList } from '../navigation/RootNavigator';
 import Tag from '../components/Tag';
 import IconPlus from '../components/icons/IconPlus';
 import IconBell from '../components/icons/IconBell';
+import { getUnreadCount as getNotifUnread, subscribeNotifs } from '../data/notifStore';
 import { PhotoThumb } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
 import { FOLDERS, DiaryEntry, DiaryFolder, entryDateLabel } from '../data/types';
@@ -36,6 +37,10 @@ export default function HomeScreen() {
   const [tab, setTab] = useState<'personal' | 'group'>('personal');
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const [zoomedGroup, setZoomedGroup] = useState<{ emoji: string; photo?: string; name: string } | null>(null);
+  // 알림 읽음 상태 구독 → 종 배지(빨간 점)를 안 읽은 알림이 있을 때만 표시
+  const [, forceNotif] = useState(0);
+  useEffect(() => subscribeNotifs(() => forceNotif((v) => v + 1)), []);
+  const hasUnreadNotif = getNotifUnread() > 0;
   const [selectedFolder, setSelectedFolder] = useState<DiaryFolder | null>(null);
   const [personalView, setPersonalView] = useState<'folder' | 'all'>('folder');
   // 캐시된 프로필로 초기화 → 폴더 커버·목록이 즉시 표시(시간차 제거), 아래 useEffect가 갱신
@@ -206,7 +211,7 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <Text style={styles.logo}>p!ng</Text>
         <TouchableOpacity style={styles.bellBtn} onPress={() => navigation.navigate('Notifications')}>
-          <IconBell size={22} dot />
+          <IconBell size={22} dot={hasUnreadNotif} />
         </TouchableOpacity>
       </View>
 

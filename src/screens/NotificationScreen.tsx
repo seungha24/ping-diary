@@ -1,53 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import IconChev from '../components/icons/IconChev';
-import { IconBellOff } from '../components/icons/Line';
+import { IconBellOff, IconBell, IconUsers, IconPencil, IconSparkle } from '../components/icons/Line';
+import { useTheme } from '../context/ThemeContext';
+import {
+  Notif, getNotifs, getUnreadCount, subscribeNotifs,
+  markAllRead as storeMarkAllRead, markRead as storeMarkRead,
+} from '../data/notifStore';
 
-interface Notif {
-  id: number;
-  type: 'diary' | 'invite' | 'reminder' | 'ai';
-  title: string;
-  body: string;
-  time: string;
-  read: boolean;
-  emoji: string;
-}
-
-const MOCK_NOTIFS: Notif[] = [
-  { id: 1, type: 'ai',       emoji: '📖', title: 'AI 코멘트가 도착했어요',             body: '선생님 · 오늘도 평범한 하루',        time: '방금 전',   read: false },
-  { id: 2, type: 'diary',    emoji: '👩', title: '엄마가 새 p!ng를 작성했어요',        body: '가족 p!ng · 가족 외식한 날',         time: '1시간 전',  read: false },
-  { id: 3, type: 'ai',       emoji: '🌸', title: 'AI 코멘트가 도착했어요',             body: '엄마 · 오랜 친구를 만난 날',        time: '2시간 전',  read: false },
-  { id: 4, type: 'diary',    emoji: '🧑', title: '민준이 새 p!ng를 작성했어요',        body: '여행크루 · 제주 첫째 날',           time: '3시간 전',  read: false },
-  { id: 5, type: 'reminder', emoji: '🔔', title: '가족 p!ng 알림',                   body: '오늘 p!ng를 아직 쓰지 않았어요!',    time: '4시간 전',  read: false },
-  { id: 6, type: 'invite',   emoji: '👥', title: '독서모임에 초대받았어요',            body: '지연님이 그룹에 초대했어요',          time: '어제',      read: true  },
-  { id: 7, type: 'diary',    emoji: '👧', title: '소희가 새 p!ng를 작성했어요',        body: '여행크루 · 성산일출봉 등반',         time: '어제',      read: true  },
-  { id: 8, type: 'reminder', emoji: '🔔', title: '여행크루 알림',                    body: '매주 월요일 p!ng 알림이에요',         time: '2일 전',    read: true  },
-  { id: 9, type: 'diary',    emoji: '👨', title: '아빠가 새 p!ng를 작성했어요',        body: '가족 p!ng · 주말 드라이브',          time: '3일 전',    read: true  },
-];
-
-const TYPE_COLOR: Record<Notif['type'], string> = {
-  diary:    '#e0f2fe',
-  invite:   '#fef9c3',
-  reminder: '#f3e8ff',
-  ai:       '#dcfce7',
+// 알림 종류별 아이콘·색 (이모지 대신 라인 아이콘)
+const TYPE_ICON: Record<Notif['type'], { bg: string; color: string; Icon: React.ComponentType<{ size?: number; color?: string }> }> = {
+  ai:       { bg: '#f3e8ff', color: '#8b5cf6', Icon: IconSparkle },
+  diary:    { bg: '#e0f2fe', color: '#0ea5e9', Icon: IconPencil },
+  invite:   { bg: '#fef3c7', color: '#f59e0b', Icon: IconUsers },
+  reminder: { bg: '#dcfce7', color: '#10b981', Icon: IconBell },
 };
 
 export default function NotificationScreen() {
   const navigation = useNavigation();
-  const [notifs, setNotifs] = useState<Notif[]>(MOCK_NOTIFS);
+  const { accent } = useTheme();
+  const [, forceUpdate] = useState(0);
 
-  const unreadCount = notifs.filter((n) => !n.read).length;
+  // 공유 스토어 구독 → 어느 화면에서 읽음 처리해도 반영
+  useEffect(() => subscribeNotifs(() => forceUpdate((v) => v + 1)), []);
 
-  function markAllRead() {
-    setNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
-  }
-
-  function markRead(id: number) {
-    setNotifs((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n));
-  }
+  const notifs = getNotifs();
+  const unreadCount = getUnreadCount();
+  const markAllRead = storeMarkAllRead;
+  const markRead = storeMarkRead;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -78,15 +61,18 @@ export default function NotificationScreen() {
             <Text style={styles.emptyText}>알림이 없어요</Text>
           </View>
         ) : (
-          notifs.map((n) => (
+          notifs.map((n) => {
+            const t = TYPE_ICON[n.type];
+            const Icon = t.Icon;
+            return (
             <TouchableOpacity
               key={n.id}
               style={[styles.notifCard, !n.read && styles.notifCardUnread]}
               onPress={() => markRead(n.id)}
               activeOpacity={0.7}
             >
-              <View style={[styles.iconBox, { backgroundColor: TYPE_COLOR[n.type] }]}>
-                <Text style={styles.iconEmoji}>{n.emoji}</Text>
+              <View style={[styles.iconBox, { backgroundColor: t.bg }]}>
+                <Icon size={19} color={t.color} />
               </View>
               <View style={styles.notifBody}>
                 <Text style={[styles.notifTitle, !n.read && styles.notifTitleUnread]}>
@@ -95,9 +81,10 @@ export default function NotificationScreen() {
                 <Text style={styles.notifSub}>{n.body}</Text>
                 <Text style={styles.notifTime}>{n.time}</Text>
               </View>
-              {!n.read && <View style={styles.unreadDot} />}
+              {!n.read && <View style={[styles.unreadDot, { backgroundColor: accent }]} />}
             </TouchableOpacity>
-          ))
+            );
+          })
         )}
       </ScrollView>
     </SafeAreaView>
