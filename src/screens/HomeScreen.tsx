@@ -479,9 +479,9 @@ export default function HomeScreen() {
                       </View>
                     )}
                   </View>
-                  <View style={[styles.groupCardBody, { backgroundColor: hexToRgba(accent, 0.1) }]}>
-                    <Text style={styles.groupCardName} numberOfLines={1}>{group.name}</Text>
-                    <Text style={styles.groupCardMeta} numberOfLines={1}>{group.member_count ?? 1}명 · {group.invite_code}</Text>
+                  <View style={[styles.folderCardBody, { backgroundColor: hexToRgba(accent, 0.1) }]}>
+                    <Text style={styles.folderName} numberOfLines={1}>{group.name}</Text>
+                    <Text style={styles.folderCount}>{group.member_count ?? 1}명</Text>
                   </View>
                 </TouchableOpacity>
               );
@@ -816,9 +816,6 @@ const styles = StyleSheet.create({
   },
   folderName: { flex: 1, fontSize: 14, fontWeight: '700', color: '#111827' },
   folderCount: { flexShrink: 0, fontSize: 12, color: '#9ca3af' },
-  groupCardBody: { height: 56, justifyContent: 'center', paddingHorizontal: 11, gap: 2 },
-  groupCardName: { fontSize: 14, fontWeight: '700', color: '#111827' },
-  groupCardMeta: { fontSize: 11.5, color: '#9ca3af' },
   sectionLabel: { fontSize: 12, color: '#9ca3af', marginBottom: 2, paddingHorizontal: 4 },
   groupCard: {
     backgroundColor: '#ffffff', borderRadius: 16, padding: 16,
@@ -858,7 +855,7 @@ const styles = StyleSheet.create({
   },
   // 폴더 그리드 톤에 맞춘 '새 그룹' 추가 카드
   groupAddCard: {
-    minHeight: 168,
+    minHeight: 148,
     alignItems: 'center', justifyContent: 'center', gap: 6,
     borderWidth: 2, borderColor: '#e5e7eb', borderStyle: 'dashed',
     borderRadius: 20, backgroundColor: '#ffffff',
