@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  SafeAreaView, Pressable, TextInput, ActivityIndicator,
+  SafeAreaView, Pressable, TextInput, ActivityIndicator, Modal,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -15,7 +15,7 @@ import IconPlus from '../components/icons/IconPlus';
 import { BAND_COLORS, DiaryEntry } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
 import { useGroups } from '../context/GroupsContext';
-import { fetchGroupEntries, leaveGroup } from '../api';
+import { fetchGroupEntries, leaveGroup, reportContent, saveBlockedUsers, getCachedMe } from '../api';
 import { notify } from '../notify';
 import { Platform } from 'react-native';
 import { IconUsers, IconBell as IconBellLine, IconSprout, IconSparkle, PersonaIcon } from '../components/icons/Line';
@@ -31,6 +31,7 @@ function mapGroupEntry(row: any): DiaryEntry {
     photo: row.photo_url || null,
     persona: row.persona || '',
     author: row.author || '멤버',
+    authorId: row.user_id,
     avatar: '🙂',
     createdAt: row.created_at,
     aiComment: row.ai_comment || undefined,
@@ -92,12 +93,13 @@ function IconGrid({ active, accent }: { active: boolean; accent: string }) {
 }
 
 function ListCard({
-  entry, onPhotoPress, isShared, onToggleShare,
+  entry, onPhotoPress, isShared, onToggleShare, onMore,
 }: {
   entry: DiaryEntry;
   onPhotoPress: (p: string) => void;
   isShared: boolean;
   onToggleShare: () => void;
+  onMore: () => void;
 }) {
   const { accent } = useTheme();
   return (
@@ -106,10 +108,13 @@ function ListCard({
         <View style={styles.authorAvatar}>
           <Text style={{ fontSize: 16 }}>{entry.avatar}</Text>
         </View>
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={styles.authorName}>{entry.author}</Text>
           <Text style={styles.entryDate}>6월 {entry.dates.join(',')}일</Text>
         </View>
+        <TouchableOpacity onPress={onMore} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={styles.moreBtn}>
+          <Text style={styles.moreDots}>⋯</Text>
+        </TouchableOpacity>
       </View>
       {entry.photo && (
         <Pressable style={{ width: '100%' }} onPress={() => onPhotoPress(entry.photo!)}>
@@ -155,13 +160,14 @@ function ListCard({
 }
 
 function GridCard({
-  entry, index, onPhotoPress, isShared, onToggleShare,
+  entry, index, onPhotoPress, isShared, onToggleShare, onMore,
 }: {
   entry: DiaryEntry;
   index: number;
   onPhotoPress: (p: string) => void;
   isShared: boolean;
   onToggleShare: () => void;
+  onMore: () => void;
 }) {
   const { accent } = useTheme();
   return (
@@ -176,7 +182,10 @@ function GridCard({
       <View style={styles.gridCardBody}>
         <View style={styles.gridAuthorRow}>
           <Text style={{ fontSize: 14 }}>{entry.avatar}</Text>
-          <Text style={styles.gridAuthorName}>{entry.author}</Text>
+          <Text style={[styles.gridAuthorName, { flex: 1 }]}>{entry.author}</Text>
+          <TouchableOpacity onPress={onMore} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Text style={styles.moreDots}>⋯</Text>
+          </TouchableOpacity>
         </View>
         <Text style={styles.gridTitle} numberOfLines={2}>{entry.title}</Text>
         <Text style={styles.gridPreview} numberOfLines={2}>{entry.body}</Text>
@@ -256,6 +265,33 @@ export default function GroupScreen() {
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
     });
+  }
+
+  // 신고/차단 (앱스토어 UGC 심사 대응)
+  const [actionEntry, setActionEntry] = useState<DiaryEntry | null>(null);
+
+  async function reportEntry(entry: DiaryEntry) {
+    setActionEntry(null);
+    try {
+      await reportContent('group_entry', entry.id, `author:${entry.authorId ?? ''}`);
+      notify('신고가 접수되었어요. 검토 후 조치할게요.');
+    } catch (e: any) {
+      notify(e?.message ?? '신고 접수에 실패했어요.');
+    }
+  }
+
+  async function blockAuthor(entry: DiaryEntry) {
+    setActionEntry(null);
+    if (!entry.authorId) { notify('이 사용자는 차단할 수 없어요.'); return; }
+    const cur = getCachedMe()?.blocked_users ?? [];
+    const next = cur.includes(entry.authorId) ? cur : [...cur, entry.authorId];
+    setEntries((prev) => prev.filter((e) => e.authorId !== entry.authorId)); // 즉시 숨김
+    try {
+      await saveBlockedUsers(next);
+      notify(`${entry.author} 님을 차단했어요. 이제 이 사람 글은 안 보여요.`);
+    } catch (e: any) {
+      notify(e?.message ?? '차단에 실패했어요.');
+    }
   }
 
   // 알림 설정 상태
@@ -379,6 +415,7 @@ export default function GroupScreen() {
               onPhotoPress={setLightboxPhoto}
               isShared={sharedAiComments.has(entry.id)}
               onToggleShare={() => toggleShare(entry.id)}
+              onMore={() => setActionEntry(entry)}
             />
           ))}
         </ScrollView>
@@ -393,6 +430,7 @@ export default function GroupScreen() {
                 onPhotoPress={setLightboxPhoto}
                 isShared={sharedAiComments.has(entry.id)}
                 onToggleShare={() => toggleShare(entry.id)}
+                onMore={() => setActionEntry(entry)}
               />
             ))}
           </View>
@@ -407,6 +445,26 @@ export default function GroupScreen() {
       <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('DiaryWrite')}>
         <IconPlus color="#ffffff" size={22} />
       </TouchableOpacity>
+
+      {/* 신고/차단 액션 시트 */}
+      {actionEntry && (
+        <View style={styles.overlayWrap}>
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setActionEntry(null)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.actionSheetTitle}>{actionEntry.author} 님의 게시물</Text>
+            <TouchableOpacity style={styles.actionRow} onPress={() => reportEntry(actionEntry)}>
+              <Text style={styles.actionText}>🚩  이 게시물 신고하기</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionRow} onPress={() => blockAuthor(actionEntry)}>
+              <Text style={[styles.actionText, styles.actionDanger]}>🚫  이 사용자 차단하기</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionRow} onPress={() => setActionEntry(null)}>
+              <Text style={[styles.actionText, { color: '#9ca3af' }]}>취소</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
 
       {/* 알림 설정 모달 */}
       {notifModalOpen && (
@@ -605,6 +663,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#e5e7eb', alignSelf: 'center', marginBottom: 20,
   },
   sheetTitle: { fontSize: 17, fontWeight: '800', color: '#111827', marginBottom: 4 },
+  moreBtn: { paddingHorizontal: 6, paddingVertical: 2 },
+  moreDots: { fontSize: 20, color: '#9ca3af', fontWeight: '700', lineHeight: 20 },
+  actionSheetTitle: { fontSize: 14, fontWeight: '700', color: '#6b7280', marginBottom: 8 },
+  actionRow: { paddingVertical: 14, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
+  actionText: { fontSize: 15, color: '#374151', fontWeight: '600' },
+  actionDanger: { color: '#ef4444' },
   sheetSubtitle: { fontSize: 13, color: '#9ca3af', marginBottom: 20 },
 
   // Frequency options

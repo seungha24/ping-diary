@@ -288,6 +288,7 @@ export interface Me {
   theme: string | null;
   folders: UserFolder[];
   hidden_folders: string[];
+  blocked_users: string[];
   display_name: string | null;
   username: string | null;
 }
@@ -338,6 +339,7 @@ export async function getMe(): Promise<Me> {
       theme: r?.theme ?? null,
       folders: Array.isArray(r?.folders) ? r.folders : [],
       hidden_folders: Array.isArray(r?.hidden_folders) ? r.hidden_folders : [],
+      blocked_users: Array.isArray(r?.blocked_users) ? r.blocked_users : [],
       display_name: r?.display_name ?? null,
       username: r?.username ?? null,
     };
@@ -354,6 +356,19 @@ export async function saveHiddenFolders(hidden: string[]): Promise<string[]> {
   const next = Array.isArray(r?.hidden_folders) ? r.hidden_folders : [];
   patchMeCache({ hidden_folders: next });
   return next;
+}
+
+/** 차단한 사용자 id 목록 저장 (user_metadata, DB) */
+export async function saveBlockedUsers(blocked: string[]): Promise<string[]> {
+  const r = await request('/auth/blocked-users', { method: 'PATCH', body: JSON.stringify({ blocked }) });
+  const next = Array.isArray(r?.blocked_users) ? r.blocked_users : [];
+  patchMeCache({ blocked_users: next });
+  return next;
+}
+
+/** 부적절 콘텐츠 신고 (AI 코멘트/그룹 공유글 등) */
+export async function reportContent(type: string, target_id: string | number, reason?: string): Promise<void> {
+  await request('/reports', { method: 'POST', body: JSON.stringify({ type, target_id, reason }) });
 }
 
 /** 표시 이름·아이디 저장 (내 계정 user_metadata, DB) */

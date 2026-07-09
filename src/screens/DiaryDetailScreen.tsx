@@ -13,7 +13,7 @@ import IconEdit from '../components/icons/IconEdit';
 import IconTrash from '../components/icons/IconTrash';
 import { useTheme } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
-import { generateComment } from '../api';
+import { generateComment, reportContent } from '../api';
 import { notify } from '../notify';
 import Svg, { Path, Line } from 'react-native-svg';
 import { IconLock, IconX, IconSparkle, IconTrash as IconTrashLine, PersonaIcon } from '../components/icons/Line';
@@ -88,6 +88,16 @@ export default function DiaryDetailScreen() {
     }
   }
 
+  /** 부적절한 AI 코멘트 신고 (앱스토어 AI 콘텐츠 심사 대응) */
+  async function reportAiComment() {
+    try {
+      await reportContent('ai_comment', entry.id);
+      notify('신고가 접수되었어요. 검토 후 조치할게요.');
+    } catch (e: any) {
+      notify(e?.message ?? '신고 접수에 실패했어요.');
+    }
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -144,6 +154,9 @@ export default function DiaryDetailScreen() {
           {aiComment ? (
             <View style={styles.aiCommentBox}>
               <Text style={styles.aiCommentText}>{aiComment}</Text>
+              <TouchableOpacity style={styles.aiReportBtn} onPress={reportAiComment}>
+                <Text style={styles.aiReportText}>부적절한 코멘트인가요? 신고하기</Text>
+              </TouchableOpacity>
             </View>
           ) : (
             <View style={styles.aiLockedBox}>
@@ -258,6 +271,8 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#e5e7eb', padding: 16,
   },
   aiCommentText: { fontSize: 14, color: '#374151', lineHeight: 22 },
+  aiReportBtn: { marginTop: 10, alignSelf: 'flex-end' },
+  aiReportText: { fontSize: 11.5, color: '#9ca3af', textDecorationLine: 'underline' },
   aiLockedBox: {
     backgroundColor: '#f9fafb', borderRadius: 14,
     borderWidth: 1, borderColor: '#e5e7eb', borderStyle: 'dashed',

@@ -23,6 +23,7 @@ export interface DiaryEntry {
   persona: string;
   folder?: string;
   author?: string;
+  authorId?: string;   // 그룹 공유글 작성자 user_id (차단용)
   avatar?: string;
   createdAt: string;   // ISO 8601
   aiComment?: string;
