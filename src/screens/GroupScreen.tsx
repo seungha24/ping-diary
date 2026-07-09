@@ -104,13 +104,14 @@ function IconGrid({ active, accent }: { active: boolean; accent: string }) {
 }
 
 function ListCard({
-  entry, onPhotoPress, isShared, onToggleShare, onMore,
+  entry, onPhotoPress, isShared, onToggleShare, onMore, onOpen,
 }: {
   entry: DiaryEntry;
   onPhotoPress: (p: string) => void;
   isShared: boolean;
   onToggleShare: () => void;
   onMore: () => void;
+  onOpen: () => void;
 }) {
   const { accent } = useTheme();
   return (
@@ -132,13 +133,13 @@ function ListCard({
           <PhotoBlock photo={entry.photo} height={140} />
         </Pressable>
       )}
-      <View style={styles.listCardBody}>
+      <Pressable style={styles.listCardBody} onPress={onOpen}>
         <Text style={styles.listCardTitle}>{entry.title}</Text>
         <Text style={styles.listCardPreview} numberOfLines={2}>{entry.body}</Text>
         <View style={styles.tagRow}>
           {entry.tags.map((t) => <Tag key={t} label={t} />)}
         </View>
-      </View>
+      </Pressable>
       {entry.aiComment && (
         <View style={styles.aiSection}>
           <View style={styles.aiSectionHeader}>
@@ -171,7 +172,7 @@ function ListCard({
 }
 
 function GridCard({
-  entry, index, onPhotoPress, isShared, onToggleShare, onMore,
+  entry, index, onPhotoPress, isShared, onToggleShare, onMore, onOpen,
 }: {
   entry: DiaryEntry;
   index: number;
@@ -179,6 +180,7 @@ function GridCard({
   isShared: boolean;
   onToggleShare: () => void;
   onMore: () => void;
+  onOpen: () => void;
 }) {
   const { accent } = useTheme();
   return (
@@ -198,14 +200,16 @@ function GridCard({
             <Text style={styles.moreDots}>⋯</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.gridTitle} numberOfLines={2}>{entry.title}</Text>
-        <Text style={styles.gridPreview} numberOfLines={2}>{entry.body}</Text>
-        <View style={styles.gridTagRow}>
-          {entry.tags.slice(0, 2).map((t) => (
-            <Text key={t} style={styles.gridTag}>#{t}</Text>
-          ))}
-        </View>
-        <Text style={styles.gridDate}>{entryDateLabel(entry)}</Text>
+        <Pressable onPress={onOpen}>
+          <Text style={styles.gridTitle} numberOfLines={2}>{entry.title}</Text>
+          <Text style={styles.gridPreview} numberOfLines={2}>{entry.body}</Text>
+          <View style={styles.gridTagRow}>
+            {entry.tags.slice(0, 2).map((t) => (
+              <Text key={t} style={styles.gridTag}>#{t}</Text>
+            ))}
+          </View>
+          <Text style={styles.gridDate}>{entryDateLabel(entry)}</Text>
+        </Pressable>
       </View>
       {entry.aiComment && (
         <View style={styles.gridAiSection}>
@@ -464,6 +468,7 @@ export default function GroupScreen() {
               isShared={sharedAiComments.has(entry.id)}
               onToggleShare={() => toggleShare(entry.id)}
               onMore={() => setActionEntry(entry)}
+              onOpen={() => navigation.navigate('DiaryDetail', { entry })}
             />
           ))}
         </ScrollView>
@@ -479,6 +484,7 @@ export default function GroupScreen() {
                 isShared={sharedAiComments.has(entry.id)}
                 onToggleShare={() => toggleShare(entry.id)}
                 onMore={() => setActionEntry(entry)}
+                onOpen={() => navigation.navigate('DiaryDetail', { entry })}
               />
             ))}
           </View>
