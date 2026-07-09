@@ -6,22 +6,18 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useGroups } from '../context/GroupsContext';
 import { createGroup, joinGroup } from '../api';
 import { IconUsers } from '../components/icons/Line';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-/** 웹/네이티브 공통 알림 */
-function notify(message: string) {
-  if (Platform.OS === 'web') {
-    if (typeof window !== 'undefined') window.alert(message);
-  } else {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    require('react-native').Alert.alert(message);
-  }
-}
+// 폰 프레임 안에 뜨는 결과 다이얼로그 상태
+type Result =
+  | { type: 'created'; name: string; code: string }
+  | { type: 'joined'; name: string }
+  | { type: 'error'; message: string };
 
 export default function GroupCreateScreen() {
   const navigation = useNavigation<Nav>();
@@ -30,6 +26,28 @@ export default function GroupCreateScreen() {
   const [name, setName] = useState('');
   const [inviteCode, setInviteCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<Result | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  // 초대 코드 복사 (웹: navigator.clipboard, 네이티브: 미지원 시 조용히 무시)
+  async function copyCode(code: string) {
+    try {
+      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(code);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }
+    } catch {
+      // 무시
+    }
+  }
+
+  // 확인 버튼: 성공이면 뒤로가기, 에러면 닫기만
+  function closeResult() {
+    const wasSuccess = result?.type === 'created' || result?.type === 'joined';
+    setResult(null);
+    if (wasSuccess) navigation.goBack();
+  }
 
   // 서버에 실제 그룹 생성 → 초대 코드 발급
   async function handleCreate() {
@@ -38,10 +56,9 @@ export default function GroupCreateScreen() {
     try {
       const group = await createGroup(name.trim());
       await refresh();
-      notify(`'${group.name}' 그룹이 만들어졌어요!\n초대 코드: ${group.invite_code}\n\n친구에게 이 코드를 공유하면 함께 쓸 수 있어요.`);
-      navigation.goBack();
+      setResult({ type: 'created', name: group.name, code: group.invite_code });
     } catch (e: any) {
-      notify(e?.message ?? '그룹 생성에 실패했습니다.');
+      setResult({ type: 'error', message: e?.message ?? '그룹 생성에 실패했습니다.' });
     } finally {
       setLoading(false);
     }
@@ -55,10 +72,9 @@ export default function GroupCreateScreen() {
     try {
       const group = await joinGroup(code);
       await refresh();
-      notify(`'${group.name}' 그룹에 참여했어요!`);
-      navigation.goBack();
+      setResult({ type: 'joined', name: group.name });
     } catch (e: any) {
-      notify(e?.message ?? '참여에 실패했습니다. 코드를 확인해주세요.');
+      setResult({ type: 'error', message: e?.message ?? '참여에 실패했습니다. 코드를 확인해주세요.' });
     } finally {
       setLoading(false);
     }
@@ -136,6 +152,51 @@ export default function GroupCreateScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {result && (
+        <View style={styles.overlayWrap}>
+          <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={closeResult} />
+          <View style={styles.dialog}>
+            {result.type === 'error' ? (
+              <>
+                <Text style={styles.dialogTitle}>앗, 문제가 생겼어요</Text>
+                <Text style={styles.dialogMsg}>{result.message}</Text>
+                <TouchableOpacity style={[styles.dialogBtn, { backgroundColor: accent }]} onPress={closeResult}>
+                  <Text style={styles.dialogBtnText}>확인</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <View style={[styles.dialogIcon, { backgroundColor: hexToRgba(accent, 0.12) }]}>
+                  <IconUsers size={26} color={accent} />
+                </View>
+                <Text style={styles.dialogTitle}>
+                  {result.type === 'created' ? '그룹이 만들어졌어요!' : '그룹에 참여했어요!'}
+                </Text>
+                <Text style={styles.dialogMsg}>
+                  {result.type === 'created'
+                    ? `'${result.name}' 그룹이 생성됐어요. 친구에게 아래 초대 코드를 공유하면 함께 쓸 수 있어요.`
+                    : `이제 '${result.name}' 그룹 피드에서 함께 볼 수 있어요.`}
+                </Text>
+                {result.type === 'created' && (
+                  <View style={styles.codeBox}>
+                    <Text style={[styles.codeText, { color: accent }]}>{result.code}</Text>
+                    <TouchableOpacity
+                      style={[styles.copyBtn, { borderColor: hexToRgba(accent, 0.4) }]}
+                      onPress={() => copyCode(result.code)}
+                    >
+                      <Text style={[styles.copyBtnText, { color: accent }]}>{copied ? '복사됨 ✓' : '복사'}</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+                <TouchableOpacity style={[styles.dialogBtn, { backgroundColor: accent }]} onPress={closeResult}>
+                  <Text style={styles.dialogBtnText}>확인</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -180,4 +241,34 @@ const styles = StyleSheet.create({
   },
   joinBtnDisabled: { backgroundColor: '#e5e7eb' },
   joinBtnText: { fontSize: 13, fontWeight: '700', color: '#ffffff' },
+
+  // 폰 프레임 안에 뜨는 결과 다이얼로그
+  overlayWrap: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    alignItems: 'center', justifyContent: 'center', padding: 28,
+  },
+  overlayBg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)' },
+  dialog: {
+    width: '100%', backgroundColor: '#fff', borderRadius: 22,
+    padding: 24, alignItems: 'center', gap: 10,
+  },
+  dialogIcon: {
+    width: 56, height: 56, borderRadius: 18,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 2,
+  },
+  dialogTitle: { fontSize: 17, fontWeight: '800', color: '#111827', textAlign: 'center' },
+  dialogMsg: { fontSize: 13, color: '#6b7280', textAlign: 'center', lineHeight: 20 },
+  codeBox: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#f9fafb', borderRadius: 14, borderWidth: 1, borderColor: '#e5e7eb',
+    paddingVertical: 12, paddingHorizontal: 16, marginTop: 4,
+  },
+  codeText: { fontSize: 22, fontWeight: '800', letterSpacing: 3 },
+  copyBtn: { borderWidth: 1.5, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
+  copyBtnText: { fontSize: 12, fontWeight: '700' },
+  dialogBtn: {
+    width: '100%', borderRadius: 14, paddingVertical: 14,
+    alignItems: 'center', marginTop: 10,
+  },
+  dialogBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
 });
