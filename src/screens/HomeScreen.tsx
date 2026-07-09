@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView,
-  Modal, Pressable, Image, TextInput, Platform, Alert,
+  Modal, Pressable, Image, TextInput,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -52,6 +52,7 @@ export default function HomeScreen() {
   const [editFolder, setEditFolder] = useState<DiaryFolder | null>(null);
   const [editName, setEditName] = useState('');
   const [editEmoji, setEditEmoji] = useState('📁');
+  const [deleteTarget, setDeleteTarget] = useState<DiaryFolder | null>(null);
 
   // 기본 폴더(이름/아이콘 override 반영, 숨긴 폴더 제외) + 사용자가 만든 폴더
   const createdFolders = customFolders.filter((f) => f.id.startsWith('c_'));
@@ -115,29 +116,10 @@ export default function HomeScreen() {
     }
   }
 
-  /** 삭제 확인창 (웹: confirm / 네이티브: Alert) */
-  function confirmDelete(msg: string): Promise<boolean> {
-    if (Platform.OS === 'web') {
-      return Promise.resolve(typeof window !== 'undefined' ? window.confirm(msg) : true);
-    }
-    return new Promise((resolve) => {
-      Alert.alert('폴더 삭제', msg, [
-        { text: '취소', style: 'cancel', onPress: () => resolve(false) },
-        { text: '삭제', style: 'destructive', onPress: () => resolve(true) },
-      ]);
-    });
-  }
-
-  /** 폴더 삭제 — 사용자 폴더는 제거, 기본 폴더는 숨김 처리 → DB 저장 */
-  async function deleteFolder() {
-    if (!editFolder) return;
-    const id = editFolder.id;
+  /** 폴더 삭제 실행 — 사용자 폴더는 제거, 기본 폴더는 숨김 처리 → DB 저장 */
+  async function performDelete(target: DiaryFolder) {
+    const id = target.id;
     const isCustom = id.startsWith('c_');
-    const ok = await confirmDelete(
-      `'${editFolder.name}' 폴더를 삭제할까요?` +
-      (isCustom ? '' : '\n(기본 폴더는 숨겨지고, 담긴 p!ng는 전체 목록에서 볼 수 있어요.)')
-    );
-    if (!ok) return;
     const nextCustom = customFolders.filter((f) => f.id !== id);
     setCustomFolders(nextCustom);
     let nextHidden = hiddenFolders;
@@ -146,7 +128,7 @@ export default function HomeScreen() {
       setHiddenFolders(nextHidden);
     }
     if (selectedFolder?.id === id) setSelectedFolder(null);
-    setEditFolder(null);
+    setDeleteTarget(null);
     try {
       await saveFolders(nextCustom);
       if (!isCustom) await saveHiddenFolders(nextHidden);
@@ -667,8 +649,35 @@ export default function HomeScreen() {
             >
               <Text style={[styles.confirmBtnText, { color: editName.trim() ? '#fff' : '#9ca3af' }]}>저장</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.deleteFolderBtn} onPress={deleteFolder}>
+            <TouchableOpacity
+              style={styles.deleteFolderBtn}
+              onPress={() => { const t = editFolder; setEditFolder(null); setDeleteTarget(t); }}
+            >
               <Text style={styles.deleteFolderText}>폴더 삭제</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* 폴더 삭제 확인 (폰 프레임 안) */}
+      {deleteTarget && (
+        <View style={styles.overlayWrap}>
+          <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setDeleteTarget(null)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.fabSheetTitle}>폴더 삭제</Text>
+            <Text style={styles.deleteConfirmMsg}>
+              '{deleteTarget.name}' 폴더를 삭제할까요?
+              {!deleteTarget.id.startsWith('c_') && '\n기본 폴더는 숨겨지고, 담긴 p!ng는 전체 목록에서 볼 수 있어요.'}
+            </Text>
+            <TouchableOpacity
+              style={[styles.confirmBtn, { backgroundColor: '#ef4444' }]}
+              onPress={() => performDelete(deleteTarget)}
+            >
+              <Text style={[styles.confirmBtnText, { color: '#ffffff' }]}>삭제</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.deleteFolderBtn} onPress={() => setDeleteTarget(null)}>
+              <Text style={[styles.deleteFolderText, { color: '#6b7280' }]}>취소</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -889,6 +898,7 @@ const styles = StyleSheet.create({
   confirmBtnText: { fontSize: 14, fontWeight: '700' },
   deleteFolderBtn: { marginTop: 12, alignItems: 'center', paddingVertical: 4 },
   deleteFolderText: { fontSize: 13, color: '#ef4444', fontWeight: '600' },
+  deleteConfirmMsg: { fontSize: 13, color: '#6b7280', lineHeight: 20, marginBottom: 16 },
 
   // + 선택 시트
   fabSheetTitle: { fontSize: 16, fontWeight: '800', color: '#111827', marginTop: 4, marginBottom: 14 },
