@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>p!ng 다이어리 · 개인정보 처리방침</title>
+  <style>
+    :root {
+      --bg: #ffffff; --fg: #1f2937; --muted: #6b7280;
+      --line: #eef0f3; --accent: #6366f1; --card: #f9fafb;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #0f1115; --fg: #e5e7eb; --muted: #9ca3af;
+        --line: #1f2430; --accent: #818cf8; --card: #161a22; }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: var(--bg); color: var(--fg);
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+      line-height: 1.7; -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 40px 22px 80px; }
+    .brand { font-size: 30px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
+    h1 { font-size: 22px; font-weight: 800; margin: 6px 0 2px; }
+    .meta { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+    h2 { font-size: 16px; font-weight: 700; margin: 30px 0 8px; padding-top: 18px; border-top: 1px solid var(--line); }
+    p, li { font-size: 14.5px; color: var(--fg); }
+    ul { padding-left: 18px; margin: 8px 0; }
+    li { margin: 4px 0; }
+    .muted { color: var(--muted); }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 12px 0; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13.5px; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; white-space: nowrap; }
+    a { color: var(--accent); }
+    footer { margin-top: 40px; color: var(--muted); font-size: 12.5px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">p!ng</div>
+    <h1>개인정보 처리방침</h1>
+    <div class="meta">p!ng 다이어리 · 시행일 2026년 7월 9일</div>
+
+    <p>p!ng 다이어리(이하 "서비스")는 이용자의 개인정보를 소중히 여기며, 「개인정보 보호법」 등 관련 법령을 준수합니다. 본 방침은 서비스가 어떤 정보를 수집하고, 어떻게 이용·보관·보호하는지 설명합니다.</p>
+
+    <h2>1. 수집하는 개인정보 항목</h2>
+    <table>
+      <tr><th>구분</th><th>항목</th></tr>
+      <tr><td>계정 정보</td><td>이메일 주소, 표시 이름, 사용자 아이디(닉네임)</td></tr>
+      <tr><td>소셜 로그인</td><td>구글·카카오·네이버 로그인 시 제공되는 식별자 및 닉네임(이메일은 요청하지 않음)</td></tr>
+      <tr><td>서비스 이용 데이터</td><td>일기 제목·본문·태그·첨부 사진·작성 날짜, 선택한 기분, AI 페르소나, 폴더, 공개 범위</td></tr>
+      <tr><td>그룹 기능</td><td>참여한 그룹 정보, 그룹에 공유한 일기</td></tr>
+      <tr><td>설정</td><td>테마 등 앱 환경설정</td></tr>
+    </table>
+    <p class="muted">서비스는 주민등록번호 등 고유식별정보를 수집하지 않습니다.</p>
+
+    <h2>2. 개인정보의 이용 목적</h2>
+    <ul>
+      <li>회원 식별 및 로그인, 계정 관리</li>
+      <li>일기 저장·조회·수정·삭제 등 핵심 기능 제공</li>
+      <li>AI 코멘트 생성(작성한 일기 내용을 바탕으로 페르소나별 코멘트 제공)</li>
+      <li>그룹 공유 기능 제공</li>
+      <li>서비스 개선 및 오류 대응</li>
+    </ul>
+
+    <h2>3. 제3자 처리위탁(서비스 제공업체)</h2>
+    <p>서비스는 원활한 운영을 위해 아래 업체에 개인정보 처리를 위탁합니다.</p>
+    <table>
+      <tr><th>수탁업체</th><th>위탁 내용</th></tr>
+      <tr><td>Supabase</td><td>회원 인증 및 데이터베이스(일기·계정 정보) 저장</td></tr>
+      <tr><td>OpenAI</td><td>AI 코멘트 생성 — 코멘트 생성을 위해 <strong>해당 일기 내용이 OpenAI로 전송</strong>됩니다. OpenAI는 API로 전송된 데이터를 모델 학습에 사용하지 않습니다.</td></tr>
+      <tr><td>Railway</td><td>백엔드 서버 호스팅</td></tr>
+      <tr><td>Vercel</td><td>웹 애플리케이션 호스팅</td></tr>
+    </table>
+    <div class="card">
+      <strong>AI 기능 안내:</strong> 이용자가 AI 코멘트를 생성할 때에 한해 해당 일기 텍스트가 OpenAI API로 전송되며, 코멘트 생성 목적 외로 사용되지 않습니다. 일기를 작성만 하고 AI 코멘트를 생성하지 않으면 외부로 전송되지 않습니다.
+    </div>
+
+    <h2>4. 보유 및 이용 기간</h2>
+    <ul>
+      <li>개인정보는 회원 탈퇴 시까지 보관하며, <strong>탈퇴 시 지체 없이 파기</strong>합니다.</li>
+      <li>이용자가 삭제한 일기·계정 데이터는 서버에서 삭제됩니다.</li>
+      <li>관련 법령에 따라 보존이 필요한 경우 해당 기간 동안 보관할 수 있습니다.</li>
+    </ul>
+
+    <h2>5. 이용자의 권리와 행사 방법</h2>
+    <ul>
+      <li>이용자는 언제든지 자신의 개인정보를 열람·수정·삭제할 수 있습니다.</li>
+      <li>일기 삭제: 앱 내에서 각 일기를 직접 삭제</li>
+      <li>이름·아이디 수정: 앱 <em>프로필 → 계정 설정</em></li>
+      <li>회원 탈퇴 및 전체 데이터 삭제: 앱 <em>프로필 → 계정 설정 → 회원 탈퇴</em> (계정과 모든 일기·그룹 데이터가 삭제됩니다)</li>
+    </ul>
+
+    <h2>6. 만 14세 미만 아동</h2>
+    <p>서비스는 만 14세 미만 아동을 대상으로 하지 않으며, 아동의 개인정보를 고의로 수집하지 않습니다.</p>
+
+    <h2>7. 개인정보의 안전성 확보</h2>
+    <ul>
+      <li>통신 구간 암호화(HTTPS) 적용</li>
+      <li>비밀번호는 복호화 불가능한 형태로 저장</li>
+      <li>데이터 접근 권한 최소화 및 계정별 데이터 분리</li>
+    </ul>
+
+    <h2>8. 개인정보 보호책임자 및 문의</h2>
+    <p>개인정보 관련 문의는 아래로 연락해 주세요.</p>
+    <div class="card">
+      운영자 · p!ng 다이어리<br />
+      이메일: <a href="mailto:CONTACT_EMAIL_PLACEHOLDER">CONTACT_EMAIL_PLACEHOLDER</a>
+    </div>
+
+    <h2>9. 방침의 변경</h2>
+    <p>본 개인정보 처리방침은 법령·서비스 변경에 따라 개정될 수 있으며, 변경 시 앱 또는 본 페이지를 통해 공지합니다.</p>
+
+    <footer>© 2026 p!ng 다이어리. 최종 업데이트 2026-07-09.</footer>
+  </div>
+</body>
+</html>

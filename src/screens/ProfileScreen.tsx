@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
@@ -105,6 +105,13 @@ export default function ProfileScreen() {
           </TouchableOpacity>
           <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('AccountSettings')}>
             <Text style={styles.menuText}>계정 설정</Text>
+            <IconChev dir="right" size={18} color="#d1d5db" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.menuItem}
+            onPress={() => Linking.openURL('https://ping-diary.vercel.app/privacy.html')}
+          >
+            <Text style={styles.menuText}>개인정보 처리방침</Text>
             <IconChev dir="right" size={18} color="#d1d5db" />
           </TouchableOpacity>
           <TouchableOpacity
