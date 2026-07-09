@@ -198,8 +198,11 @@ export async function removeEntry(id: number): Promise<void> {
 }
 
 /** AI 코멘트 즉시 생성 (미리보기/데모용) */
-export async function generateComment(id: number): Promise<DiaryEntry> {
-  const row = await request(`/entries/${id}/comment`, { method: 'POST' });
+export async function generateComment(id: number, persona?: string): Promise<DiaryEntry> {
+  const row = await request(`/entries/${id}/comment`, {
+    method: 'POST',
+    ...(persona ? { body: JSON.stringify({ persona }) } : {}),
+  });
   return fromServer(row);
 }
 

@@ -13,6 +13,7 @@ import IconEdit from '../components/icons/IconEdit';
 import IconTrash from '../components/icons/IconTrash';
 import { useTheme } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
+import { PERSONAS } from '../data/types';
 import { generateComment, reportContent } from '../api';
 import { notify } from '../notify';
 import Svg, { Path, Line } from 'react-native-svg';
@@ -58,6 +59,8 @@ export default function DiaryDetailScreen() {
   const [published, setPublished] = useState(entry.visibility === 'friends');
   const [publishing, setPublishing] = useState(false);
   const [aiComment, setAiComment] = useState<string | undefined>(entry.aiComment);
+  const [persona, setPersona] = useState(entry.persona);
+  const [personaOpen, setPersonaOpen] = useState(false);
   const [genLoading, setGenLoading] = useState(false);
 
   function handleEdit() {
@@ -69,7 +72,7 @@ export default function DiaryDetailScreen() {
     const next: 'private' | 'friends' = published ? 'private' : 'friends';
     setPublishing(true);
     setPublished(!published);
-    updateEntry({ ...entry, visibility: next, aiComment });
+    updateEntry({ ...entry, visibility: next, aiComment, persona });
     setPublishing(false);
     setShareOpen(false);
   }
@@ -78,11 +81,31 @@ export default function DiaryDetailScreen() {
   async function handleGenerateComment() {
     setGenLoading(true);
     try {
-      const updated = await generateComment(entry.id);
+      const updated = await generateComment(entry.id, persona);
       setAiComment(updated.aiComment);
       updateLocal(updated); // 목록에도 반영
     } catch (e: any) {
       notify(e?.message ?? 'AI 코멘트 생성에 실패했어요. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setGenLoading(false);
+    }
+  }
+
+  // 코멘트 페르소나(말투) 변경 → 이미 코멘트가 있으면 새 말투로 즉시 다시 생성
+  async function handleChangePersona(next: string) {
+    setPersonaOpen(false);
+    if (next === persona) return;
+    const prev = persona;
+    setPersona(next);
+    if (!aiComment) return; // 아직 코멘트가 없으면 다음 생성 때 이 페르소나가 쓰임
+    setGenLoading(true);
+    try {
+      const updated = await generateComment(entry.id, next);
+      setAiComment(updated.aiComment);
+      updateLocal(updated); // 목록에도 반영
+    } catch (e: any) {
+      notify(e?.message ?? 'AI 코멘트 생성에 실패했어요. 잠시 후 다시 시도해주세요.');
+      setPersona(prev); // 실패 시 원래 페르소나로 롤백
     } finally {
       setGenLoading(false);
     }
@@ -145,15 +168,27 @@ export default function DiaryDetailScreen() {
           <View style={styles.aiTitleRow}>
             <IconSparkle size={15} color={accent} />
             <Text style={styles.aiTitle}>AI 코멘트</Text>
-            <View style={styles.aiPersonaRow}>
-              <PersonaIcon persona={entry.persona} size={13} color="#9ca3af" />
-              <Text style={styles.aiPersona}>{entry.persona}</Text>
-            </View>
+            <TouchableOpacity
+              style={styles.aiPersonaBtn}
+              onPress={() => setPersonaOpen(true)}
+              disabled={genLoading}
+            >
+              <PersonaIcon persona={persona} size={13} color={accent} />
+              <Text style={[styles.aiPersona, { color: accent }]}>{persona}</Text>
+              <IconChev dir="down" size={12} color={accent} />
+            </TouchableOpacity>
           </View>
 
           {aiComment ? (
             <View style={styles.aiCommentBox}>
-              <Text style={styles.aiCommentText}>{aiComment}</Text>
+              {genLoading ? (
+                <View style={styles.aiRegenRow}>
+                  <ActivityIndicator color={accent} size="small" />
+                  <Text style={styles.aiRegenText}>{persona} 말투로 코멘트를 다시 쓰고 있어요…</Text>
+                </View>
+              ) : (
+                <Text style={styles.aiCommentText}>{aiComment}</Text>
+              )}
               <TouchableOpacity style={styles.aiReportBtn} onPress={reportAiComment}>
                 <Text style={styles.aiReportText}>부적절한 코멘트인가요? 신고하기</Text>
               </TouchableOpacity>
@@ -204,6 +239,38 @@ export default function DiaryDetailScreen() {
                 {published ? '그룹 공개 해제' : '그룹에 공개하기'}
               </Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {personaOpen && (
+        <View style={styles.overlayWrap}>
+          <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setPersonaOpen(false)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>코멘트 말투 바꾸기</Text>
+              <TouchableOpacity onPress={() => setPersonaOpen(false)}>
+                <IconX size={18} color="#9ca3af" />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.sheetSub}>
+              {aiComment ? '고르면 그 말투로 코멘트를 다시 써줘요.' : '어떤 말투로 코멘트를 받을까요?'}
+            </Text>
+            {PERSONAS.map((p) => {
+              const active = p.label === persona;
+              return (
+                <TouchableOpacity
+                  key={p.label}
+                  style={[styles.personaRow, active && { borderColor: accent, backgroundColor: '#f9fafb' }]}
+                  onPress={() => handleChangePersona(p.label)}
+                >
+                  <PersonaIcon persona={p.label} size={18} color={active ? accent : '#6b7280'} />
+                  <Text style={[styles.personaLabel, active && { color: accent, fontWeight: '700' }]}>{p.label}</Text>
+                  {active && <Text style={[styles.personaCheck, { color: accent }]}>✓</Text>}
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
       )}
@@ -266,6 +333,20 @@ const styles = StyleSheet.create({
   aiTitle: { fontSize: 13, fontWeight: '700', color: '#374151', flex: 1 },
   aiPersona: { fontSize: 12, color: '#9ca3af' },
   aiPersonaRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  aiPersonaBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 999,
+    backgroundColor: '#f3f4f6',
+  },
+  aiRegenRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 },
+  aiRegenText: { fontSize: 13, color: '#9ca3af', flex: 1 },
+  personaRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    padding: 14, borderRadius: 14, borderWidth: 1.5, borderColor: '#f3f4f6',
+    marginBottom: 8,
+  },
+  personaLabel: { fontSize: 14, color: '#374151', flex: 1 },
+  personaCheck: { fontSize: 15, fontWeight: '800' },
   aiCommentBox: {
     backgroundColor: '#f9fafb', borderRadius: 14,
     borderWidth: 1, borderColor: '#e5e7eb', padding: 16,
