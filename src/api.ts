@@ -67,6 +67,7 @@ export function setUserEmail(email: string) {
 export function clearToken() {
   storage.remove(TOKEN_KEY);
   storage.remove(EMAIL_KEY);
+  clearMeCache();
 }
 
 /** 앱 시작 시 네이티브 영구 저장소에서 토큰·이메일을 메모리로 복원 */
@@ -281,8 +282,7 @@ export async function updateGroupPhoto(id: number, photo_url: string | null): Pr
 
 export interface UserFolder { id: string; name: string; emoji: string }
 
-/** 내 프로필 (폴더 커버·테마·사용자 폴더 등 user_metadata) */
-export async function getMe(): Promise<{
+export interface Me {
   email: string | null;
   folder_covers: Record<string, string>;
   theme: string | null;
@@ -290,40 +290,92 @@ export async function getMe(): Promise<{
   hidden_folders: string[];
   display_name: string | null;
   username: string | null;
-}> {
-  const r = await request('/auth/me');
-  return {
-    email: r?.email ?? null,
-    folder_covers: r?.folder_covers ?? {},
-    theme: r?.theme ?? null,
-    folders: Array.isArray(r?.folders) ? r.folders : [],
-    hidden_folders: Array.isArray(r?.hidden_folders) ? r.hidden_folders : [],
-    display_name: r?.display_name ?? null,
-    username: r?.username ?? null,
-  };
+}
+
+// 프로필 캐시 — 화면 진입마다 재요청 대신 즉시 표시 + 백그라운드 갱신
+const ME_KEY = 'ping_diary_me';
+let meCache: Me | null = null;
+let meInflight: Promise<Me> | null = null;
+
+/** 캐시된 프로필 (동기). 저장된 값이 있으면 즉시 반환, 없으면 null */
+export function getCachedMe(): Me | null {
+  if (meCache) return meCache;
+  const ls = webLocalStorage();
+  if (ls) {
+    const v = ls.getItem(ME_KEY);
+    if (v) { try { meCache = JSON.parse(v); } catch {} }
+  }
+  return meCache;
+}
+
+function persistMe(me: Me) {
+  meCache = me;
+  const ls = webLocalStorage();
+  if (ls) { try { ls.setItem(ME_KEY, JSON.stringify(me)); } catch {} }
+}
+
+/** 저장(프로필/폴더/테마 변경) 후 캐시 일부 갱신 → 다음 화면에서 최신 즉시 표시 */
+export function patchMeCache(partial: Partial<Me>) {
+  const base = getCachedMe();
+  if (base) persistMe({ ...base, ...partial });
+}
+
+/** 프로필 캐시 삭제 (로그아웃 시) */
+export function clearMeCache() {
+  meCache = null;
+  const ls = webLocalStorage();
+  if (ls) ls.removeItem(ME_KEY);
+}
+
+/** 내 프로필 (폴더 커버·테마·사용자 폴더 등). 동시 호출은 하나로 합침 */
+export async function getMe(): Promise<Me> {
+  if (meInflight) return meInflight;
+  meInflight = (async () => {
+    const r = await request('/auth/me');
+    const me: Me = {
+      email: r?.email ?? null,
+      folder_covers: r?.folder_covers ?? {},
+      theme: r?.theme ?? null,
+      folders: Array.isArray(r?.folders) ? r.folders : [],
+      hidden_folders: Array.isArray(r?.hidden_folders) ? r.hidden_folders : [],
+      display_name: r?.display_name ?? null,
+      username: r?.username ?? null,
+    };
+    persistMe(me);
+    return me;
+  })();
+  try { return await meInflight; }
+  finally { meInflight = null; }
 }
 
 /** 숨긴(삭제한) 기본 폴더 id 목록 저장 */
 export async function saveHiddenFolders(hidden: string[]): Promise<string[]> {
   const r = await request('/auth/hidden-folders', { method: 'PATCH', body: JSON.stringify({ hidden }) });
-  return Array.isArray(r?.hidden_folders) ? r.hidden_folders : [];
+  const next = Array.isArray(r?.hidden_folders) ? r.hidden_folders : [];
+  patchMeCache({ hidden_folders: next });
+  return next;
 }
 
 /** 표시 이름·아이디 저장 (내 계정 user_metadata, DB) */
 export async function saveProfile(p: { display_name?: string; username?: string }): Promise<{ display_name: string | null; username: string | null }> {
   const r = await request('/auth/profile', { method: 'PATCH', body: JSON.stringify(p) });
-  return { display_name: r?.display_name ?? null, username: r?.username ?? null };
+  const next = { display_name: r?.display_name ?? null, username: r?.username ?? null };
+  patchMeCache(next);
+  return next;
 }
 
 /** 사용자가 만든 폴더 목록 저장 (user_metadata, DB) */
 export async function saveFolders(folders: UserFolder[]): Promise<UserFolder[]> {
   const r = await request('/auth/folders', { method: 'PATCH', body: JSON.stringify({ folders }) });
-  return Array.isArray(r?.folders) ? r.folders : [];
+  const next = Array.isArray(r?.folders) ? r.folders : [];
+  patchMeCache({ folders: next });
+  return next;
 }
 
 /** 선택한 테마를 내 계정(user_metadata)에 저장 */
 export async function setThemeServer(theme: string): Promise<void> {
   await request('/auth/theme', { method: 'PATCH', body: JSON.stringify({ theme }) });
+  patchMeCache({ theme });
 }
 
 /** 폴더 커버 사진 저장 (내 계정 user_metadata, DB 저장) */
@@ -332,5 +384,7 @@ export async function setFolderCover(folder_id: string, photo_url: string | null
     method: 'PATCH',
     body: JSON.stringify({ folder_id, photo_url }),
   });
-  return r?.folder_covers ?? {};
+  const next = r?.folder_covers ?? {};
+  patchMeCache({ folder_covers: next });
+  return next;
 }

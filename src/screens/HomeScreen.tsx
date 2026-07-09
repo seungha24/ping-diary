@@ -17,7 +17,7 @@ import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { useGroups } from '../context/GroupsContext';
 import { useAuth } from '../context/AuthContext';
-import { uploadPhoto, updateGroupPhoto, getMe, setFolderCover, saveFolders, saveHiddenFolders } from '../api';
+import { uploadPhoto, updateGroupPhoto, getMe, getCachedMe, setFolderCover, saveFolders, saveHiddenFolders } from '../api';
 import { notify } from '../notify';
 import Svg, { Path, Line, Circle } from 'react-native-svg';
 import { IconFolder, IconList, IconUsers, IconPencil, IconX, IconCamera } from '../components/icons/Line';
@@ -38,12 +38,13 @@ export default function HomeScreen() {
   const [zoomedGroup, setZoomedGroup] = useState<{ emoji: string; photo?: string; name: string } | null>(null);
   const [selectedFolder, setSelectedFolder] = useState<DiaryFolder | null>(null);
   const [personalView, setPersonalView] = useState<'folder' | 'all'>('folder');
-  const [folderCovers, setFolderCovers] = useState<Record<string, string>>({});
+  // 캐시된 프로필로 초기화 → 폴더 커버·목록이 즉시 표시(시간차 제거), 아래 useEffect가 갱신
+  const [folderCovers, setFolderCovers] = useState<Record<string, string>>(() => getCachedMe()?.folder_covers ?? {});
   const [shareEntry, setShareEntry] = useState<DiaryEntry | null>(null);
 
   const [groupCovers, setGroupCovers] = useState<Record<number, string>>({});
-  const [customFolders, setCustomFolders] = useState<DiaryFolder[]>([]);
-  const [hiddenFolders, setHiddenFolders] = useState<string[]>([]);
+  const [customFolders, setCustomFolders] = useState<DiaryFolder[]>(() => (getCachedMe()?.folders ?? []) as DiaryFolder[]);
+  const [hiddenFolders, setHiddenFolders] = useState<string[]>(() => getCachedMe()?.hidden_folders ?? []);
   const [fabMenuOpen, setFabMenuOpen] = useState(false);
   const [folderModalOpen, setFolderModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');

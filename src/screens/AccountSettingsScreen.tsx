@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import IconChev from '../components/icons/IconChev';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { changePassword, deleteAccount, getMe, saveProfile } from '../api';
+import { changePassword, deleteAccount, getMe, getCachedMe, saveProfile } from '../api';
 import { notify } from '../notify';
 
 function Row({ label, value, onPress }: { label: string; value?: string; onPress?: () => void }) {
@@ -28,8 +28,8 @@ export default function AccountSettingsScreen() {
   const { logout, token, email: authEmail } = useAuth();
 
   const emailPrefix = (authEmail ?? '').split('@')[0] || '사용자';
-  const [name, setName] = useState(emailPrefix);
-  const [username, setUsername] = useState(emailPrefix);
+  const [name, setName] = useState(() => getCachedMe()?.display_name || emailPrefix);
+  const [username, setUsername] = useState(() => getCachedMe()?.username || emailPrefix);
   const email = authEmail ?? '-';
   const [editingName, setEditingName] = useState(false);
   const [editingUsername, setEditingUsername] = useState(false);

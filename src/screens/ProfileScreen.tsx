@@ -7,7 +7,7 @@ import { RootStackParamList } from '../navigation/RootNavigator';
 import IconChev from '../components/icons/IconChev';
 import { useTheme, THEMES } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { getMe } from '../api';
+import { getMe, getCachedMe } from '../api';
 import { IconUser, IconCamera } from '../components/icons/Line';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -19,8 +19,9 @@ export default function ProfileScreen() {
   const emailPrefix = (email ?? '').split('@')[0] || '사용자';
 
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
-  const [displayName, setDisplayName] = useState(emailPrefix);
-  const [username, setUsername] = useState(emailPrefix);
+  // 캐시된 프로필을 초기값으로 → 즉시 표시(시간차 제거), 아래 useEffect가 백그라운드 갱신
+  const [displayName, setDisplayName] = useState(() => getCachedMe()?.display_name || emailPrefix);
+  const [username, setUsername] = useState(() => getCachedMe()?.username || emailPrefix);
 
   // 로그인 후 DB에 저장된 이름/아이디 불러오기 (없으면 이메일 앞부분)
   useEffect(() => {
