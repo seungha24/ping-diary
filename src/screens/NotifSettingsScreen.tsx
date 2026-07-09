@@ -1,11 +1,28 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  SafeAreaView, Switch,
+  SafeAreaView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import IconChev from '../components/icons/IconChev';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
+
+/** 테마색이 웹에서도 확실히 적용되는 커스텀 토글 (RN Switch가 웹에서 색 무시하는 문제 회피) */
+function ThemeSwitch({ value, onChange, disabled, accent }: { value: boolean; onChange: (v: boolean) => void; disabled?: boolean; accent: string }) {
+  return (
+    <TouchableOpacity
+      activeOpacity={0.85}
+      disabled={disabled}
+      onPress={() => onChange(!value)}
+      style={[
+        styles.switchTrack,
+        { backgroundColor: value ? accent : '#e5e7eb', justifyContent: value ? 'flex-end' : 'flex-start' },
+      ]}
+    >
+      <View style={styles.switchThumb} />
+    </TouchableOpacity>
+  );
+}
 
 interface ToggleRowProps {
   label: string;
@@ -23,13 +40,7 @@ function ToggleRow({ label, desc, value, onChange, disabled }: ToggleRowProps) {
         <Text style={[styles.rowLabel, disabled && styles.rowLabelDisabled]}>{label}</Text>
         {desc && <Text style={styles.rowDesc}>{desc}</Text>}
       </View>
-      <Switch
-        value={value}
-        onValueChange={onChange}
-        disabled={disabled}
-        trackColor={{ false: '#e5e7eb', true: accent }}
-        thumbColor="#ffffff"
-      />
+      <ThemeSwitch value={value} onChange={onChange} disabled={disabled} accent={accent} />
     </View>
   );
 }
@@ -184,6 +195,14 @@ const styles = StyleSheet.create({
     paddingVertical: 14, gap: 12,
   },
   rowDisabled: { opacity: 0.4 },
+  switchTrack: {
+    width: 48, height: 28, borderRadius: 14,
+    paddingHorizontal: 3, flexDirection: 'row', alignItems: 'center',
+  },
+  switchThumb: {
+    width: 22, height: 22, borderRadius: 11, backgroundColor: '#ffffff',
+    shadowColor: '#000', shadowOpacity: 0.18, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: 2,
+  },
   rowText: { flex: 1, gap: 2 },
   rowLabel: { fontSize: 14, fontWeight: '600', color: '#111827' },
   rowLabelDisabled: { color: '#9ca3af' },
