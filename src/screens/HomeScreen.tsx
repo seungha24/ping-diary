@@ -484,7 +484,7 @@ export default function HomeScreen() {
                       </Svg>
                     </TouchableOpacity>
                   </View>
-                  <View style={styles.groupCardBody}>
+                  <View style={[styles.groupCardBody, { backgroundColor: hexToRgba(accent, 0.1) }]}>
                     <Text style={styles.groupCardName} numberOfLines={1}>{group.name}</Text>
                     <Text style={styles.groupCardMeta} numberOfLines={1}>{group.member_count ?? 1}명 · {group.invite_code}</Text>
                   </View>
