@@ -13,11 +13,11 @@ import IconEdit from '../components/icons/IconEdit';
 import IconTrash from '../components/icons/IconTrash';
 import { useTheme } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
-import { PERSONAS } from '../data/types';
-import { generateComment, reportContent } from '../api';
+import { PERSONAS, FOLDERS, DiaryFolder } from '../data/types';
+import { generateComment, reportContent, getCachedMe } from '../api';
 import { notify } from '../notify';
 import Svg, { Path, Line } from 'react-native-svg';
-import { IconLock, IconX, IconSparkle, IconTrash as IconTrashLine, PersonaIcon } from '../components/icons/Line';
+import { IconLock, IconX, IconSparkle, IconTrash as IconTrashLine, IconFolder, PersonaIcon } from '../components/icons/Line';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -62,6 +62,21 @@ export default function DiaryDetailScreen() {
   const [persona, setPersona] = useState(entry.persona);
   const [personaOpen, setPersonaOpen] = useState(false);
   const [genLoading, setGenLoading] = useState(false);
+  const [folder, setFolder] = useState<string | undefined>(entry.folder);
+  const [folderOpen, setFolderOpen] = useState(false);
+
+  // 홈 화면과 동일하게 기본 폴더(숨김 제외·이름/이모지 오버라이드) + 사용자 생성 폴더를 합친다.
+  const cached = getCachedMe();
+  const customFolders = (cached?.folders ?? []) as DiaryFolder[];
+  const hiddenFolders = cached?.hidden_folders ?? [];
+  const allFolders: DiaryFolder[] = [
+    ...FOLDERS.filter((f) => !hiddenFolders.includes(f.id)).map((f) => {
+      const ov = customFolders.find((c) => c.id === f.id);
+      return ov ? { ...f, name: ov.name, emoji: ov.emoji } : f;
+    }),
+    ...customFolders.filter((f) => f.id.startsWith('c_')),
+  ];
+  const currentFolder = allFolders.find((f) => f.id === folder);
 
   function handleEdit() {
     navigation.navigate('DiaryWrite', { entry });
@@ -111,6 +126,16 @@ export default function DiaryDetailScreen() {
     }
   }
 
+  // 이 글을 폴더에 넣기/이동 (낙관적 반영 + 서버 저장)
+  function handleChangeFolder(id: string) {
+    setFolderOpen(false);
+    if (id === folder) return;
+    setFolder(id);
+    updateEntry({ ...entry, folder: id, aiComment, persona, visibility: published ? 'friends' : 'private' });
+    const name = allFolders.find((f) => f.id === id)?.name ?? '폴더';
+    notify(`'${name}' 폴더에 넣었어요.`);
+  }
+
   /** 부적절한 AI 코멘트 신고 (앱스토어 AI 콘텐츠 심사 대응) */
   async function reportAiComment() {
     try {
@@ -158,6 +183,14 @@ export default function DiaryDetailScreen() {
         <View style={styles.meta}>
           {entry.tags.map((t) => <Tag key={t} label={t} />)}
         </View>
+
+        <TouchableOpacity style={styles.folderChip} onPress={() => setFolderOpen(true)}>
+          <IconFolder size={13} color={accent} />
+          <Text style={styles.folderChipText}>
+            {currentFolder ? `${currentFolder.emoji} ${currentFolder.name}` : '폴더에 넣기'}
+          </Text>
+          <IconChev dir="down" size={12} color="#9ca3af" />
+        </TouchableOpacity>
 
         <View style={styles.divider} />
 
@@ -275,6 +308,38 @@ export default function DiaryDetailScreen() {
         </View>
       )}
 
+      {folderOpen && (
+        <View style={styles.overlayWrap}>
+          <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setFolderOpen(false)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>폴더에 넣기</Text>
+              <TouchableOpacity onPress={() => setFolderOpen(false)}>
+                <IconX size={18} color="#9ca3af" />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.sheetSub}>이 글을 어떤 폴더에 넣을까요?</Text>
+            <ScrollView style={styles.folderList} showsVerticalScrollIndicator={false}>
+              {allFolders.map((f) => {
+                const active = f.id === folder;
+                return (
+                  <TouchableOpacity
+                    key={f.id}
+                    style={[styles.personaRow, active && { borderColor: accent, backgroundColor: '#f9fafb' }]}
+                    onPress={() => handleChangeFolder(f.id)}
+                  >
+                    <Text style={styles.folderEmoji}>{f.emoji}</Text>
+                    <Text style={[styles.personaLabel, active && { color: accent, fontWeight: '700' }]}>{f.name}</Text>
+                    {active && <Text style={[styles.personaCheck, { color: accent }]}>✓</Text>}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </View>
+      )}
+
       {deleteOpen && (
         <View style={styles.overlayWrap}>
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setDeleteOpen(false)} />
@@ -347,6 +412,14 @@ const styles = StyleSheet.create({
   },
   personaLabel: { fontSize: 14, color: '#374151', flex: 1 },
   personaCheck: { fontSize: 15, fontWeight: '800' },
+  folderChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start',
+    paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999,
+    backgroundColor: '#f3f4f6',
+  },
+  folderChipText: { fontSize: 13, color: '#374151', fontWeight: '600' },
+  folderList: { maxHeight: 320 },
+  folderEmoji: { fontSize: 18, width: 22, textAlign: 'center' },
   aiCommentBox: {
     backgroundColor: '#f9fafb', borderRadius: 14,
     borderWidth: 1, borderColor: '#e5e7eb', padding: 16,
