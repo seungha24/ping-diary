@@ -140,33 +140,6 @@ function ListCard({
           {entry.tags.map((t) => <Tag key={t} label={t} />)}
         </View>
       </Pressable>
-      {entry.aiComment && (
-        <View style={styles.aiSection}>
-          <View style={styles.aiSectionHeader}>
-            <IconSparkle size={13} color={accent} />
-            <Text style={styles.aiSectionLabel}>AI 코멘트</Text>
-            <View style={styles.aiPersonaRow}>
-              <PersonaIcon persona={entry.persona} size={12} color="#9ca3af" />
-              <Text style={styles.aiPersonaText}>{entry.persona}</Text>
-            </View>
-            <TouchableOpacity
-              style={[styles.shareToggle, isShared && { borderColor: accent, backgroundColor: accent }]}
-              onPress={onToggleShare}
-            >
-              <Text style={[styles.shareToggleText, isShared && styles.shareToggleTextActive]}>
-                {isShared ? '공개 중' : '비공개'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          {isShared ? (
-            <Text style={styles.aiCommentText}>{entry.aiComment}</Text>
-          ) : (
-            <TouchableOpacity style={styles.aiLocked} onPress={onToggleShare}>
-              <Text style={styles.aiLockedText}>비공개 · 탭하여 그룹에 공개하기</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
     </View>
   );
 }
@@ -211,29 +184,6 @@ function GridCard({
           <Text style={styles.gridDate}>{entryDateLabel(entry)}</Text>
         </Pressable>
       </View>
-      {entry.aiComment && (
-        <View style={styles.gridAiSection}>
-          <View style={styles.gridAiHeader}>
-            <View style={styles.aiDotWrap}><View style={styles.aiDotInner} /></View>
-            <Text style={styles.gridAiLabel}>AI 코멘트</Text>
-            <TouchableOpacity
-              style={[styles.shareToggle, isShared && { borderColor: accent, backgroundColor: accent }]}
-              onPress={onToggleShare}
-            >
-              <Text style={[styles.shareToggleText, isShared && styles.shareToggleTextActive]}>
-                {isShared ? '공개' : '비공개'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-          {isShared ? (
-            <Text style={styles.gridAiText} numberOfLines={3}>{entry.aiComment}</Text>
-          ) : (
-            <TouchableOpacity onPress={onToggleShare}>
-              <Text style={styles.gridAiLocked}>탭하여 공개</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
     </View>
   );
 }
@@ -438,14 +388,6 @@ export default function GroupScreen() {
         </View>
       </View>
 
-      {/* 현재 알림 주기 표시 배너 */}
-      {frequency !== 'off' && (
-        <TouchableOpacity style={styles.notifBanner} onPress={openModal}>
-          <IconBellLine size={16} color={accent} />
-          <Text style={styles.notifBannerText}>{freqSummary()} p!ng 알림 중</Text>
-          <Text style={styles.notifBannerEdit}>변경</Text>
-        </TouchableOpacity>
-      )}
 
       {/* Feed */}
       {loading ? (
