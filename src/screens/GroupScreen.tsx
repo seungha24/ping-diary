@@ -13,7 +13,7 @@ import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import IconPlus from '../components/icons/IconPlus';
 import { DiaryEntry, entryDateLabel } from '../data/types';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useGroups } from '../context/GroupsContext';
 import { fetchGroupEntries, leaveGroup, deleteGroup, renameGroup, reportContent, saveBlockedUsers, getCachedMe } from '../api';
 import { notify } from '../notify';
@@ -115,7 +115,7 @@ function ListCard({
 }) {
   const { accent } = useTheme();
   return (
-    <View style={styles.listCard}>
+    <View style={[styles.listCard, { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) }]}>
       <View style={styles.listCardAuthor}>
         <View style={styles.authorAvatar}>
           <Text style={{ fontSize: 16 }}>{entry.avatar}</Text>
@@ -157,7 +157,7 @@ function GridCard({
 }) {
   const { accent } = useTheme();
   return (
-    <View style={styles.gridCard}>
+    <View style={[styles.gridCard, { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) }]}>
       {entry.photo && (
         <Pressable style={{ width: '100%' }} onPress={() => onPhotoPress(entry.photo!)}>
           <PhotoBlock photo={entry.photo} height={90} />
