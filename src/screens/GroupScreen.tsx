@@ -12,7 +12,7 @@ import PhotoLightbox from '../components/PhotoLightbox';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import IconPlus from '../components/icons/IconPlus';
-import { BAND_COLORS, DiaryEntry, entryDateLabel } from '../data/types';
+import { DiaryEntry, entryDateLabel } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
 import { useGroups } from '../context/GroupsContext';
 import { fetchGroupEntries, leaveGroup, deleteGroup, renameGroup, reportContent, saveBlockedUsers, getCachedMe } from '../api';
@@ -158,12 +158,10 @@ function GridCard({
   const { accent } = useTheme();
   return (
     <View style={styles.gridCard}>
-      {entry.photo ? (
+      {entry.photo && (
         <Pressable style={{ width: '100%' }} onPress={() => onPhotoPress(entry.photo!)}>
           <PhotoBlock photo={entry.photo} height={90} />
         </Pressable>
-      ) : (
-        <View style={[styles.gridBand, { backgroundColor: BAND_COLORS[index % BAND_COLORS.length] }]} />
       )}
       <View style={styles.gridCardBody}>
         <View style={styles.gridAuthorRow}>
