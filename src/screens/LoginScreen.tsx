@@ -31,6 +31,15 @@ function KakaoLogo({ size = 18 }: { size?: number }) {
   );
 }
 
+/** 네이버 N 심볼 */
+function NaverLogo({ size = 16 }: { size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 20 20">
+      <Path fill="#ffffff" d="M13.03 10.72 6.57 1.5H1.5v17h5.47V9.28l6.46 9.22h5.07v-17h-5.47v9.22z" />
+    </Svg>
+  );
+}
+
 /**
  * 로그인 / 회원가입 화면.
  * 인증되지 않은 상태에서 앱 진입 시 노출된다.
@@ -88,6 +97,15 @@ export default function LoginScreen() {
       await loginOAuth('kakao'); // 웹: 카카오 페이지로 리디렉트됨
     } catch (e: any) {
       setError(e?.message ?? '카카오 로그인을 시작하지 못했습니다. (Supabase 카카오 provider 설정 필요)');
+    }
+  }
+
+  async function naver() {
+    setError(null);
+    try {
+      await loginOAuth('naver'); // 웹: 네이버 페이지로 리디렉트됨
+    } catch (e: any) {
+      setError(e?.message ?? '네이버 로그인을 시작하지 못했습니다.');
     }
   }
 
@@ -175,6 +193,12 @@ export default function LoginScreen() {
             <Text style={styles.kakaoText}>카카오로 계속하기</Text>
           </TouchableOpacity>
 
+          {/* 네이버 로그인 */}
+          <TouchableOpacity style={styles.naverBtn} onPress={naver} disabled={loading} activeOpacity={0.85}>
+            <View style={styles.socialIcon}><NaverLogo size={16} /></View>
+            <Text style={styles.naverText}>네이버로 계속하기</Text>
+          </TouchableOpacity>
+
           {/* 데모 */}
           <TouchableOpacity style={styles.demoBtn} onPress={demo} disabled={loading}>
             <Text style={styles.demoText}>데모 계정으로 둘러보기</Text>
@@ -219,4 +243,9 @@ const styles = StyleSheet.create({
     borderRadius: 12, paddingVertical: 14, backgroundColor: '#FEE500',
   },
   kakaoText: { fontSize: 14, fontWeight: '700', color: 'rgba(0,0,0,0.85)' },
+  naverBtn: {
+    position: 'relative', flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    borderRadius: 12, paddingVertical: 14, backgroundColor: '#03C75A',
+  },
+  naverText: { fontSize: 14, fontWeight: '700', color: '#ffffff' },
 });

@@ -29,7 +29,7 @@ interface AuthContextValue {
 }
 
 /** 소셜 로그인 provider (Supabase 기본 지원) */
-export type OAuthProvider = 'google' | 'kakao';
+export type OAuthProvider = 'google' | 'kakao' | 'naver';
 
 const AuthContext = createContext<AuthContextValue>({
   ready: false,
@@ -80,25 +80,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!cancelled) { setTok(null); setUserEmail(null); setReady(true); }
         return;
       }
-      // 카카오 로그인 실패 시 서버가 넘긴 에러 표시
-      if (Platform.OS === 'web' && typeof window !== 'undefined' && /[?&]kakao_error=/.test(window.location.search)) {
-        const ep = new URLSearchParams(window.location.search);
-        const err = ep.get('kakao_error');
-        window.history.replaceState(null, '', window.location.pathname);
-        notify(`카카오 로그인에 실패했어요 (${err}). 잠시 후 다시 시도해주세요.`);
-      }
-      // 카카오 커스텀 OAuth 콜백: 서버가 해시로 넘긴 토큰으로 세션 세팅
-      if (Platform.OS === 'web' && typeof window !== 'undefined' && window.location.hash.includes('kakao_at=')) {
-        const hp = new URLSearchParams(window.location.hash.slice(1));
-        const at = hp.get('kakao_at');
-        const rt = hp.get('kakao_rt');
-        // 해시 제거 (토큰 노출 방지)
-        window.history.replaceState(null, '', window.location.pathname + window.location.search);
-        if (at && rt) {
-          try {
-            const { data } = await supabase.auth.setSession({ access_token: at, refresh_token: rt });
-            if (data.session) adoptSession(data.session);
-          } catch {}
+      // 소셜 커스텀 OAuth(카카오/네이버) 콜백 처리 — 서버가 해시/쿼리로 넘긴 값
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        const labels: Record<string, string> = { kakao: '카카오', naver: '네이버' };
+        for (const p of ['kakao', 'naver']) {
+          // 실패 시 서버가 넘긴 에러 표시
+          if (new RegExp(`[?&]${p}_error=`).test(window.location.search)) {
+            const err = new URLSearchParams(window.location.search).get(`${p}_error`);
+            window.history.replaceState(null, '', window.location.pathname);
+            notify(`${labels[p]} 로그인에 실패했어요 (${err}). 잠시 후 다시 시도해주세요.`);
+          }
+          // 성공 시 해시로 넘어온 토큰으로 세션 세팅
+          if (window.location.hash.includes(`${p}_at=`)) {
+            const hp = new URLSearchParams(window.location.hash.slice(1));
+            const at = hp.get(`${p}_at`);
+            const rt = hp.get(`${p}_rt`);
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+            if (at && rt) {
+              try {
+                const { data } = await supabase.auth.setSession({ access_token: at, refresh_token: rt });
+                if (data.session) adoptSession(data.session);
+              } catch {}
+            }
+          }
         }
       }
       await hydrateToken();
@@ -138,14 +142,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  /** 소셜 계정으로 로그인 (구글: Supabase OAuth / 카카오: 서버 커스텀 OAuth) */
+  /** 소셜 계정으로 로그인 (구글: Supabase OAuth / 카카오·네이버: 서버 커스텀 OAuth) */
   async function loginOAuth(provider: OAuthProvider) {
-    // 카카오는 이메일 scope 강제 문제로 서버 커스텀 OAuth 사용 (닉네임만). 웹 리디렉트.
-    if (provider === 'kakao' && Platform.OS === 'web' && typeof window !== 'undefined') {
+    // 카카오·네이버는 이메일 scope 문제로 서버 커스텀 OAuth 사용 (닉네임만). 웹 리디렉트.
+    if ((provider === 'kakao' || provider === 'naver') && Platform.OS === 'web' && typeof window !== 'undefined') {
       const ret = encodeURIComponent(window.location.origin);
-      window.location.href = `${API_BASE_URL}/auth/kakao/start?return=${ret}`;
+      window.location.href = `${API_BASE_URL}/auth/${provider}/start?return=${ret}`;
       return;
     }
+    // 네이버는 서버 커스텀 OAuth 전용(위 웹 리디렉트) — Supabase provider 아님
+    if (provider === 'naver') throw new Error('네이버 로그인은 웹에서 이용해주세요.');
     const redirectTo =
       Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.origin : undefined;
     const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo } });
