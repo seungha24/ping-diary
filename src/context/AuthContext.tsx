@@ -26,6 +26,10 @@ interface AuthContextValue {
   loginDemo: () => Promise<void>;
   loginOAuth: (provider: OAuthProvider) => Promise<void>;
   logout: () => void;
+  recovering: boolean;   // 비밀번호 재설정 링크로 진입한 상태
+  resetPassword: (email: string) => Promise<void>;
+  completeRecovery: (newPassword: string) => Promise<void>;
+  cancelRecovery: () => void;
 }
 
 /** 소셜 로그인 provider (Supabase 기본 지원) */
@@ -41,12 +45,17 @@ const AuthContext = createContext<AuthContextValue>({
   loginDemo: async () => {},
   loginOAuth: async () => {},
   logout: () => {},
+  recovering: false,
+  resetPassword: async () => {},
+  completeRecovery: async () => {},
+  cancelRecovery: () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [token, setTok] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [recovering, setRecovering] = useState(false);
   const { hydrateTheme } = useTheme();
 
   // 로그인되면 내 계정에 저장된 테마를 불러와 적용
@@ -69,7 +78,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // 앱 시작 시 토큰 복원 + 소셜 로그인 세션 구독
   useEffect(() => {
     let cancelled = false;
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      // 비밀번호 재설정 링크로 들어오면 새 비밀번호 입력 화면을 띄운다
+      if (event === 'PASSWORD_RECOVERY') setRecovering(true);
       if (session?.access_token) adoptSession(session);
     });
     (async () => {
@@ -166,9 +177,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.signOut().catch(() => {});
   }
 
+  /** 비밀번호 재설정 메일 발송 (재설정 링크 → 앱으로 복귀) */
+  async function resetPassword(email: string) {
+    const redirectTo =
+      Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.origin : undefined;
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo });
+    if (error) throw error;
+  }
+
+  /** 재설정 링크로 들어온 세션에서 새 비밀번호 확정 */
+  async function completeRecovery(newPassword: string) {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+    setRecovering(false); // 세션이 유효해져 그대로 로그인 상태
+  }
+
+  /** 재설정 취소 (로그인 화면으로) */
+  function cancelRecovery() {
+    setRecovering(false);
+    logout();
+  }
+
   return (
     <AuthContext.Provider
-      value={{ ready, authed: !!token, token, email: userEmail, login, signup, loginDemo, loginOAuth, logout }}
+      value={{
+        ready, authed: !!token, token, email: userEmail,
+        login, signup, loginDemo, loginOAuth, logout,
+        recovering, resetPassword, completeRecovery, cancelRecovery,
+      }}
     >
       {children}
     </AuthContext.Provider>

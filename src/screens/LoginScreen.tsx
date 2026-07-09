@@ -46,19 +46,41 @@ function NaverLogo({ size = 16 }: { size?: number }) {
  */
 export default function LoginScreen() {
   const { accent } = useTheme();
-  const { login, signup, loginDemo, loginOAuth } = useAuth();
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const { login, signup, loginDemo, loginOAuth, resetPassword } = useAuth();
+  const [mode, setMode] = useState<'login' | 'signup' | 'reset'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
   /** 모드 전환 (입력 오류/확인칸 초기화) */
-  function switchMode(m: 'login' | 'signup') {
+  function switchMode(m: 'login' | 'signup' | 'reset') {
     setMode(m);
     setError(null);
+    setInfo(null);
     setConfirm('');
+  }
+
+  /** 비밀번호 재설정 메일 발송 */
+  async function sendReset() {
+    const em = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) {
+      setError('가입한 이메일을 입력해주세요.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    setInfo(null);
+    try {
+      await resetPassword(em);
+      setInfo('재설정 링크를 이메일로 보냈어요. 메일함(스팸함 포함)을 확인해주세요.');
+    } catch (e: any) {
+      setError(e?.message ?? '메일 발송에 실패했어요.');
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function submit() {
@@ -172,17 +194,19 @@ export default function LoginScreen() {
             keyboardType="email-address"
             editable={!loading}
           />
-          <TextInput
-            style={styles.input}
-            value={password}
-            onChangeText={setPassword}
-            placeholder={mode === 'signup' ? '비밀번호 (6자 이상)' : '비밀번호'}
-            placeholderTextColor="#9ca3af"
-            secureTextEntry
-            editable={!loading}
-            onSubmitEditing={mode === 'login' ? submit : undefined}
-            returnKeyType={mode === 'login' ? 'go' : 'next'}
-          />
+          {mode !== 'reset' && (
+            <TextInput
+              style={styles.input}
+              value={password}
+              onChangeText={setPassword}
+              placeholder={mode === 'signup' ? '비밀번호 (6자 이상)' : '비밀번호'}
+              placeholderTextColor="#9ca3af"
+              secureTextEntry
+              editable={!loading}
+              onSubmitEditing={mode === 'login' ? submit : undefined}
+              returnKeyType={mode === 'login' ? 'go' : 'next'}
+            />
+          )}
 
           {mode === 'signup' && (
             <TextInput
@@ -198,48 +222,70 @@ export default function LoginScreen() {
             />
           )}
 
+          {mode === 'reset' && (
+            <Text style={styles.resetHint}>가입한 이메일 주소로 비밀번호 재설정 링크를 보내드려요.</Text>
+          )}
+
           {error && <Text style={styles.error}>{error}</Text>}
+          {info && <Text style={styles.info}>{info}</Text>}
 
           {/* 제출 */}
           <TouchableOpacity
             style={[styles.submitBtn, { backgroundColor: accent }, loading && styles.disabled]}
-            onPress={submit}
+            onPress={mode === 'reset' ? sendReset : submit}
             disabled={loading}
           >
             {loading
               ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.submitText}>{mode === 'login' ? '로그인' : '회원가입'}</Text>}
+              : <Text style={styles.submitText}>
+                  {mode === 'login' ? '로그인' : mode === 'signup' ? '회원가입' : '재설정 메일 보내기'}
+                </Text>}
           </TouchableOpacity>
 
-          {/* 구분선 */}
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>또는</Text>
-            <View style={styles.dividerLine} />
-          </View>
+          {mode === 'login' && (
+            <TouchableOpacity style={styles.linkBtn} onPress={() => switchMode('reset')} disabled={loading}>
+              <Text style={styles.linkText}>비밀번호를 잊으셨나요?</Text>
+            </TouchableOpacity>
+          )}
+          {mode === 'reset' && (
+            <TouchableOpacity style={styles.linkBtn} onPress={() => switchMode('login')} disabled={loading}>
+              <Text style={styles.linkText}>← 로그인으로 돌아가기</Text>
+            </TouchableOpacity>
+          )}
 
-          {/* 구글 로그인 */}
-          <TouchableOpacity style={styles.googleBtn} onPress={google} disabled={loading} activeOpacity={0.85}>
-            <View style={styles.socialIcon}><GoogleLogo size={18} /></View>
-            <Text style={styles.googleText}>구글로 계속하기</Text>
-          </TouchableOpacity>
+          {mode !== 'reset' && (
+            <>
+              {/* 구분선 */}
+              <View style={styles.dividerRow}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>또는</Text>
+                <View style={styles.dividerLine} />
+              </View>
 
-          {/* 카카오 로그인 */}
-          <TouchableOpacity style={styles.kakaoBtn} onPress={kakao} disabled={loading} activeOpacity={0.85}>
-            <View style={styles.socialIcon}><KakaoLogo size={18} /></View>
-            <Text style={styles.kakaoText}>카카오로 계속하기</Text>
-          </TouchableOpacity>
+              {/* 구글 로그인 */}
+              <TouchableOpacity style={styles.googleBtn} onPress={google} disabled={loading} activeOpacity={0.85}>
+                <View style={styles.socialIcon}><GoogleLogo size={18} /></View>
+                <Text style={styles.googleText}>구글로 계속하기</Text>
+              </TouchableOpacity>
 
-          {/* 네이버 로그인 */}
-          <TouchableOpacity style={styles.naverBtn} onPress={naver} disabled={loading} activeOpacity={0.85}>
-            <View style={styles.socialIcon}><NaverLogo size={16} /></View>
-            <Text style={styles.naverText}>네이버로 계속하기</Text>
-          </TouchableOpacity>
+              {/* 카카오 로그인 */}
+              <TouchableOpacity style={styles.kakaoBtn} onPress={kakao} disabled={loading} activeOpacity={0.85}>
+                <View style={styles.socialIcon}><KakaoLogo size={18} /></View>
+                <Text style={styles.kakaoText}>카카오로 계속하기</Text>
+              </TouchableOpacity>
 
-          {/* 데모 */}
-          <TouchableOpacity style={styles.demoBtn} onPress={demo} disabled={loading}>
-            <Text style={styles.demoText}>데모 계정으로 둘러보기</Text>
-          </TouchableOpacity>
+              {/* 네이버 로그인 */}
+              <TouchableOpacity style={styles.naverBtn} onPress={naver} disabled={loading} activeOpacity={0.85}>
+                <View style={styles.socialIcon}><NaverLogo size={16} /></View>
+                <Text style={styles.naverText}>네이버로 계속하기</Text>
+              </TouchableOpacity>
+
+              {/* 데모 */}
+              <TouchableOpacity style={styles.demoBtn} onPress={demo} disabled={loading}>
+                <Text style={styles.demoText}>데모 계정으로 둘러보기</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -261,6 +307,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14, paddingVertical: 13, fontSize: 14, color: '#1f2937',
   },
   error: { color: '#dc2626', fontSize: 12, textAlign: 'center' },
+  info: { color: '#059669', fontSize: 12, textAlign: 'center', lineHeight: 18 },
+  resetHint: { color: '#6b7280', fontSize: 12, textAlign: 'center', lineHeight: 18 },
+  linkBtn: { alignItems: 'center', paddingVertical: 6 },
+  linkText: { color: '#6b7280', fontSize: 13 },
   submitBtn: { borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginTop: 4 },
   submitText: { color: '#ffffff', fontSize: 15, fontWeight: '700' },
   disabled: { opacity: 0.6 },
