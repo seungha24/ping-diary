@@ -279,6 +279,10 @@ export async function deleteGroup(id: number): Promise<void> {
   await request(`/groups/${id}`, { method: 'DELETE' });
 }
 
+export async function renameGroup(id: number, name: string): Promise<void> {
+  await request(`/groups/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) });
+}
+
 /** 그룹 커버 사진 변경 (멤버 공유, DB 저장) */
 export async function updateGroupPhoto(id: number, photo_url: string | null): Promise<ServerGroup> {
   return request(`/groups/${id}/photo`, {
