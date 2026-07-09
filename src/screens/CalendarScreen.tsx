@@ -103,7 +103,6 @@ export default function CalendarScreen() {
                 </View>
                 <View>
                   <Text style={styles.previewTitle}>{e.title}</Text>
-                  {e.photo && <Text style={styles.previewSub}>사진 포함</Text>}
                 </View>
               </TouchableOpacity>
             ))

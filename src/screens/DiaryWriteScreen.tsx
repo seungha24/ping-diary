@@ -9,11 +9,11 @@ import * as ImagePicker from 'expo-image-picker';
 import Svg, { Path, Rect, Circle, Polyline } from 'react-native-svg';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
-import { PERSONAS, MONTHS, DAYS } from '../data/types';
-import { PersonaIcon } from '../components/icons/Line';
+import { PERSONAS, MONTHS, DAYS, FOLDERS, DiaryFolder } from '../data/types';
+import { PersonaIcon, IconFolder } from '../components/icons/Line';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
-import { uploadPhoto } from '../api';
+import { uploadPhoto, getCachedMe, patchEntry, generateComment } from '../api';
 import { notify } from '../notify';
 import { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -105,7 +105,7 @@ export default function DiaryWriteScreen() {
   const route = useRoute<WriteRoute>();
   const editEntry = route.params?.entry;
   const { accent } = useTheme();
-  const { addEntry, updateEntry } = useEntries();
+  const { addEntry, updateEntry, updateLocal } = useEntries();
   const today = new Date();
   const [title, setTitle] = useState(editEntry?.title ?? '');
   const [body, setBody] = useState(editEntry?.body ?? '');
@@ -118,9 +118,24 @@ export default function DiaryWriteScreen() {
   const [calOpen, setCalOpen] = useState(false);
   const [promptIndex, setPromptIndex] = useState(0);
   const [personaModalOpen, setPersonaModalOpen] = useState(false);
+  const [folder, setFolder] = useState<string | undefined>(editEntry?.folder ?? undefined);
+  const [folderModalOpen, setFolderModalOpen] = useState(false);
   const [calYear] = useState(2026);
   const [calMonth, setCalMonth] = useState(5);
   const [selectedDates, setSelectedDates] = useState<number[]>(editEntry?.dates ?? [today.getDate()]);
+
+  // 홈 화면과 동일하게 기본 폴더(숨김 제외·이름/이모지 오버라이드) + 사용자 생성 폴더
+  const cachedMe = getCachedMe();
+  const customFolders = (cachedMe?.folders ?? []) as DiaryFolder[];
+  const hiddenFolders = cachedMe?.hidden_folders ?? [];
+  const allFolders: DiaryFolder[] = [
+    ...FOLDERS.filter((f) => !hiddenFolders.includes(f.id)).map((f) => {
+      const ov = customFolders.find((c) => c.id === f.id);
+      return ov ? { ...f, name: ov.name, emoji: ov.emoji } : f;
+    }),
+    ...customFolders.filter((f) => f.id.startsWith('c_')),
+  ];
+  const currentFolder = allFolders.find((f) => f.id === folder);
 
   const daysInMonth = getDaysInMonth(calYear, calMonth);
   const firstDay = getFirstDayOfMonth(calYear, calMonth);
@@ -184,9 +199,25 @@ export default function DiaryWriteScreen() {
           </View>
           <TouchableOpacity
             style={[styles.saveBtn, { backgroundColor: accent }]}
-            onPress={() => {
+            onPress={async () => {
               if (editEntry) {
-                updateEntry({ ...editEntry, title, body, tags, persona, dates: selectedDates, photo, visibility });
+                const personaChanged = editEntry.persona !== persona;
+                const needRegen = personaChanged && !!editEntry.aiComment;
+                const updated = { ...editEntry, title, body, tags, persona, folder, dates: selectedDates, photo, visibility };
+                updateLocal(updated); // 화면 즉시 반영
+                playPing();
+                navigation.goBack();
+                try {
+                  const saved = await patchEntry(updated); // 내용·페르소나·폴더 저장
+                  updateLocal(saved);
+                  // 페르소나가 바뀌었고 이미 코멘트가 있으면 새 말투로 다시 생성
+                  if (needRegen) {
+                    const regen = await generateComment(saved.id, persona);
+                    updateLocal(regen);
+                  }
+                } catch (e: any) {
+                  notify(e?.message ?? '저장에 실패했어요. 잠시 후 다시 시도해주세요.');
+                }
               } else {
                 addEntry({
                   id: Date.now(),
@@ -194,14 +225,15 @@ export default function DiaryWriteScreen() {
                   body,
                   tags,
                   persona,
+                  folder,
                   dates: selectedDates,
                   photo,
                   visibility,
                   createdAt: new Date().toISOString(),
                 });
+                playPing();
+                navigation.goBack();
               }
-              playPing();
-              navigation.goBack();
             }}
           >
             <Text style={styles.saveBtnText}>{editEntry ? '저장' : 'p!ng'}</Text>
@@ -311,6 +343,18 @@ export default function DiaryWriteScreen() {
           <Text style={styles.visHint}>참여 중인 그룹의 피드에 이 p!ng가 공개돼요.</Text>
         )}
 
+        {/* Folder card */}
+        <TouchableOpacity style={styles.aiCard} onPress={() => setFolderModalOpen(true)} activeOpacity={0.85}>
+          <View style={[styles.aiCardIcon, { backgroundColor: hexToRgba(accent, 0.12) }]}>
+            <IconFolder color={accent} size={16} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.aiCardTitle}>폴더</Text>
+            <Text style={styles.aiCardSub}>{currentFolder ? `${currentFolder.emoji} ${currentFolder.name}` : '폴더 없음'}</Text>
+          </View>
+          <IconChev dir="right" size={16} color="#9ca3af" />
+        </TouchableOpacity>
+
         {/* AI comment card */}
         <TouchableOpacity style={styles.aiCard} onPress={() => setPersonaModalOpen(true)} activeOpacity={0.85}>
           <View style={[styles.aiCardIcon, { backgroundColor: hexToRgba(accent, 0.12) }]}>
@@ -343,6 +387,34 @@ export default function DiaryWriteScreen() {
                   </TouchableOpacity>
                 ))}
               </View>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* 폴더 선택 모달 */}
+      <Modal visible={folderModalOpen} transparent animationType="fade">
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setFolderModalOpen(false)}>
+          <TouchableOpacity activeOpacity={1}>
+            <View style={styles.personaModal}>
+              <Text style={styles.personaModalTitle}>폴더 선택</Text>
+              <Text style={styles.personaModalSub}>이 p!ng를 어떤 폴더에 넣을까요?</Text>
+              <ScrollView style={{ maxHeight: 300 }} showsVerticalScrollIndicator={false}>
+                {allFolders.map((f) => {
+                  const active = folder === f.id;
+                  return (
+                    <TouchableOpacity
+                      key={f.id}
+                      style={[styles.folderRow, active && { borderColor: accent, backgroundColor: hexToRgba(accent, 0.08) }]}
+                      onPress={() => { setFolder(f.id); setFolderModalOpen(false); }}
+                    >
+                      <Text style={styles.folderRowEmoji}>{f.emoji}</Text>
+                      <Text style={[styles.folderRowLabel, active && { color: accent, fontWeight: '700' }]}>{f.name}</Text>
+                      {active && <Text style={[styles.folderRowCheck, { color: accent }]}>✓</Text>}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
             </View>
           </TouchableOpacity>
         </TouchableOpacity>
@@ -503,6 +575,14 @@ const styles = StyleSheet.create({
   personaEmoji: { fontSize: 18 },
   personaLabel: { fontSize: 11, color: '#6b7280' },
   personaLabelActive: { color: '#ffffff' },
+  folderRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    padding: 14, borderRadius: 14, borderWidth: 1.5, borderColor: '#f3f4f6',
+    marginBottom: 8,
+  },
+  folderRowEmoji: { fontSize: 18, width: 22, textAlign: 'center' },
+  folderRowLabel: { fontSize: 14, color: '#374151', flex: 1 },
+  folderRowCheck: { fontSize: 15, fontWeight: '800' },
   // AI 코멘트 컴팩트 카드
   aiCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
