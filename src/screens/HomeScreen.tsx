@@ -479,7 +479,7 @@ export default function HomeScreen() {
                       </Svg>
                     </TouchableOpacity>
                   </View>
-                  <View style={[styles.groupCardBody, { backgroundColor: hexToRgba(accent, 0.1) }]}>
+                  <View style={styles.groupCardBody}>
                     <Text style={styles.groupCardName} numberOfLines={1}>{group.name}</Text>
                     <Text style={styles.groupCardMeta} numberOfLines={1}>{group.member_count ?? 1}명 · {group.invite_code}</Text>
                   </View>
@@ -816,7 +816,7 @@ const styles = StyleSheet.create({
   },
   folderName: { flex: 1, fontSize: 14, fontWeight: '700', color: '#111827' },
   folderCount: { flexShrink: 0, fontSize: 12, color: '#9ca3af' },
-  groupCardBody: { paddingHorizontal: 11, paddingVertical: 8, gap: 2 },
+  groupCardBody: { height: 56, justifyContent: 'center', paddingHorizontal: 11, gap: 2 },
   groupCardName: { fontSize: 14, fontWeight: '700', color: '#111827' },
   groupCardMeta: { fontSize: 11.5, color: '#9ca3af' },
   sectionLabel: { fontSize: 12, color: '#9ca3af', marginBottom: 2, paddingHorizontal: 4 },

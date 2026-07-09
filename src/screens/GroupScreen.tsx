@@ -18,7 +18,18 @@ import { useGroups } from '../context/GroupsContext';
 import { fetchGroupEntries, leaveGroup, deleteGroup, renameGroup, reportContent, saveBlockedUsers, getCachedMe } from '../api';
 import { notify } from '../notify';
 import { Platform } from 'react-native';
-import { IconUsers, IconBell as IconBellLine, IconSprout, IconSparkle, PersonaIcon } from '../components/icons/Line';
+import { IconUsers, IconBell as IconBellLine, IconSprout, IconSparkle, IconPencil, IconTrash, PersonaIcon } from '../components/icons/Line';
+
+/** 그룹 나가기용 문/화살표 아이콘 (라인 스타일) */
+function IconExit({ color = '#374151', size = 16 }: { color?: string; size?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <Path d="M16 17l5-5-5-5" />
+      <Path d="M21 12H9" />
+    </Svg>
+  );
+}
 
 /** 서버 그룹 피드 행 → DiaryEntry 매핑 */
 function mapGroupEntry(row: any): DiaryEntry {
@@ -510,17 +521,20 @@ export default function GroupScreen() {
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
             <Text style={styles.actionSheetTitle}>{groupName}</Text>
-            <TouchableOpacity style={styles.actionRow} onPress={() => { setMenuOpen(false); setRenameValue(groupName); setRenameOpen(true); }}>
-              <Text style={styles.actionText}>✏️  그룹 이름 수정</Text>
+            <TouchableOpacity style={styles.menuRow} onPress={() => { setMenuOpen(false); setRenameValue(groupName); setRenameOpen(true); }}>
+              <IconPencil size={17} color="#374151" />
+              <Text style={styles.actionText}>그룹 이름 수정</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionRow} onPress={() => { setMenuOpen(false); setConfirmMode('leave'); }}>
-              <Text style={styles.actionText}>🚪  그룹 나가기</Text>
+            <TouchableOpacity style={styles.menuRow} onPress={() => { setMenuOpen(false); setConfirmMode('leave'); }}>
+              <IconExit size={17} color="#374151" />
+              <Text style={styles.actionText}>그룹 나가기</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionRow} onPress={() => { setMenuOpen(false); setConfirmMode('delete'); }}>
-              <Text style={[styles.actionText, styles.actionDanger]}>🗑  그룹 삭제</Text>
+            <TouchableOpacity style={styles.menuRow} onPress={() => { setMenuOpen(false); setConfirmMode('delete'); }}>
+              <IconTrash size={17} color="#ef4444" />
+              <Text style={[styles.actionText, styles.actionDanger]}>그룹 삭제</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionRow} onPress={() => setMenuOpen(false)}>
-              <Text style={[styles.actionText, { color: '#9ca3af' }]}>취소</Text>
+            <TouchableOpacity style={styles.menuRow} onPress={() => setMenuOpen(false)}>
+              <Text style={[styles.actionText, { color: '#9ca3af', marginLeft: 2 }]}>취소</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -791,6 +805,10 @@ const styles = StyleSheet.create({
   moreDots: { fontSize: 20, color: '#9ca3af', fontWeight: '700', lineHeight: 20 },
   actionSheetTitle: { fontSize: 14, fontWeight: '700', color: '#6b7280', marginBottom: 8 },
   actionRow: { paddingVertical: 14, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
+  menuRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingVertical: 14, borderTopWidth: 1, borderTopColor: '#f3f4f6',
+  },
   actionText: { fontSize: 15, color: '#374151', fontWeight: '600' },
   actionDanger: { color: '#ef4444' },
   confirmMsg: { fontSize: 13, color: '#6b7280', lineHeight: 20, marginBottom: 14 },
