@@ -50,19 +50,42 @@ export default function LoginScreen() {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  /** 모드 전환 (입력 오류/확인칸 초기화) */
+  function switchMode(m: 'login' | 'signup') {
+    setMode(m);
+    setError(null);
+    setConfirm('');
+  }
+
   async function submit() {
-    if (!email.trim() || !password) {
+    const em = email.trim();
+    if (!em || !password) {
       setError('이메일과 비밀번호를 입력해주세요.');
       return;
+    }
+    if (mode === 'signup') {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) {
+        setError('이메일 형식을 확인해주세요.');
+        return;
+      }
+      if (password.length < 6) {
+        setError('비밀번호는 6자 이상이어야 해요.');
+        return;
+      }
+      if (password !== confirm) {
+        setError('비밀번호가 일치하지 않아요.');
+        return;
+      }
     }
     setLoading(true);
     setError(null);
     try {
-      if (mode === 'login') await login(email.trim(), password);
-      else await signup(email.trim(), password);
+      if (mode === 'login') await login(em, password);
+      else await signup(em, password);
     } catch (e: any) {
       setError(e?.message ?? '요청에 실패했습니다.');
     } finally {
@@ -126,13 +149,13 @@ export default function LoginScreen() {
           <View style={styles.tabRow}>
             <TouchableOpacity
               style={[styles.tab, mode === 'login' && { borderBottomColor: accent }]}
-              onPress={() => { setMode('login'); setError(null); }}
+              onPress={() => switchMode('login')}
             >
               <Text style={[styles.tabText, mode === 'login' && { color: accent, fontWeight: '700' }]}>로그인</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.tab, mode === 'signup' && { borderBottomColor: accent }]}
-              onPress={() => { setMode('signup'); setError(null); }}
+              onPress={() => switchMode('signup')}
             >
               <Text style={[styles.tabText, mode === 'signup' && { color: accent, fontWeight: '700' }]}>회원가입</Text>
             </TouchableOpacity>
@@ -153,13 +176,27 @@ export default function LoginScreen() {
             style={styles.input}
             value={password}
             onChangeText={setPassword}
-            placeholder="비밀번호"
+            placeholder={mode === 'signup' ? '비밀번호 (6자 이상)' : '비밀번호'}
             placeholderTextColor="#9ca3af"
             secureTextEntry
             editable={!loading}
-            onSubmitEditing={submit}
-            returnKeyType="go"
+            onSubmitEditing={mode === 'login' ? submit : undefined}
+            returnKeyType={mode === 'login' ? 'go' : 'next'}
           />
+
+          {mode === 'signup' && (
+            <TextInput
+              style={styles.input}
+              value={confirm}
+              onChangeText={setConfirm}
+              placeholder="비밀번호 확인"
+              placeholderTextColor="#9ca3af"
+              secureTextEntry
+              editable={!loading}
+              onSubmitEditing={submit}
+              returnKeyType="go"
+            />
+          )}
 
           {error && <Text style={styles.error}>{error}</Text>}
 
