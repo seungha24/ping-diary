@@ -13,7 +13,7 @@ import IconEdit from '../components/icons/IconEdit';
 import IconTrash from '../components/icons/IconTrash';
 import { useTheme } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
-import { PERSONAS, FOLDERS, DiaryFolder } from '../data/types';
+import { PERSONAS, FOLDERS, DiaryFolder, entryDateLabel } from '../data/types';
 import { generateComment, reportContent, getCachedMe } from '../api';
 import { notify } from '../notify';
 import Svg, { Path, Line } from 'react-native-svg';
@@ -171,7 +171,7 @@ export default function DiaryDetailScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        <Text style={styles.date}>6월 {entry.dates.join(', ')}일</Text>
+        <Text style={styles.date}>{entryDateLabel(entry)}</Text>
         <Text style={styles.title}>{entry.title}</Text>
 
         {entry.photo && (

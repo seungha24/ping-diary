@@ -120,8 +120,10 @@ export default function DiaryWriteScreen() {
   const [personaModalOpen, setPersonaModalOpen] = useState(false);
   const [folder, setFolder] = useState<string | undefined>(editEntry?.folder ?? undefined);
   const [folderModalOpen, setFolderModalOpen] = useState(false);
-  const [calYear] = useState(2026);
-  const [calMonth, setCalMonth] = useState(5);
+  // 달력은 수정 시 원래 작성월, 새 글은 이번 달로 기본 설정
+  const initDate = editEntry ? new Date(editEntry.createdAt) : today;
+  const [calYear] = useState(initDate.getFullYear());
+  const [calMonth, setCalMonth] = useState(initDate.getMonth());
   const [selectedDates, setSelectedDates] = useState<number[]>(editEntry?.dates ?? [today.getDate()]);
 
   // 홈 화면과 동일하게 기본 폴더(숨김 제외·이름/이모지 오버라이드) + 사용자 생성 폴더
@@ -180,8 +182,8 @@ export default function DiaryWriteScreen() {
 
   function dateLabel() {
     if (selectedDates.length === 0) return '날짜 선택';
-    if (selectedDates.length === 1) return `6월 ${selectedDates[0]}일`;
-    return `6월 ${selectedDates[0]}일 ~ ${selectedDates[selectedDates.length - 1]}일`;
+    if (selectedDates.length === 1) return `${MONTHS[calMonth]} ${selectedDates[0]}일`;
+    return `${MONTHS[calMonth]} ${selectedDates[0]}일 ~ ${selectedDates[selectedDates.length - 1]}일`;
   }
 
   return (

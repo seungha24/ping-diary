@@ -64,6 +64,7 @@ export default function AccountSettingsScreen() {
   const [confirmPw, setConfirmPw] = useState('');
   const [pwLoading, setPwLoading] = useState(false);
   const [delLoading, setDelLoading] = useState(false);
+  const [delOpen, setDelOpen] = useState(false);
 
   async function submitPassword() {
     if (newPw.length < 6) return notify('비밀번호는 6자 이상이어야 해요.');
@@ -94,15 +95,7 @@ export default function AccountSettingsScreen() {
   }
 
   function handleDeleteAccount() {
-    const msg = '정말 삭제할까요? 모든 p!ng와 계정이 영구적으로 삭제되며 복구할 수 없어요.';
-    if (Platform.OS === 'web') {
-      if (typeof window !== 'undefined' && window.confirm(msg)) runDelete();
-      return;
-    }
-    Alert.alert('계정 삭제', msg, [
-      { text: '취소', style: 'cancel' },
-      { text: '삭제', style: 'destructive', onPress: runDelete },
-    ]);
+    setDelOpen(true); // 폰 프레임 안 인앱 확인 다이얼로그
   }
 
   function handleLogout() {
@@ -256,6 +249,34 @@ export default function AccountSettingsScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* 계정 삭제 확인 (폰 프레임 안) */}
+      <Modal visible={delOpen} transparent animationType="fade" onRequestClose={() => setDelOpen(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>계정을 삭제할까요?</Text>
+            <Text style={styles.modalMsg}>모든 p!ng와 계정이 영구적으로 삭제되며 복구할 수 없어요.</Text>
+            <View style={styles.modalBtns}>
+              <TouchableOpacity
+                style={styles.modalCancel}
+                onPress={() => setDelOpen(false)}
+                disabled={delLoading}
+              >
+                <Text style={styles.modalCancelText}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalConfirm, { backgroundColor: '#ef4444' }, delLoading && { opacity: 0.6 }]}
+                onPress={runDelete}
+                disabled={delLoading}
+              >
+                {delLoading
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <Text style={styles.modalConfirmText}>삭제</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -305,6 +326,7 @@ const styles = StyleSheet.create({
     borderRadius: 18, padding: 22, gap: 12,
   },
   modalTitle: { fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 2 },
+  modalMsg: { fontSize: 13, color: '#6b7280', lineHeight: 20, marginTop: 6, marginBottom: 4 },
   modalInput: {
     borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12,
     paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: '#111827',

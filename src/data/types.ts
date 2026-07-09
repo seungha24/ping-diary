@@ -125,3 +125,10 @@ export function getPhotoPlaceholder(ph: string) {
   const idx = parseInt(ph.split(':')[1]);
   return PHOTO_PLACEHOLDERS[idx % PHOTO_PLACEHOLDERS.length];
 }
+
+/** 일기 날짜 라벨 — 작성 시각(createdAt)의 실제 월 + 선택 일자들 */
+export function entryDateLabel(entry: { createdAt: string; dates: number[] }): string {
+  const month = new Date(entry.createdAt).getMonth() + 1;
+  const days = entry.dates && entry.dates.length ? entry.dates.join(', ') : '';
+  return days ? `${month}월 ${days}일` : `${month}월`;
+}

@@ -12,7 +12,7 @@ import IconPlus from '../components/icons/IconPlus';
 import IconBell from '../components/icons/IconBell';
 import { PhotoThumb } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
-import { FOLDERS, DiaryEntry, DiaryFolder } from '../data/types';
+import { FOLDERS, DiaryEntry, DiaryFolder, entryDateLabel } from '../data/types';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { useGroups } from '../context/GroupsContext';
@@ -299,7 +299,7 @@ export default function HomeScreen() {
                     <View style={styles.entryHeader}>
                       <Text style={styles.entryTitle} numberOfLines={1}>{entry.title}</Text>
                       <View style={styles.entryHeaderRight}>
-                        <Text style={styles.entryDate}>6월 {entry.dates.join(',')}일</Text>
+                        <Text style={styles.entryDate}>{entryDateLabel(entry)}</Text>
                         <TouchableOpacity
                           style={styles.cardShareBtn}
                           onPress={(e) => { e.stopPropagation(); openShare(entry); }}
@@ -405,7 +405,7 @@ export default function HomeScreen() {
                     <View style={styles.entryHeader}>
                       <Text style={styles.entryTitle} numberOfLines={1}>{entry.title}</Text>
                       <View style={styles.entryHeaderRight}>
-                        <Text style={styles.entryDate}>6월 {entry.dates.join(',')}일</Text>
+                        <Text style={styles.entryDate}>{entryDateLabel(entry)}</Text>
                         <TouchableOpacity
                           style={styles.cardShareBtn}
                           onPress={(e) => { e.stopPropagation(); openShare(entry); }}
@@ -479,9 +479,9 @@ export default function HomeScreen() {
                       </Svg>
                     </TouchableOpacity>
                   </View>
-                  <View style={[styles.folderCardBody, { backgroundColor: hexToRgba(accent, 0.1) }]}>
-                    <Text style={styles.folderName} numberOfLines={1}>{group.name}</Text>
-                    <Text style={styles.folderCount}>{group.member_count ?? 1}명 · {group.invite_code}</Text>
+                  <View style={[styles.groupCardBody, { backgroundColor: hexToRgba(accent, 0.1) }]}>
+                    <Text style={styles.groupCardName} numberOfLines={1}>{group.name}</Text>
+                    <Text style={styles.groupCardMeta} numberOfLines={1}>{group.member_count ?? 1}명 · {group.invite_code}</Text>
                   </View>
                 </TouchableOpacity>
               );
@@ -816,6 +816,9 @@ const styles = StyleSheet.create({
   },
   folderName: { flex: 1, fontSize: 14, fontWeight: '700', color: '#111827' },
   folderCount: { flexShrink: 0, fontSize: 12, color: '#9ca3af' },
+  groupCardBody: { paddingHorizontal: 11, paddingVertical: 8, gap: 2 },
+  groupCardName: { fontSize: 14, fontWeight: '700', color: '#111827' },
+  groupCardMeta: { fontSize: 11.5, color: '#9ca3af' },
   sectionLabel: { fontSize: 12, color: '#9ca3af', marginBottom: 2, paddingHorizontal: 4 },
   groupCard: {
     backgroundColor: '#ffffff', borderRadius: 16, padding: 16,

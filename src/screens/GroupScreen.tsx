@@ -12,10 +12,10 @@ import PhotoLightbox from '../components/PhotoLightbox';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import IconPlus from '../components/icons/IconPlus';
-import { BAND_COLORS, DiaryEntry } from '../data/types';
+import { BAND_COLORS, DiaryEntry, entryDateLabel } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
 import { useGroups } from '../context/GroupsContext';
-import { fetchGroupEntries, leaveGroup, reportContent, saveBlockedUsers, getCachedMe } from '../api';
+import { fetchGroupEntries, leaveGroup, deleteGroup, reportContent, saveBlockedUsers, getCachedMe } from '../api';
 import { notify } from '../notify';
 import { Platform } from 'react-native';
 import { IconUsers, IconBell as IconBellLine, IconSprout, IconSparkle, PersonaIcon } from '../components/icons/Line';
@@ -110,7 +110,7 @@ function ListCard({
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.authorName}>{entry.author}</Text>
-          <Text style={styles.entryDate}>6월 {entry.dates.join(',')}일</Text>
+          <Text style={styles.entryDate}>{entryDateLabel(entry)}</Text>
         </View>
         <TouchableOpacity onPress={onMore} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} style={styles.moreBtn}>
           <Text style={styles.moreDots}>⋯</Text>
@@ -194,7 +194,7 @@ function GridCard({
             <Text key={t} style={styles.gridTag}>#{t}</Text>
           ))}
         </View>
-        <Text style={styles.gridDate}>6월 {entry.dates.join(',')}일</Text>
+        <Text style={styles.gridDate}>{entryDateLabel(entry)}</Text>
       </View>
       {entry.aiComment && (
         <View style={styles.gridAiSection}>
@@ -230,18 +230,36 @@ export default function GroupScreen() {
   const { refresh: refreshGroups } = useGroups();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
-  // 그룹 나가기
-  async function handleLeave() {
-    const ok = Platform.OS === 'web'
-      ? (typeof window !== 'undefined' && window.confirm(`'${group.name}' 그룹에서 나갈까요?`))
-      : true;
-    if (!ok) return;
+  // 그룹 관리 메뉴(나가기/삭제) — 폰 프레임 안 인앱 다이얼로그
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [confirmMode, setConfirmMode] = useState<null | 'leave' | 'delete'>(null);
+  const [actionBusy, setActionBusy] = useState(false);
+
+  async function doLeave() {
+    setActionBusy(true);
     try {
       await leaveGroup(group.id);
       await refreshGroups();
       navigation.goBack();
     } catch (e: any) {
       notify(e?.message ?? '그룹 나가기에 실패했어요.');
+    } finally {
+      setActionBusy(false);
+      setConfirmMode(null);
+    }
+  }
+
+  async function doDelete() {
+    setActionBusy(true);
+    try {
+      await deleteGroup(group.id);
+      await refreshGroups();
+      navigation.goBack();
+    } catch (e: any) {
+      notify(e?.message ?? '그룹 삭제에 실패했어요.');
+    } finally {
+      setActionBusy(false);
+      setConfirmMode(null);
     }
   }
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
@@ -358,9 +376,9 @@ export default function GroupScreen() {
         </View>
 
         <View style={styles.headerRight}>
-          {/* 그룹 나가기 */}
-          <TouchableOpacity style={styles.leaveBtn} onPress={handleLeave}>
-            <Text style={styles.leaveBtnText}>나가기</Text>
+          {/* 그룹 관리 메뉴(나가기/삭제) */}
+          <TouchableOpacity style={styles.leaveBtn} onPress={() => setMenuOpen(true)}>
+            <Text style={styles.leaveBtnText}>관리</Text>
           </TouchableOpacity>
 
           {/* 알림 설정 버튼 */}
@@ -460,6 +478,56 @@ export default function GroupScreen() {
               <Text style={[styles.actionText, styles.actionDanger]}>🚫  이 사용자 차단하기</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionRow} onPress={() => setActionEntry(null)}>
+              <Text style={[styles.actionText, { color: '#9ca3af' }]}>취소</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* 그룹 관리 메뉴 */}
+      {menuOpen && (
+        <View style={styles.overlayWrap}>
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setMenuOpen(false)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.actionSheetTitle}>{group.name}</Text>
+            <TouchableOpacity style={styles.actionRow} onPress={() => { setMenuOpen(false); setConfirmMode('leave'); }}>
+              <Text style={styles.actionText}>🚪  그룹 나가기</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionRow} onPress={() => { setMenuOpen(false); setConfirmMode('delete'); }}>
+              <Text style={[styles.actionText, styles.actionDanger]}>🗑  그룹 삭제</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionRow} onPress={() => setMenuOpen(false)}>
+              <Text style={[styles.actionText, { color: '#9ca3af' }]}>취소</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* 나가기/삭제 확인 */}
+      {confirmMode && (
+        <View style={styles.overlayWrap}>
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => !actionBusy && setConfirmMode(null)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.actionSheetTitle}>
+              {confirmMode === 'delete' ? '그룹을 삭제할까요?' : '그룹에서 나갈까요?'}
+            </Text>
+            <Text style={styles.confirmMsg}>
+              {confirmMode === 'delete'
+                ? `'${group.name}' 그룹이 모든 멤버에게서 사라져요. 되돌릴 수 없어요.`
+                : `'${group.name}' 그룹에서 나가면 이 그룹의 피드를 볼 수 없어요.`}
+            </Text>
+            <TouchableOpacity
+              style={[styles.confirmDangerBtn, actionBusy && { opacity: 0.6 }]}
+              onPress={confirmMode === 'delete' ? doDelete : doLeave}
+              disabled={actionBusy}
+            >
+              {actionBusy
+                ? <ActivityIndicator color="#fff" size="small" />
+                : <Text style={styles.confirmDangerText}>{confirmMode === 'delete' ? '삭제' : '나가기'}</Text>}
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionRow} onPress={() => !actionBusy && setConfirmMode(null)}>
               <Text style={[styles.actionText, { color: '#9ca3af' }]}>취소</Text>
             </TouchableOpacity>
           </View>
@@ -669,6 +737,12 @@ const styles = StyleSheet.create({
   actionRow: { paddingVertical: 14, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
   actionText: { fontSize: 15, color: '#374151', fontWeight: '600' },
   actionDanger: { color: '#ef4444' },
+  confirmMsg: { fontSize: 13, color: '#6b7280', lineHeight: 20, marginBottom: 14 },
+  confirmDangerBtn: {
+    backgroundColor: '#ef4444', borderRadius: 14, paddingVertical: 14,
+    alignItems: 'center', marginBottom: 4,
+  },
+  confirmDangerText: { fontSize: 14, fontWeight: '700', color: '#fff' },
   sheetSubtitle: { fontSize: 13, color: '#9ca3af', marginBottom: 20 },
 
   // Frequency options
