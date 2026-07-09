@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import IconChev from '../components/icons/IconChev';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme, hexToRgba } from '../context/ThemeContext';
 
 interface ToggleRowProps {
   label: string;
@@ -36,6 +36,7 @@ function ToggleRow({ label, desc, value, onChange, disabled }: ToggleRowProps) {
 
 export default function NotifSettingsScreen() {
   const navigation = useNavigation();
+  const { accent } = useTheme();
 
   const [allOn, setAllOn] = useState(true);
   const [newDiary, setNewDiary] = useState(true);
@@ -135,15 +136,15 @@ export default function NotifSettingsScreen() {
                 <View style={styles.timeRow}>
                   <View style={styles.timeBlock}>
                     <Text style={styles.timeLabel}>시작</Text>
-                    <TouchableOpacity style={styles.timeBtn}>
-                      <Text style={styles.timeBtnText}>22:00</Text>
+                    <TouchableOpacity style={[styles.timeBtn, { backgroundColor: hexToRgba(accent, 0.1), borderColor: hexToRgba(accent, 0.25) }]}>
+                      <Text style={[styles.timeBtnText, { color: accent }]}>22:00</Text>
                     </TouchableOpacity>
                   </View>
                   <Text style={styles.timeSep}>—</Text>
                   <View style={styles.timeBlock}>
                     <Text style={styles.timeLabel}>종료</Text>
-                    <TouchableOpacity style={styles.timeBtn}>
-                      <Text style={styles.timeBtnText}>08:00</Text>
+                    <TouchableOpacity style={[styles.timeBtn, { backgroundColor: hexToRgba(accent, 0.1), borderColor: hexToRgba(accent, 0.25) }]}>
+                      <Text style={[styles.timeBtnText, { color: accent }]}>08:00</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -194,10 +195,10 @@ const styles = StyleSheet.create({
   timeBlock: { alignItems: 'center', gap: 6 },
   timeLabel: { fontSize: 11, color: '#9ca3af', fontWeight: '500' },
   timeBtn: {
-    backgroundColor: '#f3f4f6', borderRadius: 10,
-    paddingHorizontal: 20, paddingVertical: 10,
+    backgroundColor: '#f3f4f6', borderRadius: 12, borderWidth: 1.5, borderColor: 'transparent',
+    paddingHorizontal: 22, paddingVertical: 11, minWidth: 88, alignItems: 'center',
   },
-  timeBtnText: { fontSize: 16, fontWeight: '700', color: '#111827' },
+  timeBtnText: { fontSize: 16, fontWeight: '800', color: '#111827', letterSpacing: 0.5 },
   timeSep: { fontSize: 18, color: '#d1d5db', marginTop: 18 },
   footerNote: { fontSize: 12, color: '#d1d5db', textAlign: 'center' },
 });
