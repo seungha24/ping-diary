@@ -13,6 +13,7 @@ import IconEdit from '../components/icons/IconEdit';
 import IconTrash from '../components/icons/IconTrash';
 import { useTheme } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
+import { useGroups } from '../context/GroupsContext';
 import { PERSONAS, FOLDERS, DiaryFolder, entryDateLabel } from '../data/types';
 import { generateComment, reportContent, getCachedMe } from '../api';
 import { notify } from '../notify';
@@ -54,10 +55,17 @@ export default function DiaryDetailScreen() {
   const { deleteEntry, updateLocal, updateEntry } = useEntries();
   const remaining = useCountdown(entry.createdAt);
   const isUnlocked = remaining <= 0;
+  const { groups } = useGroups();
   const [shareOpen, setShareOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [published, setPublished] = useState(entry.visibility === 'friends');
   const [publishing, setPublishing] = useState(false);
+  // 공유 대상 그룹 선택: 기존 friends+null(전체 공개)이던 글은 모든 그룹 체크로 시작
+  const [selectedGroups, setSelectedGroups] = useState<Set<number>>(() => {
+    if (entry.visibility !== 'friends') return new Set();
+    if (entry.sharedGroups && entry.sharedGroups.length) return new Set(entry.sharedGroups);
+    return new Set(groups.map((g) => g.id));
+  });
   const [aiComment, setAiComment] = useState<string | undefined>(entry.aiComment);
   const [persona, setPersona] = useState(entry.persona);
   const [personaOpen, setPersonaOpen] = useState(false);
@@ -82,14 +90,25 @@ export default function DiaryDetailScreen() {
     navigation.navigate('DiaryWrite', { entry });
   }
 
-  // 이 p!ng를 참여 중인 그룹에 공개/비공개 전환 (visibility)
-  function togglePublish() {
-    const next: 'private' | 'friends' = published ? 'private' : 'friends';
+  // 공유 대상 그룹 토글
+  function toggleGroup(id: number) {
+    setSelectedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  // 선택된 그룹에만 공개 저장 (아무것도 안 고르면 비공개)
+  function savePublish() {
+    const ids = Array.from(selectedGroups);
+    const next: 'private' | 'friends' = ids.length > 0 ? 'friends' : 'private';
     setPublishing(true);
-    setPublished(!published);
-    updateEntry({ ...entry, visibility: next, aiComment, persona });
+    setPublished(ids.length > 0);
+    updateEntry({ ...entry, visibility: next, sharedGroups: ids.length > 0 ? ids : null, aiComment, persona });
     setPublishing(false);
     setShareOpen(false);
+    notify(ids.length > 0 ? `${ids.length}개 그룹에 공개했어요.` : '비공개로 전환했어요.');
   }
 
   // AI 코멘트 즉시 생성 (24시간 기다리지 않고 미리 받아보기)
@@ -259,17 +278,36 @@ export default function DiaryDetailScreen() {
               </TouchableOpacity>
             </View>
             <Text style={styles.sheetSub}>
-              {published
-                ? '이 p!ng는 참여 중인 그룹의 피드에 공개돼 있어요.'
-                : '공개하면 참여 중인 모든 그룹의 피드에 이 p!ng가 표시돼요.'}
+              {groups.length === 0
+                ? '아직 참여 중인 그룹이 없어요. 그룹을 만들거나 참여해보세요.'
+                : '공개할 그룹을 골라주세요. 아무것도 고르지 않으면 비공개예요.'}
             </Text>
+            <ScrollView style={{ maxHeight: 260 }} showsVerticalScrollIndicator={false}>
+              {groups.map((g) => {
+                const active = selectedGroups.has(g.id);
+                return (
+                  <TouchableOpacity
+                    key={g.id}
+                    style={[styles.shareGroupRow, active && { borderColor: accent, backgroundColor: '#f9fafb' }]}
+                    onPress={() => toggleGroup(g.id)}
+                  >
+                    <Text style={[styles.shareGroupName, active && { color: accent, fontWeight: '700' }]} numberOfLines={1}>
+                      {g.name}
+                    </Text>
+                    <View style={[styles.shareCheck, active && { borderColor: accent, backgroundColor: accent }]}>
+                      {active && <Text style={styles.shareCheckMark}>✓</Text>}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
             <TouchableOpacity
-              style={[styles.confirmBtn, { backgroundColor: published ? '#e5e7eb' : accent }]}
-              onPress={togglePublish}
+              style={[styles.confirmBtn, { backgroundColor: accent }]}
+              onPress={savePublish}
               disabled={publishing}
             >
-              <Text style={[styles.confirmBtnText, { color: published ? '#374151' : '#fff' }]}>
-                {published ? '그룹 공개 해제' : '그룹에 공개하기'}
+              <Text style={[styles.confirmBtnText, { color: '#fff' }]}>
+                {selectedGroups.size > 0 ? `${selectedGroups.size}개 그룹에 공개` : '비공개로 저장'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -475,6 +513,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   confirmBtnText: { fontSize: 14, fontWeight: '700' },
+
+  // 공유 그룹 선택
+  shareGroupRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    padding: 14, borderRadius: 14, borderWidth: 1.5, borderColor: '#f3f4f6',
+    marginBottom: 8,
+  },
+  shareGroupName: { flex: 1, fontSize: 14, color: '#374151' },
+  shareCheck: {
+    width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: '#d1d5db',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  shareCheckMark: { fontSize: 12, color: '#fff', fontWeight: '800' },
 
   deleteContent: { alignItems: 'center', paddingVertical: 20, gap: 8 },
   deleteEmoji: { fontSize: 36, marginBottom: 4 },

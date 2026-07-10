@@ -97,6 +97,7 @@ function fromServer(row: any): DiaryEntry {
     createdAt: row.created_at,
     aiComment: row.ai_comment ?? undefined,
     visibility: row.visibility === 'friends' ? 'friends' : 'private',
+    sharedGroups: row.shared_groups ?? null,
   };
 }
 
@@ -169,6 +170,7 @@ export async function createEntry(entry: DiaryEntry): Promise<DiaryEntry> {
       folder: entry.folder ?? '',
       photo_url: entry.photo ?? null,
       visibility: entry.visibility ?? 'private',
+      shared_groups: entry.sharedGroups ?? null,
     }),
   });
   return fromServer(row);
@@ -187,6 +189,7 @@ export async function patchEntry(entry: DiaryEntry): Promise<DiaryEntry> {
       folder: entry.folder ?? '',
       photo_url: entry.photo ?? null,
       visibility: entry.visibility ?? 'private',
+      shared_groups: entry.sharedGroups ?? null,
     }),
   });
   return fromServer(row);

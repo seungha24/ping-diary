@@ -28,6 +28,7 @@ export interface DiaryEntry {
   createdAt: string;   // ISO 8601
   aiComment?: string;
   visibility?: 'private' | 'friends';  // 'friends'면 참여 그룹 피드에 공개
+  sharedGroups?: number[] | null;      // 공유할 그룹 id 목록. null이면 모든 그룹(기존 동작)
 }
 
 export interface Group {
