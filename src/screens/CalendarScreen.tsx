@@ -21,8 +21,8 @@ export default function CalendarScreen() {
   const { accent } = useTheme();
   const today = new Date();
   const [selectedDay, setSelectedDay] = useState(today.getDate());
-  const [year] = useState(2026);
-  const [month, setMonth] = useState(route.params?.month ?? 5);
+  const [year] = useState(today.getFullYear());
+  const [month, setMonth] = useState(route.params?.month ?? today.getMonth());
 
   useEffect(() => {
     if (route.params?.month !== undefined) setMonth(route.params.month);
@@ -38,7 +38,12 @@ export default function CalendarScreen() {
 
   const { entries } = useEntries();
   const todayDate = today.getDate();
-  const selectedEntries = entries.filter((e) => e.dates.includes(selectedDay));
+  // 보고 있는 연·월에 작성된 글만 (일 숫자만 비교하면 다른 달에도 중복 표시됨)
+  const monthEntries = entries.filter((e) => {
+    const d = new Date(e.createdAt);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+  const selectedEntries = monthEntries.filter((e) => e.dates.includes(selectedDay));
 
   return (
     <SafeAreaView style={styles.container}>
@@ -64,7 +69,7 @@ export default function CalendarScreen() {
           {calGrid.map((day, i) => {
             const isSelected = day === selectedDay;
             const isToday = day === todayDate;
-            const hasEntry = day !== null && entries.some((e) => e.dates.includes(day));
+            const hasEntry = day !== null && monthEntries.some((e) => e.dates.includes(day));
             return (
               <TouchableOpacity
                 key={i}
