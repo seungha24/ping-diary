@@ -155,8 +155,11 @@ export default function DiaryDetailScreen() {
     notify(`'${name}' 폴더에 넣었어요.`);
   }
 
-  /** 부적절한 AI 코멘트 신고 (앱스토어 AI 콘텐츠 심사 대응) */
+  /** 부적절한 AI 코멘트 신고 (앱스토어 AI 콘텐츠 심사 대응) — 확인 후 접수 */
+  const [reportConfirmOpen, setReportConfirmOpen] = useState(false);
+
   async function reportAiComment() {
+    setReportConfirmOpen(false);
     try {
       await reportContent('ai_comment', entry.id);
       notify('신고가 접수되었어요. 검토 후 조치할게요.');
@@ -241,7 +244,7 @@ export default function DiaryDetailScreen() {
               ) : (
                 <Text style={styles.aiCommentText}>{aiComment}</Text>
               )}
-              <TouchableOpacity style={styles.aiReportBtn} onPress={reportAiComment}>
+              <TouchableOpacity style={styles.aiReportBtn} onPress={() => setReportConfirmOpen(true)}>
                 <Text style={styles.aiReportText}>부적절한 코멘트인가요? 신고하기</Text>
               </TouchableOpacity>
             </View>
@@ -374,6 +377,25 @@ export default function DiaryDetailScreen() {
                 );
               })}
             </ScrollView>
+          </View>
+        </View>
+      )}
+
+      {reportConfirmOpen && (
+        <View style={styles.overlayWrap}>
+          <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setReportConfirmOpen(false)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <View style={styles.deleteContent}>
+              <Text style={styles.deleteTitle}>이 AI 코멘트를 신고할까요?</Text>
+              <Text style={styles.deleteSub}>운영팀에 접수되고, 검토 후 조치돼요</Text>
+              <TouchableOpacity style={styles.deleteConfirmBtn} onPress={reportAiComment}>
+                <Text style={styles.deleteConfirmText}>신고하기</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.deleteCancelBtn} onPress={() => setReportConfirmOpen(false)}>
+                <Text style={styles.deleteCancelText}>취소</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       )}

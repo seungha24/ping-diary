@@ -271,9 +271,10 @@ export default function GroupScreen() {
 
   // 신고/차단 (앱스토어 UGC 심사 대응)
   const [actionEntry, setActionEntry] = useState<DiaryEntry | null>(null);
+  const [confirmReport, setConfirmReport] = useState<DiaryEntry | null>(null); // 신고 전 확인
 
   async function reportEntry(entry: DiaryEntry) {
-    setActionEntry(null);
+    setConfirmReport(null);
     try {
       await reportContent('group_entry', entry.id, `author:${entry.authorId ?? ''}`);
       notify('신고가 접수되었어요. 검토 후 조치할게요.');
@@ -449,13 +450,33 @@ export default function GroupScreen() {
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
             <Text style={styles.actionSheetTitle}>{actionEntry.author} 님의 게시물</Text>
-            <TouchableOpacity style={styles.actionRow} onPress={() => reportEntry(actionEntry)}>
+            <TouchableOpacity style={styles.actionRow} onPress={() => { setActionEntry(null); setConfirmReport(actionEntry); }}>
               <Text style={styles.actionText}>🚩  이 게시물 신고하기</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionRow} onPress={() => blockAuthor(actionEntry)}>
               <Text style={[styles.actionText, styles.actionDanger]}>🚫  이 사용자 차단하기</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionRow} onPress={() => setActionEntry(null)}>
+              <Text style={[styles.actionText, { color: '#9ca3af' }]}>취소</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* 신고 확인 */}
+      {confirmReport && (
+        <View style={styles.overlayWrap}>
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setConfirmReport(null)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.actionSheetTitle}>이 게시물을 신고할까요?</Text>
+            <Text style={styles.confirmMsg}>
+              {confirmReport.author} 님의 게시물이 운영팀에 접수되고, 검토 후 조치돼요.
+            </Text>
+            <TouchableOpacity style={styles.confirmDangerBtn} onPress={() => reportEntry(confirmReport)}>
+              <Text style={styles.confirmDangerText}>신고하기</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionRow} onPress={() => setConfirmReport(null)}>
               <Text style={[styles.actionText, { color: '#9ca3af' }]}>취소</Text>
             </TouchableOpacity>
           </View>
