@@ -152,17 +152,17 @@ export default function StatsScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* 지난달 대비 / 연속 기록 (요약 아래 작은 카드) */}
+        {/* 지난달 대비 / 연속 기록 (요약 아래 작은 칩) */}
         <View style={styles.statsGrid}>
-          <View style={styles.statCardSm}>
-            <Text style={[styles.statValSm, { color: monthDiff >= 0 ? '#10b981' : '#ef4444' }]}>
+          <View style={styles.statChip}>
+            <Text style={styles.statChipLabel}>지난달 대비</Text>
+            <Text style={[styles.statChipVal, { color: monthDiff >= 0 ? '#10b981' : '#ef4444' }]}>
               {monthDiff >= 0 ? `↗ +${monthDiff}개` : `↘ ${monthDiff}개`}
             </Text>
-            <Text style={styles.statLabel}>지난달 대비</Text>
           </View>
-          <View style={[styles.statCardSm, { backgroundColor: hexToRgba(accent, 0.07), borderColor: hexToRgba(accent, 0.25) }]}>
-            <Text style={[styles.statValSm, { color: accent }]}>{streak}일</Text>
-            <Text style={styles.statLabel}>연속 기록</Text>
+          <View style={[styles.statChip, { backgroundColor: hexToRgba(accent, 0.07), borderColor: hexToRgba(accent, 0.25) }]}>
+            <Text style={styles.statChipLabel}>연속 기록</Text>
+            <Text style={[styles.statChipVal, { color: accent }]}>{streak}일</Text>
           </View>
         </View>
 
@@ -471,6 +471,13 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#f3f4f6', alignItems: 'center', gap: 3,
   },
   statValSm: { fontSize: 17, fontWeight: '800', color: '#374151' },
+  statChip: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#ffffff', borderRadius: 12, borderWidth: 1, borderColor: '#f3f4f6',
+    paddingHorizontal: 12, paddingVertical: 8,
+  },
+  statChipLabel: { fontSize: 11.5, color: '#9ca3af' },
+  statChipVal: { fontSize: 13.5, fontWeight: '800' },
 
   // AI 리포트
   reportHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
