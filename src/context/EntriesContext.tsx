@@ -27,29 +27,29 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 인증 완료 후 서버에서 p!ng 로드 (비어 있으면 데모 데이터로 최초 1회 시드)
+  // 인증 완료 후 서버에서 p!ng 로드
   useEffect(() => {
     let cancelled = false;
     if (!ready) return;
 
     async function load() {
       if (!token) {
-        // 토큰 확보 실패 시 로컬 데모 데이터로 폴백
-        if (!cancelled) { setEntries(INITIAL_ENTRIES); setLoading(false); }
+        if (!cancelled) { setEntries([]); setLoading(false); }
         return;
       }
       try {
         let list = await fetchEntries();
-        if (list.length === 0) {
-          // 데모 계정 최초 접속 — 기본 p!ng를 서버에 시드
-          for (const seed of [...INITIAL_ENTRIES].reverse()) {
-            try { await createEntry(seed); } catch {}
-          }
-          list = await fetchEntries();
+        // 예전에 자동 시드됐던 데모 글 정리 (제목+본문이 데모와 정확히 일치하는 것만 삭제)
+        const demoIds = list
+          .filter((e) => INITIAL_ENTRIES.some((s) => s.title === e.title && s.body === e.body))
+          .map((e) => e.id);
+        if (demoIds.length > 0) {
+          await Promise.all(demoIds.map((id) => removeEntry(id).catch(() => {})));
+          list = list.filter((e) => !demoIds.includes(e.id));
         }
         if (!cancelled) { setEntries(list); setLoading(false); }
       } catch {
-        if (!cancelled) { setEntries(INITIAL_ENTRIES); setLoading(false); }
+        if (!cancelled) { setEntries([]); setLoading(false); }
       }
     }
 
