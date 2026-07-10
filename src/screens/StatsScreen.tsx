@@ -152,6 +152,20 @@ export default function StatsScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* 지난달 대비 / 연속 기록 (요약 아래 작은 카드) */}
+        <View style={styles.statsGrid}>
+          <View style={styles.statCardSm}>
+            <Text style={[styles.statValSm, { color: monthDiff >= 0 ? '#10b981' : '#ef4444' }]}>
+              {monthDiff >= 0 ? `↗ +${monthDiff}개` : `↘ ${monthDiff}개`}
+            </Text>
+            <Text style={styles.statLabel}>지난달 대비</Text>
+          </View>
+          <View style={[styles.statCardSm, { backgroundColor: hexToRgba(accent, 0.07), borderColor: hexToRgba(accent, 0.25) }]}>
+            <Text style={[styles.statValSm, { color: accent }]}>{streak}일</Text>
+            <Text style={styles.statLabel}>연속 기록</Text>
+          </View>
+        </View>
+
         {/* Monthly heatmap */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>월별 기록 · {thisYear}</Text>
@@ -266,19 +280,6 @@ export default function StatsScreen() {
           </View>
         )}
 
-        {/* 지난달 대비 / 평균 글 길이 */}
-        <View style={styles.statsGrid}>
-          <View style={styles.statCardSm}>
-            <Text style={[styles.statValSm, { color: monthDiff >= 0 ? '#10b981' : '#ef4444' }]}>
-              {monthDiff >= 0 ? `↗ +${monthDiff}개` : `↘ ${monthDiff}개`}
-            </Text>
-            <Text style={styles.statLabel}>지난달 대비</Text>
-          </View>
-          <View style={[styles.statCardSm, { backgroundColor: hexToRgba(accent, 0.07), borderColor: hexToRgba(accent, 0.25) }]}>
-            <Text style={[styles.statValSm, { color: accent }]}>{streak}일</Text>
-            <Text style={styles.statLabel}>연속 기록</Text>
-          </View>
-        </View>
 
         {/* 월말 p!ng 어워즈 */}
         <View style={[styles.card, { borderColor: hexToRgba(accent, 0.3) }]}>
