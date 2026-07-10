@@ -292,7 +292,7 @@ export default function HomeScreen() {
                       <TouchableOpacity style={styles.folderBackBtn} onPress={() => setSelectedFolder(null)}>
                         <Text style={[styles.folderBackText, { color: '#fff' }]}>← 폴더</Text>
                       </TouchableOpacity>
-                      <Text style={[styles.folderHeaderTitle, { color: '#fff' }]}>{selectedFolder.emoji} {selectedFolder.name}</Text>
+                      <Text style={[styles.folderHeaderTitle, { color: '#fff' }]}>{selectedFolder.name}</Text>
                       {/* 커버 변경은 카메라 버튼을 정확히 눌렀을 때만 */}
                       <TouchableOpacity
                         style={[styles.folderBackBtn, styles.folderCameraChip]}
@@ -312,7 +312,7 @@ export default function HomeScreen() {
                   <TouchableOpacity style={styles.folderBackBtn} onPress={() => setSelectedFolder(null)}>
                     <Text style={styles.folderBackText}>← 폴더</Text>
                   </TouchableOpacity>
-                  <Text style={styles.folderHeaderTitle}>{selectedFolder.emoji} {selectedFolder.name}</Text>
+                  <Text style={styles.folderHeaderTitle}>{selectedFolder.name}</Text>
                   <TouchableOpacity style={[styles.folderBackBtn, { alignItems: 'flex-end' }]} onPress={() => pickFolderCover(selectedFolder.id)}>
                     <View style={styles.folderAddCoverBtn}>
                       <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
