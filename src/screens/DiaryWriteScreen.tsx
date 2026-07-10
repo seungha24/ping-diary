@@ -9,24 +9,53 @@ import * as ImagePicker from 'expo-image-picker';
 import Svg, { Path, Rect, Circle, Polyline } from 'react-native-svg';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
-import { PERSONAS, MONTHS, DAYS, DiaryFolder, mergeFolders } from '../data/types';
+import { PERSONAS, MONTHS, DAYS, DiaryEntry, DiaryFolder, mergeFolders, parseBodySegments } from '../data/types';
 
-// 저장 형식([photo:URL]) ↔ 편집 형식([사진N]) 변환
-function toEditorBody(raw: string): { text: string; urls: string[] } {
-  const urls: string[] = [];
-  const text = raw.replace(/\[photo:([^\]\s]+)\]/g, (_m, u) => {
-    urls.push(u);
-    return `[사진${urls.length}]`;
-  });
-  return { text, urls };
+// ── 블록 에디터: 본문을 텍스트/사진 블록으로 편집, 저장 시 [photo:URL] 마커로 직렬화 ──
+type EditorBlock = { type: 'text'; text: string } | { type: 'photo'; url: string };
+
+/** 텍스트 블록끼리 병합하고, 사진 앞뒤에 텍스트 블록을 보장 */
+function normalizeBlocks(list: EditorBlock[]): EditorBlock[] {
+  const out: EditorBlock[] = [];
+  for (const b of list) {
+    const last = out[out.length - 1];
+    if (b.type === 'text' && last && last.type === 'text') {
+      last.text = last.text && b.text ? `${last.text}\n${b.text}` : (last.text || b.text);
+      continue;
+    }
+    if (b.type === 'photo' && (!last || last.type === 'photo')) {
+      out.push({ type: 'text', text: '' });
+    }
+    out.push({ ...b });
+  }
+  if (out.length === 0 || out[0].type === 'photo') out.unshift({ type: 'text', text: '' });
+  if (out[out.length - 1].type === 'photo') out.push({ type: 'text', text: '' });
+  return out;
 }
-function toStorageBody(text: string, urls: string[]): string {
-  return text
-    .replace(/\[사진(\d+)\]/g, (_m, n) => {
-      const u = urls[parseInt(n, 10) - 1];
-      return u ? `[photo:${u}]` : '';
-    })
-    .replace(/\n{3,}/g, '\n\n');
+
+/** 기존 일기 → 블록 (대표 사진은 맨 앞, 갤러리 사진은 맨 뒤 블록으로 흡수) */
+function entryToBlocks(entry?: Pick<DiaryEntry, 'body' | 'photo' | 'photos'>): EditorBlock[] {
+  if (!entry) return [{ type: 'text', text: '' }];
+  const segs = parseBodySegments(entry.body || '');
+  const bodyUrls = new Set(segs.filter((s) => s.type === 'photo').map((s: any) => s.url));
+  const pre: EditorBlock[] = entry.photo && !bodyUrls.has(entry.photo)
+    ? [{ type: 'photo', url: entry.photo }] : [];
+  const post: EditorBlock[] = (entry.photos ?? [])
+    .filter((u) => !bodyUrls.has(u) && u !== entry.photo)
+    .map((u) => ({ type: 'photo' as const, url: u }));
+  const mid: EditorBlock[] = segs.map((s: any) =>
+    s.type === 'text' ? { type: 'text' as const, text: s.text } : { type: 'photo' as const, url: s.url }
+  );
+  return normalizeBlocks([...pre, ...mid, ...post]);
+}
+
+/** 블록 → 저장용 본문 */
+function blocksToBody(blocks: EditorBlock[]): string {
+  return blocks
+    .map((b) => (b.type === 'text' ? b.text : `\n[photo:${b.url}]\n`))
+    .join('')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }
 import { PersonaIcon, IconFolder } from '../components/icons/Line';
 import { AspectPhoto } from '../components/PhotoThumb';
@@ -128,19 +157,13 @@ export default function DiaryWriteScreen() {
   const { addEntry, updateEntry, updateLocal } = useEntries();
   const today = new Date();
   const [title, setTitle] = useState(editEntry?.title ?? '');
-  // 본문: 편집 중엔 [사진N] 토큰, 저장 시 [photo:URL]로 변환
-  const initBody = editEntry ? toEditorBody(editEntry.body) : { text: '', urls: [] };
-  const [body, setBody] = useState(initBody.text);
-  const [inlinePhotos, setInlinePhotos] = useState<string[]>(initBody.urls);
-  const bodySelRef = useRef({ start: 0, end: 0 }); // 본문 커서 위치 (사진 삽입용)
-  const [inlineUploading, setInlineUploading] = useState(false);
+  // 본문: 텍스트/사진 블록 에디터 (사진이 입력창 사이에 실제로 보임)
+  const [blocks, setBlocks] = useState<EditorBlock[]>(() => entryToBlocks(editEntry));
+  const focusRef = useRef({ block: 0, sel: { start: 0, end: 0 } }); // 사진 삽입 위치(커서)
+  const [blockHeights, setBlockHeights] = useState<Record<number, number>>({}); // 자동 높이
   const [tags, setTags] = useState<string[]>(editEntry?.tags ?? []);
   const [tagInput, setTagInput] = useState('');
   const [persona, setPersona] = useState(editEntry?.persona ?? '선생님');
-  // 사진 목록 (첫 번째가 대표=크게 보이는 사진, 최대 4장)
-  const [photoList, setPhotoList] = useState<string[]>(
-    () => [editEntry?.photo, ...(editEntry?.photos ?? [])].filter(Boolean) as string[]
-  );
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null); // 사진 확대
   const [uploading, setUploading] = useState(false);
   const [visibility, setVisibility] = useState<'private' | 'friends'>(editEntry?.visibility ?? 'private');
@@ -190,15 +213,17 @@ export default function DiaryWriteScreen() {
   const [draftSaved, setDraftSaved] = useState(false);
 
   function handleSaveDraft() {
-    if (!title.trim() && !body.trim()) {
+    const draftBody = blocksToBody(blocks);
+    if (!title.trim() && !draftBody.trim()) {
       notify('내용을 입력한 뒤 임시저장할 수 있어요.');
       return;
     }
+    const firstPhoto = (blocks.find((b) => b.type === 'photo') as any)?.url ?? null;
     saveDraft({
-      title, body: toStorageBody(body, inlinePhotos), tags, persona, folder,
+      title, body: draftBody, tags, persona, folder,
       dates: selectedDates,
-      photo: photoList[0] ?? null,
-      photos: photoList.slice(1),
+      photo: firstPhoto,
+      photos: [],
       visibility,
       savedAt: new Date().toISOString(),
     });
@@ -211,14 +236,11 @@ export default function DiaryWriteScreen() {
     const d = draftBanner;
     if (!d) return;
     setTitle(d.title);
-    const parsed = toEditorBody(d.body);
-    setBody(parsed.text);
-    setInlinePhotos(parsed.urls);
+    setBlocks(entryToBlocks({ body: d.body, photo: null, photos: [] }));
     setTags(d.tags);
     setPersona(d.persona);
     setFolder(d.folder);
     setSelectedDates(d.dates);
-    setPhotoList([d.photo, ...(d.photos ?? [])].filter(Boolean) as string[]);
     setVisibility(d.visibility);
     setDraftBanner(null);
   }
@@ -256,12 +278,8 @@ export default function DiaryWriteScreen() {
     setTagInput('');
   }
 
-  // 사진 선택 → 서버 업로드 → 목록에 추가 (최대 4장, 첫 장이 대표)
-  async function pickPhoto() {
-    if (photoList.length >= 4) {
-      notify('사진은 최대 4장까지 넣을 수 있어요.');
-      return;
-    }
+  // 사진 선택 → 업로드 → 커서 위치에 사진 블록 삽입
+  async function insertPhoto() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') return;
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -273,7 +291,24 @@ export default function DiaryWriteScreen() {
     setUploading(true);
     try {
       const url = await uploadPhoto(result.assets[0].uri);
-      setPhotoList((prev) => [...prev, url].slice(0, 4));
+      setBlocks((prev) => {
+        const next = prev.map((b) => ({ ...b }));
+        // 커서가 있던 텍스트 블록에서 분할 삽입 (없으면 마지막 텍스트 블록 끝에)
+        let idx = focusRef.current.block;
+        if (idx < 0 || idx >= next.length || next[idx].type !== 'text') {
+          idx = next.map((b) => b.type).lastIndexOf('text');
+        }
+        const t = next[idx] as { type: 'text'; text: string };
+        const pos = Math.min(focusRef.current.sel?.start ?? t.text.length, t.text.length);
+        const before = t.text.slice(0, pos).replace(/\n$/, '');
+        const after = t.text.slice(pos).replace(/^\n/, '');
+        next.splice(idx, 1,
+          { type: 'text', text: before },
+          { type: 'photo', url },
+          { type: 'text', text: after },
+        );
+        return normalizeBlocks(next);
+      });
     } catch (e: any) {
       notify(e?.message ?? '사진 업로드에 실패했어요. 다시 시도해주세요.');
     } finally {
@@ -281,46 +316,9 @@ export default function DiaryWriteScreen() {
     }
   }
 
-  // 본문 커서 위치에 사진 삽입 ([사진N] 토큰)
-  async function pickInlinePhoto() {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') return;
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 0.8,
-    });
-    if (result.canceled || !result.assets[0]) return;
-    setInlineUploading(true);
-    try {
-      const url = await uploadPhoto(result.assets[0].uri);
-      const token = `[사진${inlinePhotos.length + 1}]`;
-      setInlinePhotos((prev) => [...prev, url]);
-      const pos = Math.min(bodySelRef.current.start ?? body.length, body.length);
-      const before = body.slice(0, pos);
-      const after = body.slice(pos);
-      const insert = `${before && !before.endsWith('\n') ? '\n' : ''}${token}\n`;
-      setBody(before + insert + after);
-    } catch (e: any) {
-      notify(e?.message ?? '사진 업로드에 실패했어요. 다시 시도해주세요.');
-    } finally {
-      setInlineUploading(false);
-    }
-  }
-
-  // 작은 사진을 대표(맨 앞)로 승격
-  function makeMainPhoto(idx: number) {
-    setPhotoList((prev) => {
-      if (idx <= 0 || idx >= prev.length) return prev;
-      const next = [...prev];
-      const [p] = next.splice(idx, 1);
-      next.unshift(p);
-      return next;
-    });
-  }
-
-  function removePhoto(idx: number) {
-    setPhotoList((prev) => prev.filter((_, i) => i !== idx));
+  // 사진 블록 제거 (앞뒤 텍스트는 자동 병합)
+  function removePhotoBlock(i: number) {
+    setBlocks((prev) => normalizeBlocks(prev.filter((_, j) => j !== i)));
   }
 
   function dateLabel() {
@@ -352,17 +350,16 @@ export default function DiaryWriteScreen() {
               const diaryDate = new Date(calYear, calMonth, diaryDay,
                 base.getHours(), base.getMinutes(), base.getSeconds());
               const createdAtISO = isNaN(diaryDate.getTime()) ? base.toISOString() : diaryDate.toISOString();
-              const storedBody = toStorageBody(body, inlinePhotos); // [사진N] → [photo:URL]
-              // 대표 사진이 없으면 본문 첫 사진을 대표로 (목록 썸네일용)
-              const bodyFirstPhoto = (storedBody.match(/\[photo:([^\]\s]+)\]/) || [])[1] ?? null;
-              const mainPhoto = photoList[0] ?? bodyFirstPhoto ?? null;
+              const storedBody = blocksToBody(blocks); // 블록 → [photo:URL] 마커 본문
+              // 본문 첫 사진이 대표 (목록 썸네일용)
+              const mainPhoto = (blocks.find((b) => b.type === 'photo') as any)?.url ?? null;
 
               if (editEntry) {
                 const personaChanged = editEntry.persona !== persona;
                 const needRegen = personaChanged && !!editEntry.aiComment;
                 const updated = {
                   ...editEntry, title, body: storedBody, tags, persona, folder, dates: selectedDates,
-                  photo: mainPhoto, photos: photoList.slice(1), visibility,
+                  photo: mainPhoto, photos: [], visibility,
                   sharedGroups: visibility === 'friends' && shareGroupIds.size > 0 ? Array.from(shareGroupIds) : null,
                   createdAt: createdAtISO,
                 };
@@ -390,7 +387,7 @@ export default function DiaryWriteScreen() {
                   folder,
                   dates: selectedDates,
                   photo: mainPhoto,
-                  photos: photoList.slice(1),
+                  photos: [],
                   visibility,
                   sharedGroups: visibility === 'friends' && shareGroupIds.size > 0 ? Array.from(shareGroupIds) : null,
                   createdAt: createdAtISO,
@@ -470,88 +467,53 @@ export default function DiaryWriteScreen() {
           placeholderTextColor="#d1d5db"
         />
 
-        {/* Body */}
-        <TextInput
-          style={styles.bodyInput}
-          value={body}
-          onChangeText={setBody}
-          onSelectionChange={(e) => { bodySelRef.current = e.nativeEvent.selection; }}
-          placeholder="오늘의 일상을 자유롭게 p!ng해보세요..."
-          placeholderTextColor="#d1d5db"
-          multiline
-          textAlignVertical="top"
-        />
+        {/* Body — 텍스트/사진 블록 에디터 (사진이 글 사이에 실제로 보임) */}
+        {blocks.map((b, i) =>
+          b.type === 'text' ? (
+            <TextInput
+              key={`t${i}`}
+              style={[
+                styles.bodyInput,
+                { height: Math.max(blocks.length === 1 ? 180 : 44, blockHeights[i] ?? 0) },
+              ]}
+              value={b.text}
+              multiline
+              textAlignVertical="top"
+              placeholder={i === 0 ? '오늘의 일상을 자유롭게 p!ng해보세요...' : undefined}
+              placeholderTextColor="#d1d5db"
+              onChangeText={(t) =>
+                setBlocks((prev) => prev.map((x, j) => (j === i ? { type: 'text', text: t } : x)))
+              }
+              onFocus={() => { focusRef.current.block = i; }}
+              onSelectionChange={(e) => { focusRef.current = { block: i, sel: e.nativeEvent.selection }; }}
+              onContentSizeChange={(e) => {
+                const h = Math.ceil(e.nativeEvent.contentSize.height);
+                setBlockHeights((p) => (p[i] === h ? p : { ...p, [i]: h }));
+              }}
+            />
+          ) : (
+            <View key={`p${i}`} style={styles.blockPhotoWrap}>
+              <TouchableOpacity activeOpacity={0.9} onPress={() => setLightboxPhoto(b.url)}>
+                <AspectPhoto photo={b.url} minRatio={1} />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.photoRemove} onPress={() => removePhotoBlock(i)}>
+                <Text style={styles.photoRemoveText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+          )
+        )}
 
-        {/* 본문 중간 사진 삽입 */}
-        <TouchableOpacity style={styles.inlinePhotoBtn} onPress={pickInlinePhoto} disabled={inlineUploading}>
-          {inlineUploading
+        {/* 사진 추가: 커서 위치에 삽입 */}
+        <TouchableOpacity style={styles.inlinePhotoBtn} onPress={insertPhoto} disabled={uploading}>
+          {uploading
             ? <ActivityIndicator color="#9ca3af" size="small" />
             : (
               <>
                 <IconCamera color="#6b7280" size={14} />
-                <Text style={styles.inlinePhotoBtnText}>커서 위치에 사진 넣기</Text>
+                <Text style={styles.inlinePhotoBtnText}>사진 넣기</Text>
               </>
             )}
         </TouchableOpacity>
-        {inlinePhotos.length > 0 && (
-          <Text style={styles.photoHint}>본문의 [사진N] 자리에 사진이 들어가요. 토큰을 지우면 사진도 빠져요.</Text>
-        )}
-
-        {/* Photo — 대표 1장 크게 + 나머지 작게 (최대 4장) */}
-        {photoList.length > 0 ? (
-          <>
-            <View style={styles.photoBox}>
-              <TouchableOpacity activeOpacity={0.9} onPress={() => setLightboxPhoto(photoList[0])}>
-                <AspectPhoto photo={photoList[0]} />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.photoRemove} onPress={() => removePhoto(0)}>
-                <Text style={styles.photoRemoveText}>✕</Text>
-              </TouchableOpacity>
-              <View style={styles.mainPhotoBadge}>
-                <Text style={styles.mainPhotoBadgeText}>대표</Text>
-              </View>
-            </View>
-            <View style={styles.photoThumbRow}>
-              {photoList.slice(1).map((p, i) => (
-                <View key={p} style={styles.photoThumbCol}>
-                  <View style={styles.photoThumbWrap}>
-                    <TouchableOpacity onPress={() => setLightboxPhoto(p)}>
-                      <Image source={{ uri: p }} style={styles.photoThumbImg} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.photoThumbRemove} onPress={() => removePhoto(i + 1)}>
-                      <Text style={styles.photoThumbRemoveText}>✕</Text>
-                    </TouchableOpacity>
-                  </View>
-                  {/* 대표 설정은 별도 버튼으로 (사진 탭은 확대) */}
-                  <TouchableOpacity onPress={() => makeMainPhoto(i + 1)}>
-                    <Text style={[styles.setMainText, { color: accent }]}>대표로</Text>
-                  </TouchableOpacity>
-                </View>
-              ))}
-              {photoList.length < 4 && (
-                <TouchableOpacity style={styles.photoThumbAdd} onPress={pickPhoto} disabled={uploading}>
-                  {uploading
-                    ? <ActivityIndicator color="#9ca3af" size="small" />
-                    : <Text style={styles.photoThumbAddPlus}>+</Text>}
-                </TouchableOpacity>
-              )}
-            </View>
-            {photoList.length > 1 && (
-              <Text style={styles.photoHint}>사진을 탭하면 크게 볼 수 있어요 · '대표로'를 누르면 대표 사진이 바뀌어요</Text>
-            )}
-          </>
-        ) : (
-          <TouchableOpacity style={styles.photoAddBtn} onPress={pickPhoto} disabled={uploading}>
-            {uploading
-              ? <ActivityIndicator color="#9ca3af" size="small" />
-              : (
-                <View style={styles.photoAddInner}>
-                  <IconCamera color="#6b7280" size={16} />
-                  <Text style={styles.photoAddText}>사진 추가 (최대 4장)</Text>
-                </View>
-              )}
-          </TouchableOpacity>
-        )}
 
         {/* Visibility */}
         <View style={styles.visRow}>
@@ -823,7 +785,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9fafb', borderRadius: 16, borderWidth: 1, borderColor: '#e5e7eb',
     padding: 14, minHeight: 140,
   },
-  bodyInput: { fontSize: 15, color: '#374151', lineHeight: 24, minHeight: 180, paddingVertical: 4 },
+  bodyInput: { fontSize: 15, color: '#374151', lineHeight: 24, paddingVertical: 4 },
   photoBox: { position: 'relative', borderRadius: 14, overflow: 'hidden' },
   photoImg: { width: '100%', height: 180 },
   photoRemove: {
@@ -856,6 +818,7 @@ const styles = StyleSheet.create({
   },
   photoThumbAddPlus: { fontSize: 22, color: '#9ca3af' },
   photoHint: { fontSize: 11.5, color: '#9ca3af', marginTop: 6 },
+  blockPhotoWrap: { position: 'relative', borderRadius: 14, overflow: 'hidden', marginVertical: 2 },
   inlinePhotoBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     alignSelf: 'flex-start', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 999,
