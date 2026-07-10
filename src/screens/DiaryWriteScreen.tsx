@@ -9,7 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 import Svg, { Path, Rect, Circle, Polyline } from 'react-native-svg';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
-import { PERSONAS, MONTHS, DAYS, FOLDERS, DiaryFolder } from '../data/types';
+import { PERSONAS, MONTHS, DAYS, DiaryFolder, mergeFolders } from '../data/types';
 import { PersonaIcon, IconFolder } from '../components/icons/Line';
 import { AspectPhoto } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
@@ -172,17 +172,12 @@ export default function DiaryWriteScreen() {
     setDraftBanner(null);
   }
 
-  // 홈 화면과 동일하게 기본 폴더(숨김 제외·이름/이모지 오버라이드) + 사용자 생성 폴더
+  // 홈 화면과 동일한 순서(사용자 재정렬 반영)로 폴더 목록 구성
   const cachedMe = getCachedMe();
-  const customFolders = (cachedMe?.folders ?? []) as DiaryFolder[];
-  const hiddenFolders = cachedMe?.hidden_folders ?? [];
-  const allFolders: DiaryFolder[] = [
-    ...FOLDERS.filter((f) => !hiddenFolders.includes(f.id)).map((f) => {
-      const ov = customFolders.find((c) => c.id === f.id);
-      return ov ? { ...f, name: ov.name, emoji: ov.emoji } : f;
-    }),
-    ...customFolders.filter((f) => f.id.startsWith('c_')),
-  ];
+  const allFolders: DiaryFolder[] = mergeFolders(
+    (cachedMe?.folders ?? []) as DiaryFolder[],
+    cachedMe?.hidden_folders ?? []
+  );
   const currentFolder = allFolders.find((f) => f.id === folder);
 
   const daysInMonth = getDaysInMonth(calYear, calMonth);

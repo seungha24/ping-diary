@@ -13,7 +13,7 @@ import IconBell from '../components/icons/IconBell';
 import { getUnreadCount as getNotifUnread, subscribeNotifs, refreshNotifs } from '../data/notifStore';
 import { PhotoThumb } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
-import { FOLDERS, DiaryEntry, DiaryFolder, entryDateLabel } from '../data/types';
+import { FOLDERS, DiaryEntry, DiaryFolder, entryDateLabel, mergeFolders } from '../data/types';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { useGroups } from '../context/GroupsContext';
@@ -61,15 +61,27 @@ export default function HomeScreen() {
   const [editEmoji, setEditEmoji] = useState('📁');
   const [deleteTarget, setDeleteTarget] = useState<DiaryFolder | null>(null);
 
-  // 기본 폴더(이름/아이콘 override 반영, 숨긴 폴더 제외) + 사용자가 만든 폴더
-  const createdFolders = customFolders.filter((f) => f.id.startsWith('c_'));
-  const allFolders: DiaryFolder[] = [
-    ...FOLDERS.filter((f) => !hiddenFolders.includes(f.id)).map((f) => {
-      const ov = customFolders.find((c) => c.id === f.id);
-      return ov ? { ...f, name: ov.name, emoji: ov.emoji } : f;
-    }),
-    ...createdFolders,
-  ];
+  // 저장된 순서(사용자 재정렬 포함)대로 폴더 목록 구성
+  const allFolders: DiaryFolder[] = mergeFolders(customFolders, hiddenFolders);
+
+  // 폴더 순서 바꾸기: 길게 눌러 선택 → 이동할 위치의 폴더를 탭
+  const [reorderId, setReorderId] = useState<string | null>(null);
+
+  function moveFolder(targetId: string) {
+    if (!reorderId || reorderId === targetId) { setReorderId(null); return; }
+    const list = [...allFolders];
+    const fromIdx = list.findIndex((f) => f.id === reorderId);
+    const toIdx = list.findIndex((f) => f.id === targetId);
+    if (fromIdx < 0 || toIdx < 0) { setReorderId(null); return; }
+    const [moved] = list.splice(fromIdx, 1);
+    list.splice(toIdx, 0, moved);
+    // 숨긴 폴더 항목은 순서 목록 뒤에 붙여 보존
+    const hiddenEntries = customFolders.filter((f) => hiddenFolders.includes(f.id));
+    const next = [...list, ...hiddenEntries];
+    setCustomFolders(next);
+    setReorderId(null);
+    saveFolders(next).catch(() => notify('순서 저장에 실패했어요.'));
+  }
 
   // 폴더 커버·사용자 폴더(서버 저장분)를 로그인(토큰 준비) 후 불러오기 — 토큰 늦게 붙어도 재실행
   useEffect(() => {
@@ -293,17 +305,27 @@ export default function HomeScreen() {
                         <Text style={[styles.folderBackText, { color: '#fff' }]}>← 폴더</Text>
                       </TouchableOpacity>
                       <Text style={[styles.folderHeaderTitle, { color: '#fff' }]}>{selectedFolder.name}</Text>
-                      {/* 커버 변경은 카메라 버튼을 정확히 눌렀을 때만 */}
-                      <TouchableOpacity
-                        style={[styles.folderBackBtn, styles.folderCameraChip]}
-                        onPress={() => pickFolderCover(selectedFolder.id)}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      >
-                        <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                          <Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                          <Circle cx="12" cy="13" r="4"/>
-                        </Svg>
-                      </TouchableOpacity>
+                      <View style={styles.folderHeaderActions}>
+                        {/* 이름·아이콘 수정, 삭제 */}
+                        <TouchableOpacity
+                          style={styles.folderEditChip}
+                          onPress={() => openEditFolder(selectedFolder)}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <Text style={styles.folderEditChipText}>수정</Text>
+                        </TouchableOpacity>
+                        {/* 커버 변경은 카메라 버튼을 정확히 눌렀을 때만 */}
+                        <TouchableOpacity
+                          style={styles.folderCameraChip}
+                          onPress={() => pickFolderCover(selectedFolder.id)}
+                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                          <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                            <Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <Circle cx="12" cy="13" r="4"/>
+                          </Svg>
+                        </TouchableOpacity>
+                      </View>
                     </View>
                   </View>
                 </View>
@@ -313,15 +335,18 @@ export default function HomeScreen() {
                     <Text style={styles.folderBackText}>← 폴더</Text>
                   </TouchableOpacity>
                   <Text style={styles.folderHeaderTitle}>{selectedFolder.name}</Text>
-                  <TouchableOpacity style={[styles.folderBackBtn, { alignItems: 'flex-end' }]} onPress={() => pickFolderCover(selectedFolder.id)}>
-                    <View style={styles.folderAddCoverBtn}>
+                  <View style={styles.folderHeaderActions}>
+                    <TouchableOpacity style={styles.folderAddCoverBtn} onPress={() => openEditFolder(selectedFolder)}>
+                      <Text style={styles.folderAddCoverText}>수정</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.folderAddCoverBtn} onPress={() => pickFolderCover(selectedFolder.id)}>
                       <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                         <Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
                         <circle cx="12" cy="13" r="4"/>
                       </Svg>
                       <Text style={styles.folderAddCoverText}>커버</Text>
-                    </View>
-                  </TouchableOpacity>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               )}
               <ScrollView contentContainerStyle={styles.list}>
@@ -397,18 +422,32 @@ export default function HomeScreen() {
 
               {personalView === 'folder' ? (
             <ScrollView contentContainerStyle={styles.folderList}>
-              <Text style={styles.folderHint}>폴더를 길게 누르면 이름·아이콘 수정, 삭제를 할 수 있어요</Text>
+              {reorderId ? (
+                <View style={[styles.reorderBanner, { borderColor: hexToRgba(accent, 0.3), backgroundColor: hexToRgba(accent, 0.07) }]}>
+                  <Text style={styles.reorderBannerText}>이동할 위치의 폴더를 탭하세요</Text>
+                  <TouchableOpacity onPress={() => setReorderId(null)}>
+                    <Text style={[styles.reorderCancel, { color: accent }]}>취소</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <Text style={styles.folderHint}>폴더를 길게 누르면 순서를 바꿀 수 있어요</Text>
+              )}
               <View style={styles.folderGrid}>
                 {allFolders.map((folder) => {
                   const count = entries.filter((e) => e.folder === folder.id).length;
                   const cover = folderCovers[folder.id];
+                  const picking = reorderId === folder.id;
                   return (
                     <TouchableOpacity
                       key={folder.id}
-                      style={[styles.gridCell, styles.glowCard, { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) }]}
+                      style={[
+                        styles.gridCell, styles.glowCard,
+                        { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) },
+                        picking && { borderColor: accent, borderWidth: 2, opacity: 0.85 },
+                      ]}
                       activeOpacity={0.85}
-                      onPress={() => setSelectedFolder(folder)}
-                      onLongPress={() => openEditFolder(folder)}
+                      onPress={() => reorderId ? moveFolder(folder.id) : setSelectedFolder(folder)}
+                      onLongPress={() => setReorderId(folder.id)}
                       delayLongPress={300}
                     >
                       <View style={styles.folderCoverWrap}>
@@ -853,8 +892,24 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   folderCameraChip: {
-    alignItems: 'flex-end', justifyContent: 'center',
+    width: 28, height: 28, borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    alignItems: 'center', justifyContent: 'center',
   },
+  folderHeaderActions: { flexDirection: 'row', alignItems: 'center', gap: 6, minWidth: 60, justifyContent: 'flex-end' },
+  folderEditChip: {
+    paddingHorizontal: 10, height: 28, borderRadius: 14,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  folderEditChipText: { fontSize: 11.5, color: '#fff', fontWeight: '600' },
+  reorderBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderWidth: 1, borderRadius: 12,
+    paddingHorizontal: 12, paddingVertical: 9, marginBottom: 12,
+  },
+  reorderBannerText: { flex: 1, fontSize: 12, color: '#374151' },
+  reorderCancel: { fontSize: 12.5, fontWeight: '700' },
   folderAddCoverBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 10, paddingVertical: 5,

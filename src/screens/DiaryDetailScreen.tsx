@@ -15,7 +15,7 @@ import IconTrash from '../components/icons/IconTrash';
 import { useTheme } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { useGroups } from '../context/GroupsContext';
-import { PERSONAS, FOLDERS, DiaryFolder, entryDateLabel } from '../data/types';
+import { PERSONAS, DiaryFolder, entryDateLabel, mergeFolders } from '../data/types';
 import { generateComment, reportContent, getCachedMe } from '../api';
 import { notify } from '../notify';
 import Svg, { Path, Line } from 'react-native-svg';
@@ -90,17 +90,12 @@ export default function DiaryDetailScreen() {
     setPublished(entry.visibility === 'friends');
   }, [entry.aiComment, entry.persona, entry.folder, entry.visibility]);
 
-  // 홈 화면과 동일하게 기본 폴더(숨김 제외·이름/이모지 오버라이드) + 사용자 생성 폴더를 합친다.
+  // 홈 화면과 동일한 순서(사용자 재정렬 반영)로 폴더 목록 구성
   const cached = getCachedMe();
-  const customFolders = (cached?.folders ?? []) as DiaryFolder[];
-  const hiddenFolders = cached?.hidden_folders ?? [];
-  const allFolders: DiaryFolder[] = [
-    ...FOLDERS.filter((f) => !hiddenFolders.includes(f.id)).map((f) => {
-      const ov = customFolders.find((c) => c.id === f.id);
-      return ov ? { ...f, name: ov.name, emoji: ov.emoji } : f;
-    }),
-    ...customFolders.filter((f) => f.id.startsWith('c_')),
-  ];
+  const allFolders: DiaryFolder[] = mergeFolders(
+    (cached?.folders ?? []) as DiaryFolder[],
+    cached?.hidden_folders ?? []
+  );
   const currentFolder = allFolders.find((f) => f.id === folder);
 
   function handleEdit() {

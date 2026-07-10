@@ -128,6 +128,19 @@ export function getPhotoPlaceholder(ph: string) {
   return PHOTO_PLACEHOLDERS[idx % PHOTO_PLACEHOLDERS.length];
 }
 
+/**
+ * 저장된 폴더 목록(사용자 순서·이름·이모지)과 기본 폴더를 합친다.
+ * - 저장 목록에 있는 폴더는 그 순서대로
+ * - 저장 목록에 없는 기본 폴더는 기본 순서로 뒤에 (단, 저장 목록에 기본 폴더가
+ *   하나도 없으면 예전 동작처럼 기본 폴더 먼저 → 만든 폴더 순)
+ */
+export function mergeFolders(stored: DiaryFolder[], hidden: string[]): DiaryFolder[] {
+  const storedVisible = stored.filter((f) => !hidden.includes(f.id));
+  const rest = FOLDERS.filter((d) => !hidden.includes(d.id) && !stored.some((s) => s.id === d.id));
+  const hasDefaultsInStored = stored.some((s) => FOLDERS.some((d) => d.id === s.id));
+  return hasDefaultsInStored ? [...storedVisible, ...rest] : [...rest, ...storedVisible];
+}
+
 /** 일기 날짜 라벨 — 작성 시각(createdAt)의 실제 월 + 선택 일자들 */
 export function entryDateLabel(entry: { createdAt: string; dates: number[] }): string {
   const month = new Date(entry.createdAt).getMonth() + 1;
