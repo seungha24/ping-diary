@@ -12,6 +12,7 @@ import IconChev from '../components/icons/IconChev';
 import { PERSONAS, MONTHS, DAYS, FOLDERS, DiaryFolder } from '../data/types';
 import { PersonaIcon, IconFolder } from '../components/icons/Line';
 import { AspectPhoto } from '../components/PhotoThumb';
+import PhotoLightbox from '../components/PhotoLightbox';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { uploadPhoto, getCachedMe, patchEntry, generateComment } from '../api';
@@ -116,6 +117,7 @@ export default function DiaryWriteScreen() {
   const [photoList, setPhotoList] = useState<string[]>(
     () => [editEntry?.photo, ...(editEntry?.photos ?? [])].filter(Boolean) as string[]
   );
+  const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null); // 사진 확대
   const [uploading, setUploading] = useState(false);
   const [visibility, setVisibility] = useState<'private' | 'friends'>(editEntry?.visibility ?? 'private');
   const [calOpen, setCalOpen] = useState(false);
@@ -391,7 +393,9 @@ export default function DiaryWriteScreen() {
         {photoList.length > 0 ? (
           <>
             <View style={styles.photoBox}>
-              <AspectPhoto photo={photoList[0]} />
+              <TouchableOpacity activeOpacity={0.9} onPress={() => setLightboxPhoto(photoList[0])}>
+                <AspectPhoto photo={photoList[0]} />
+              </TouchableOpacity>
               <TouchableOpacity style={styles.photoRemove} onPress={() => removePhoto(0)}>
                 <Text style={styles.photoRemoveText}>✕</Text>
               </TouchableOpacity>
@@ -401,12 +405,18 @@ export default function DiaryWriteScreen() {
             </View>
             <View style={styles.photoThumbRow}>
               {photoList.slice(1).map((p, i) => (
-                <View key={p} style={styles.photoThumbWrap}>
+                <View key={p} style={styles.photoThumbCol}>
+                  <View style={styles.photoThumbWrap}>
+                    <TouchableOpacity onPress={() => setLightboxPhoto(p)}>
+                      <Image source={{ uri: p }} style={styles.photoThumbImg} />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.photoThumbRemove} onPress={() => removePhoto(i + 1)}>
+                      <Text style={styles.photoThumbRemoveText}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+                  {/* 대표 설정은 별도 버튼으로 (사진 탭은 확대) */}
                   <TouchableOpacity onPress={() => makeMainPhoto(i + 1)}>
-                    <Image source={{ uri: p }} style={styles.photoThumbImg} />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.photoThumbRemove} onPress={() => removePhoto(i + 1)}>
-                    <Text style={styles.photoThumbRemoveText}>✕</Text>
+                    <Text style={[styles.setMainText, { color: accent }]}>대표로</Text>
                   </TouchableOpacity>
                 </View>
               ))}
@@ -419,7 +429,7 @@ export default function DiaryWriteScreen() {
               )}
             </View>
             {photoList.length > 1 && (
-              <Text style={styles.photoHint}>작은 사진을 탭하면 대표 사진이 돼요</Text>
+              <Text style={styles.photoHint}>사진을 탭하면 크게 볼 수 있어요 · '대표로'를 누르면 대표 사진이 바뀌어요</Text>
             )}
           </>
         ) : (
@@ -587,6 +597,10 @@ export default function DiaryWriteScreen() {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
+
+      {lightboxPhoto && (
+        <PhotoLightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
+      )}
     </SafeAreaView>
   );
 }
@@ -671,8 +685,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8, paddingVertical: 3,
   },
   mainPhotoBadgeText: { color: '#fff', fontSize: 10.5, fontWeight: '700' },
-  photoThumbRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  photoThumbRow: { flexDirection: 'row', gap: 8, marginTop: 8, alignItems: 'flex-start' },
+  photoThumbCol: { alignItems: 'center', gap: 3 },
   photoThumbWrap: { position: 'relative' },
+  setMainText: { fontSize: 11, fontWeight: '700' },
   photoThumbImg: { width: 64, height: 64, borderRadius: 12 },
   photoThumbRemove: {
     position: 'absolute', top: -6, right: -6,

@@ -8,6 +8,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import Tag from '../components/Tag';
 import { AspectPhoto } from '../components/PhotoThumb';
+import PhotoLightbox from '../components/PhotoLightbox';
 import IconChev from '../components/icons/IconChev';
 import IconEdit from '../components/icons/IconEdit';
 import IconTrash from '../components/icons/IconTrash';
@@ -58,9 +59,9 @@ export default function DiaryDetailScreen() {
   const { groups } = useGroups();
   // 내 글인지: authorId가 없으면 내 목록에서 연 글, 있으면 내 id와 비교 (그룹 피드에서 연 남의 글은 읽기 전용)
   const isMine = !entry.authorId || entry.authorId === getCachedMe()?.id;
-  // 사진 갤러리: 대표 + 추가 사진, 작은 걸 탭하면 크게 보기 교체
+  // 사진 갤러리: 대표는 크게, 나머지는 작게. 탭하면 확대 보기
   const gallery = [entry.photo, ...(entry.photos ?? [])].filter(Boolean) as string[];
-  const [mainIdx, setMainIdx] = useState(0);
+  const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [published, setPublished] = useState(entry.visibility === 'friends');
@@ -208,13 +209,13 @@ export default function DiaryDetailScreen() {
 
         {gallery.length > 0 && (
           <>
-            <View style={styles.photoWrapper}>
-              <AspectPhoto photo={gallery[mainIdx]} />
-            </View>
+            <TouchableOpacity style={styles.photoWrapper} activeOpacity={0.9} onPress={() => setLightboxPhoto(gallery[0])}>
+              <AspectPhoto photo={gallery[0]} />
+            </TouchableOpacity>
             {gallery.length > 1 && (
               <View style={styles.galleryRow}>
-                {gallery.map((p, i) => i !== mainIdx && (
-                  <TouchableOpacity key={p} onPress={() => setMainIdx(i)}>
+                {gallery.slice(1).map((p) => (
+                  <TouchableOpacity key={p} onPress={() => setLightboxPhoto(p)}>
                     <Image source={{ uri: p }} style={styles.galleryThumb} />
                   </TouchableOpacity>
                 ))}
@@ -463,6 +464,10 @@ export default function DiaryDetailScreen() {
             </View>
           </View>
         </View>
+      )}
+
+      {lightboxPhoto && (
+        <PhotoLightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
       )}
     </SafeAreaView>
   );
