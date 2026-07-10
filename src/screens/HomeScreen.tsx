@@ -254,7 +254,7 @@ export default function HomeScreen() {
             /* ── 폴더 내 p!ng 목록 ── */
             <>
               {folderCovers[selectedFolder.id] ? (
-                <TouchableOpacity onPress={() => pickFolderCover(selectedFolder.id)} activeOpacity={0.9}>
+                <View>
                   <Image source={{ uri: folderCovers[selectedFolder.id] }} style={styles.folderCoverBanner} />
                   <View style={styles.folderCoverOverlay}>
                     <View style={styles.folderHeader}>
@@ -262,15 +262,20 @@ export default function HomeScreen() {
                         <Text style={[styles.folderBackText, { color: '#fff' }]}>← 폴더</Text>
                       </TouchableOpacity>
                       <Text style={[styles.folderHeaderTitle, { color: '#fff' }]}>{selectedFolder.emoji} {selectedFolder.name}</Text>
-                      <View style={[styles.folderBackBtn, styles.folderCameraChip]}>
+                      {/* 커버 변경은 카메라 버튼을 정확히 눌렀을 때만 */}
+                      <TouchableOpacity
+                        style={[styles.folderBackBtn, styles.folderCameraChip]}
+                        onPress={() => pickFolderCover(selectedFolder.id)}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      >
                         <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                           <Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
                           <Circle cx="12" cy="13" r="4"/>
                         </Svg>
-                      </View>
+                      </TouchableOpacity>
                     </View>
                   </View>
-                </TouchableOpacity>
+                </View>
               ) : (
                 <View style={styles.folderHeader}>
                   <TouchableOpacity style={styles.folderBackBtn} onPress={() => setSelectedFolder(null)}>
