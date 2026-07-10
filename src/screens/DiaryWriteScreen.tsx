@@ -11,6 +11,7 @@ import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import { PERSONAS, MONTHS, DAYS, FOLDERS, DiaryFolder } from '../data/types';
 import { PersonaIcon, IconFolder } from '../components/icons/Line';
+import { AspectPhoto } from '../components/PhotoThumb';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { uploadPhoto, getCachedMe, patchEntry, generateComment } from '../api';
@@ -360,7 +361,7 @@ export default function DiaryWriteScreen() {
         {/* Photo */}
         {photo ? (
           <View style={styles.photoBox}>
-            <Image source={{ uri: photo }} style={styles.photoImg} resizeMode="cover" />
+            <AspectPhoto photo={photo} />
             <TouchableOpacity style={styles.photoRemove} onPress={() => setPhoto(null)}>
               <Text style={styles.photoRemoveText}>✕</Text>
             </TouchableOpacity>

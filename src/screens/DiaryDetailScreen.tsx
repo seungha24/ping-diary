@@ -7,7 +7,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import Tag from '../components/Tag';
-import { PhotoBlock } from '../components/PhotoThumb';
+import { AspectPhoto } from '../components/PhotoThumb';
 import IconChev from '../components/icons/IconChev';
 import IconEdit from '../components/icons/IconEdit';
 import IconTrash from '../components/icons/IconTrash';
@@ -195,7 +195,7 @@ export default function DiaryDetailScreen() {
 
         {entry.photo && (
           <View style={styles.photoWrapper}>
-            <PhotoBlock photo={entry.photo} height={200} />
+            <AspectPhoto photo={entry.photo} />
           </View>
         )}
 

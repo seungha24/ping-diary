@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { getPhotoPlaceholder } from '../data/types';
 import PHOTO_ASSETS from '../data/photoAssets';
@@ -40,6 +40,40 @@ export function PhotoBlock({ photo, height = 140 }: { photo: string | null; heig
     );
   }
   return <Image source={resolveSource(photo)} style={{ width: '100%', height }} resizeMode="cover" />;
+}
+
+/** 원본 비율 그대로 보여주는 전체 너비 사진 (일기 상세용) */
+export function AspectPhoto({ photo, radius = 0 }: { photo: string | null; radius?: number }) {
+  const [ratio, setRatio] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!photo || photo.startsWith('ph:')) return;
+    const src = resolveSource(photo);
+    if (src && typeof src === 'object' && 'uri' in src && src.uri) {
+      Image.getSize(src.uri, (w, h) => { if (w && h) setRatio(w / h); }, () => setRatio(4 / 3));
+    } else {
+      // 번들 에셋: 해상도 조회 (실패 시 4:3)
+      try {
+        const resolved = (Image as any).resolveAssetSource?.(src);
+        if (resolved?.width && resolved?.height) setRatio(resolved.width / resolved.height);
+        else setRatio(4 / 3);
+      } catch {
+        setRatio(4 / 3);
+      }
+    }
+  }, [photo]);
+
+  if (!photo) return null;
+  if (photo.startsWith('ph:')) return <PhotoBlock photo={photo} height={200} />;
+  // 세로로 극단적으로 긴 사진은 살짝만 제한 (화면 독점 방지)
+  const r = Math.max(ratio ?? 4 / 3, 0.6);
+  return (
+    <Image
+      source={resolveSource(photo)}
+      style={{ width: '100%', aspectRatio: r, borderRadius: radius }}
+      resizeMode="cover"
+    />
+  );
 }
 
 const styles = StyleSheet.create({
