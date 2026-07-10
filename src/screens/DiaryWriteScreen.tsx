@@ -15,6 +15,7 @@ import { AspectPhoto } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
+import { useGroups } from '../context/GroupsContext';
 import { uploadPhoto, getCachedMe, patchEntry, generateComment } from '../api';
 import { saveDraft, getDraft, clearDraft, DiaryDraft } from '../data/draftStore';
 import { notify } from '../notify';
@@ -120,6 +121,36 @@ export default function DiaryWriteScreen() {
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null); // 사진 확대
   const [uploading, setUploading] = useState(false);
   const [visibility, setVisibility] = useState<'private' | 'friends'>(editEntry?.visibility ?? 'private');
+  // 그룹 공개 시 공유할 그룹 선택
+  const { groups } = useGroups();
+  const [shareGroupIds, setShareGroupIds] = useState<Set<number>>(() => {
+    if (editEntry?.visibility === 'friends') {
+      return new Set(editEntry.sharedGroups?.length ? editEntry.sharedGroups : []);
+    }
+    return new Set();
+  });
+  const [groupPickOpen, setGroupPickOpen] = useState(false);
+
+  function openGroupPick() {
+    // 처음 열 때(선택 없음)는 모든 그룹 체크로 시작
+    if (shareGroupIds.size === 0 && groups.length > 0) {
+      setShareGroupIds(new Set(groups.map((g) => g.id)));
+    }
+    setGroupPickOpen(true);
+  }
+
+  function toggleShareGroup(id: number) {
+    setShareGroupIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function confirmGroupPick() {
+    setVisibility(shareGroupIds.size > 0 ? 'friends' : 'private');
+    setGroupPickOpen(false);
+  }
   const [calOpen, setCalOpen] = useState(false);
   const [promptIndex, setPromptIndex] = useState(0);
   const [personaModalOpen, setPersonaModalOpen] = useState(false);
@@ -276,6 +307,7 @@ export default function DiaryWriteScreen() {
                 const updated = {
                   ...editEntry, title, body, tags, persona, folder, dates: selectedDates,
                   photo: photoList[0] ?? null, photos: photoList.slice(1), visibility,
+                  sharedGroups: visibility === 'friends' && shareGroupIds.size > 0 ? Array.from(shareGroupIds) : null,
                   createdAt: createdAtISO,
                 };
                 updateLocal(updated); // 화면 즉시 반영
@@ -304,6 +336,7 @@ export default function DiaryWriteScreen() {
                   photo: photoList[0] ?? null,
                   photos: photoList.slice(1),
                   visibility,
+                  sharedGroups: visibility === 'friends' && shareGroupIds.size > 0 ? Array.from(shareGroupIds) : null,
                   createdAt: createdAtISO,
                 });
                 clearDraft(); // 발행했으니 임시저장본 정리
@@ -459,14 +492,18 @@ export default function DiaryWriteScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.visBtn, visibility === 'friends' && { borderColor: accent, backgroundColor: `${accent}0d` }]}
-            onPress={() => setVisibility('friends')}
+            onPress={openGroupPick}
           >
             <IconUsers color={visibility === 'friends' ? accent : '#6b7280'} size={15} />
-            <Text style={[styles.visLabel, visibility === 'friends' && { color: accent, fontWeight: '700' }]}>그룹 공개</Text>
+            <Text style={[styles.visLabel, visibility === 'friends' && { color: accent, fontWeight: '700' }]}>
+              그룹 공개{visibility === 'friends' && shareGroupIds.size > 0 ? ` · ${shareGroupIds.size}` : ''}
+            </Text>
           </TouchableOpacity>
         </View>
         {visibility === 'friends' && (
-          <Text style={styles.visHint}>참여 중인 그룹의 피드에 이 p!ng가 공개돼요.</Text>
+          <Text style={styles.visHint}>
+            선택한 {shareGroupIds.size}개 그룹의 피드에 이 p!ng가 공개돼요. 버튼을 다시 누르면 바꿀 수 있어요.
+          </Text>
         )}
 
         {/* Folder card */}
@@ -541,6 +578,47 @@ export default function DiaryWriteScreen() {
                   );
                 })}
               </ScrollView>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
+      {/* 그룹 공개 대상 선택 모달 */}
+      <Modal visible={groupPickOpen} transparent animationType="fade">
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={confirmGroupPick}>
+          <TouchableOpacity activeOpacity={1}>
+            <View style={styles.personaModal}>
+              <Text style={styles.personaModalTitle}>그룹 공개</Text>
+              <Text style={styles.personaModalSub}>
+                {groups.length === 0
+                  ? '아직 참여 중인 그룹이 없어요. 그룹을 만들거나 참여해보세요.'
+                  : '공개할 그룹을 골라주세요. 아무것도 고르지 않으면 나만 보기예요.'}
+              </Text>
+              <ScrollView style={{ maxHeight: 260 }} showsVerticalScrollIndicator={false}>
+                {groups.map((g) => {
+                  const active = shareGroupIds.has(g.id);
+                  return (
+                    <TouchableOpacity
+                      key={g.id}
+                      style={[styles.folderRow, active && { borderColor: accent, backgroundColor: hexToRgba(accent, 0.08) }]}
+                      onPress={() => toggleShareGroup(g.id)}
+                    >
+                      <Text style={[styles.folderRowLabel, active && { color: accent, fontWeight: '700' }]} numberOfLines={1}>
+                        {g.name}
+                      </Text>
+                      {active && <Text style={[styles.folderRowCheck, { color: accent }]}>✓</Text>}
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+              <TouchableOpacity
+                style={[styles.groupPickConfirm, { backgroundColor: accent }]}
+                onPress={confirmGroupPick}
+              >
+                <Text style={styles.groupPickConfirmText}>
+                  {shareGroupIds.size > 0 ? `${shareGroupIds.size}개 그룹에 공개` : '나만 보기로 저장'}
+                </Text>
+              </TouchableOpacity>
             </View>
           </TouchableOpacity>
         </TouchableOpacity>
@@ -747,6 +825,8 @@ const styles = StyleSheet.create({
   folderRowEmoji: { fontSize: 18, width: 22, textAlign: 'center' },
   folderRowLabel: { fontSize: 14, color: '#374151', flex: 1 },
   folderRowCheck: { fontSize: 15, fontWeight: '800' },
+  groupPickConfirm: { borderRadius: 12, paddingVertical: 13, alignItems: 'center', marginTop: 10 },
+  groupPickConfirmText: { fontSize: 14, fontWeight: '700', color: '#ffffff' },
   // AI 코멘트 컴팩트 카드
   aiCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
