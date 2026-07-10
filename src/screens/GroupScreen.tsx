@@ -689,10 +689,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
   },
   leaveBtn: {
-    paddingHorizontal: 10, height: 30, borderRadius: 8,
+    paddingHorizontal: 12, height: 36, borderRadius: 10,
     backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
   },
-  leaveBtnText: { fontSize: 12, color: '#6b7280', fontWeight: '600' },
+  leaveBtnText: { fontSize: 12.5, color: '#6b7280', fontWeight: '600' },
   viewToggle: {
     flexDirection: 'row', backgroundColor: '#f3f4f6',
     borderRadius: 10, padding: 3, gap: 2,
