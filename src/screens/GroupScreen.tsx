@@ -541,8 +541,8 @@ export default function GroupScreen() {
             <TouchableOpacity style={[styles.saveBtn, { backgroundColor: accent }]} onPress={shareInviteLink}>
               <Text style={styles.saveBtnText}>초대 메시지 공유</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionRow} onPress={() => setInviteOpen(false)}>
-              <Text style={[styles.actionText, { color: '#9ca3af' }]}>닫기</Text>
+            <TouchableOpacity style={styles.inviteCloseBtn} onPress={() => setInviteOpen(false)}>
+              <Text style={styles.inviteCloseText}>닫기</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -855,6 +855,11 @@ const styles = StyleSheet.create({
   inviteCodeText: { fontSize: 22, fontWeight: '800', letterSpacing: 3 },
   inviteCopyBtn: { borderWidth: 1.5, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
   inviteCopyText: { fontSize: 12, fontWeight: '700' },
+  inviteCloseBtn: {
+    backgroundColor: '#f3f4f6', borderRadius: 14, paddingVertical: 14,
+    alignItems: 'center', marginTop: 8,
+  },
+  inviteCloseText: { fontSize: 14, fontWeight: '600', color: '#374151' },
   renameInput: {
     fontSize: 15, color: '#111827',
     borderWidth: 1.5, borderColor: '#e5e7eb', borderRadius: 12,
