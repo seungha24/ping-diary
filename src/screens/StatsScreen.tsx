@@ -160,7 +160,7 @@ export default function StatsScreen() {
               {monthDiff >= 0 ? `↗ +${monthDiff}개` : `↘ ${monthDiff}개`}
             </Text>
           </View>
-          <View style={[styles.statChip, { backgroundColor: hexToRgba(accent, 0.07), borderColor: hexToRgba(accent, 0.25) }]}>
+          <View style={styles.statChip}>
             <Text style={styles.statChipLabel}>연속 기록</Text>
             <Text style={[styles.statChipVal, { color: accent }]}>{streak}일</Text>
           </View>
