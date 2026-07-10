@@ -40,6 +40,7 @@ function mapGroupEntry(row: any): DiaryEntry {
     dates: row.dates || [],
     tags: row.tags || [],
     photo: row.photo_url || null,
+    photos: Array.isArray(row.photos) ? row.photos : [],
     persona: row.persona || '',
     author: row.author || '멤버',
     authorId: row.user_id,

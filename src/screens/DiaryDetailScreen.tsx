@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView,
-  ActivityIndicator,
+  ActivityIndicator, Image,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -58,6 +58,9 @@ export default function DiaryDetailScreen() {
   const { groups } = useGroups();
   // 내 글인지: authorId가 없으면 내 목록에서 연 글, 있으면 내 id와 비교 (그룹 피드에서 연 남의 글은 읽기 전용)
   const isMine = !entry.authorId || entry.authorId === getCachedMe()?.id;
+  // 사진 갤러리: 대표 + 추가 사진, 작은 걸 탭하면 크게 보기 교체
+  const gallery = [entry.photo, ...(entry.photos ?? [])].filter(Boolean) as string[];
+  const [mainIdx, setMainIdx] = useState(0);
   const [shareOpen, setShareOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [published, setPublished] = useState(entry.visibility === 'friends');
@@ -202,10 +205,21 @@ export default function DiaryDetailScreen() {
         <Text style={styles.date}>{entryDateLabel(entry)}</Text>
         <Text style={styles.title}>{entry.title}</Text>
 
-        {entry.photo && (
-          <View style={styles.photoWrapper}>
-            <AspectPhoto photo={entry.photo} />
-          </View>
+        {gallery.length > 0 && (
+          <>
+            <View style={styles.photoWrapper}>
+              <AspectPhoto photo={gallery[mainIdx]} />
+            </View>
+            {gallery.length > 1 && (
+              <View style={styles.galleryRow}>
+                {gallery.map((p, i) => i !== mainIdx && (
+                  <TouchableOpacity key={p} onPress={() => setMainIdx(i)}>
+                    <Image source={{ uri: p }} style={styles.galleryThumb} />
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </>
         )}
 
         <View style={styles.meta}>
@@ -462,6 +476,8 @@ const styles = StyleSheet.create({
   date: { fontSize: 12, color: '#9ca3af' },
   title: { fontSize: 22, fontWeight: '800', color: '#111827', lineHeight: 30, letterSpacing: -0.3 },
   photoWrapper: { borderRadius: 16, overflow: 'hidden' },
+  galleryRow: { flexDirection: 'row', gap: 8 },
+  galleryThumb: { width: 64, height: 64, borderRadius: 12 },
   meta: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   divider: { height: 1, backgroundColor: '#f3f4f6' },
   body: { fontSize: 15, color: '#374151', lineHeight: 26 },

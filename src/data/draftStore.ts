@@ -7,6 +7,7 @@ export interface DiaryDraft {
   folder?: string;
   dates: number[];
   photo: string | null;
+  photos?: string[];
   visibility: 'private' | 'friends';
   savedAt: string; // ISO
 }

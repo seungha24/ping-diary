@@ -112,7 +112,10 @@ export default function DiaryWriteScreen() {
   const [tags, setTags] = useState<string[]>(editEntry?.tags ?? []);
   const [tagInput, setTagInput] = useState('');
   const [persona, setPersona] = useState(editEntry?.persona ?? '선생님');
-  const [photo, setPhoto] = useState<string | null>(editEntry?.photo ?? null);
+  // 사진 목록 (첫 번째가 대표=크게 보이는 사진, 최대 4장)
+  const [photoList, setPhotoList] = useState<string[]>(
+    () => [editEntry?.photo, ...(editEntry?.photos ?? [])].filter(Boolean) as string[]
+  );
   const [uploading, setUploading] = useState(false);
   const [visibility, setVisibility] = useState<'private' | 'friends'>(editEntry?.visibility ?? 'private');
   const [calOpen, setCalOpen] = useState(false);
@@ -137,7 +140,10 @@ export default function DiaryWriteScreen() {
     }
     saveDraft({
       title, body, tags, persona, folder,
-      dates: selectedDates, photo, visibility,
+      dates: selectedDates,
+      photo: photoList[0] ?? null,
+      photos: photoList.slice(1),
+      visibility,
       savedAt: new Date().toISOString(),
     });
     setDraftSaved(true);
@@ -154,7 +160,7 @@ export default function DiaryWriteScreen() {
     setPersona(d.persona);
     setFolder(d.folder);
     setSelectedDates(d.dates);
-    setPhoto(d.photo);
+    setPhotoList([d.photo, ...(d.photos ?? [])].filter(Boolean) as string[]);
     setVisibility(d.visibility);
     setDraftBanner(null);
   }
@@ -197,8 +203,12 @@ export default function DiaryWriteScreen() {
     setTagInput('');
   }
 
-  // 사진 선택 → 서버 업로드 → 공개 URL 저장
+  // 사진 선택 → 서버 업로드 → 목록에 추가 (최대 4장, 첫 장이 대표)
   async function pickPhoto() {
+    if (photoList.length >= 4) {
+      notify('사진은 최대 4장까지 넣을 수 있어요.');
+      return;
+    }
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') return;
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -210,12 +220,27 @@ export default function DiaryWriteScreen() {
     setUploading(true);
     try {
       const url = await uploadPhoto(result.assets[0].uri);
-      setPhoto(url);
+      setPhotoList((prev) => [...prev, url].slice(0, 4));
     } catch (e: any) {
       notify(e?.message ?? '사진 업로드에 실패했어요. 다시 시도해주세요.');
     } finally {
       setUploading(false);
     }
+  }
+
+  // 작은 사진을 대표(맨 앞)로 승격
+  function makeMainPhoto(idx: number) {
+    setPhotoList((prev) => {
+      if (idx <= 0 || idx >= prev.length) return prev;
+      const next = [...prev];
+      const [p] = next.splice(idx, 1);
+      next.unshift(p);
+      return next;
+    });
+  }
+
+  function removePhoto(idx: number) {
+    setPhotoList((prev) => prev.filter((_, i) => i !== idx));
   }
 
   function dateLabel() {
@@ -244,7 +269,10 @@ export default function DiaryWriteScreen() {
               if (editEntry) {
                 const personaChanged = editEntry.persona !== persona;
                 const needRegen = personaChanged && !!editEntry.aiComment;
-                const updated = { ...editEntry, title, body, tags, persona, folder, dates: selectedDates, photo, visibility };
+                const updated = {
+                  ...editEntry, title, body, tags, persona, folder, dates: selectedDates,
+                  photo: photoList[0] ?? null, photos: photoList.slice(1), visibility,
+                };
                 updateLocal(updated); // 화면 즉시 반영
                 playPing();
                 navigation.goBack();
@@ -268,7 +296,8 @@ export default function DiaryWriteScreen() {
                   persona,
                   folder,
                   dates: selectedDates,
-                  photo,
+                  photo: photoList[0] ?? null,
+                  photos: photoList.slice(1),
                   visibility,
                   createdAt: new Date().toISOString(),
                 });
@@ -358,14 +387,41 @@ export default function DiaryWriteScreen() {
           textAlignVertical="top"
         />
 
-        {/* Photo */}
-        {photo ? (
-          <View style={styles.photoBox}>
-            <AspectPhoto photo={photo} />
-            <TouchableOpacity style={styles.photoRemove} onPress={() => setPhoto(null)}>
-              <Text style={styles.photoRemoveText}>✕</Text>
-            </TouchableOpacity>
-          </View>
+        {/* Photo — 대표 1장 크게 + 나머지 작게 (최대 4장) */}
+        {photoList.length > 0 ? (
+          <>
+            <View style={styles.photoBox}>
+              <AspectPhoto photo={photoList[0]} />
+              <TouchableOpacity style={styles.photoRemove} onPress={() => removePhoto(0)}>
+                <Text style={styles.photoRemoveText}>✕</Text>
+              </TouchableOpacity>
+              <View style={styles.mainPhotoBadge}>
+                <Text style={styles.mainPhotoBadgeText}>대표</Text>
+              </View>
+            </View>
+            <View style={styles.photoThumbRow}>
+              {photoList.slice(1).map((p, i) => (
+                <View key={p} style={styles.photoThumbWrap}>
+                  <TouchableOpacity onPress={() => makeMainPhoto(i + 1)}>
+                    <Image source={{ uri: p }} style={styles.photoThumbImg} />
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.photoThumbRemove} onPress={() => removePhoto(i + 1)}>
+                    <Text style={styles.photoThumbRemoveText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+              {photoList.length < 4 && (
+                <TouchableOpacity style={styles.photoThumbAdd} onPress={pickPhoto} disabled={uploading}>
+                  {uploading
+                    ? <ActivityIndicator color="#9ca3af" size="small" />
+                    : <Text style={styles.photoThumbAddPlus}>+</Text>}
+                </TouchableOpacity>
+              )}
+            </View>
+            {photoList.length > 1 && (
+              <Text style={styles.photoHint}>작은 사진을 탭하면 대표 사진이 돼요</Text>
+            )}
+          </>
         ) : (
           <TouchableOpacity style={styles.photoAddBtn} onPress={pickPhoto} disabled={uploading}>
             {uploading
@@ -373,7 +429,7 @@ export default function DiaryWriteScreen() {
               : (
                 <View style={styles.photoAddInner}>
                   <IconCamera color="#6b7280" size={16} />
-                  <Text style={styles.photoAddText}>사진 추가</Text>
+                  <Text style={styles.photoAddText}>사진 추가 (최대 4장)</Text>
                 </View>
               )}
           </TouchableOpacity>
@@ -609,6 +665,28 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   photoRemoveText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  mainPhotoBadge: {
+    position: 'absolute', top: 8, left: 8,
+    backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 8,
+    paddingHorizontal: 8, paddingVertical: 3,
+  },
+  mainPhotoBadgeText: { color: '#fff', fontSize: 10.5, fontWeight: '700' },
+  photoThumbRow: { flexDirection: 'row', gap: 8, marginTop: 8 },
+  photoThumbWrap: { position: 'relative' },
+  photoThumbImg: { width: 64, height: 64, borderRadius: 12 },
+  photoThumbRemove: {
+    position: 'absolute', top: -6, right: -6,
+    width: 20, height: 20, borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center',
+  },
+  photoThumbRemoveText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  photoThumbAdd: {
+    width: 64, height: 64, borderRadius: 12,
+    borderWidth: 1.5, borderColor: '#e5e7eb', borderStyle: 'dashed',
+    alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb',
+  },
+  photoThumbAddPlus: { fontSize: 22, color: '#9ca3af' },
+  photoHint: { fontSize: 11.5, color: '#9ca3af', marginTop: 6 },
   photoAddBtn: {
     borderWidth: 1.5, borderColor: '#e5e7eb', borderStyle: 'dashed',
     borderRadius: 14, paddingVertical: 16, alignItems: 'center',

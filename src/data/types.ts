@@ -19,7 +19,8 @@ export interface DiaryEntry {
   body: string;
   dates: number[];
   tags: string[];
-  photo: string | null;
+  photo: string | null;        // 대표(크게 보이는) 사진
+  photos?: string[];           // 추가 사진 (작게 보이는 것들, 최대 3)
   persona: string;
   folder?: string;
   author?: string;
