@@ -140,7 +140,7 @@ export default function StatsScreen() {
             <Text style={styles.statLabel}>이번 달</Text>
           </TouchableOpacity>
           <View style={[styles.statCard, { backgroundColor: hexToRgba(accent, 0.07), borderColor: hexToRgba(accent, 0.25) }]}>
-            <Text style={[styles.statVal, { color: accent }]}>🔥 {streak}일</Text>
+            <Text style={[styles.statVal, { color: accent }]}>{streak}일</Text>
             <Text style={styles.statLabel}>연속 기록</Text>
           </View>
         </View>
@@ -156,6 +156,26 @@ export default function StatsScreen() {
           <View style={styles.statCardSm}>
             <Text style={styles.statValSm}>{avgLen}자</Text>
             <Text style={styles.statLabel}>평균 글 길이</Text>
+          </View>
+        </View>
+
+        {/* Monthly heatmap */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>월별 기록 · {thisYear}</Text>
+          <View style={styles.monthGrid}>
+            {monthCounts.map((count, i) => (
+              <TouchableOpacity
+                key={i}
+                style={[styles.monthCell, { backgroundColor: getMonthBg(count, maxMonth) }]}
+                onPress={() => (navigation as any).navigate('Calendar', { month: i })}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.monthLabel, { color: getMonthTextColor(count, maxMonth) }]}>{MONTHS[i]}</Text>
+                {count > 0 && (
+                  <Text style={[styles.monthCount, { color: getMonthTextColor(count, maxMonth) }]}>{count}</Text>
+                )}
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
@@ -184,26 +204,6 @@ export default function StatsScreen() {
               </TouchableOpacity>
             </>
           )}
-        </View>
-
-        {/* Monthly heatmap */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>월별 기록 · {thisYear}</Text>
-          <View style={styles.monthGrid}>
-            {monthCounts.map((count, i) => (
-              <TouchableOpacity
-                key={i}
-                style={[styles.monthCell, { backgroundColor: getMonthBg(count, maxMonth) }]}
-                onPress={() => (navigation as any).navigate('Calendar', { month: i })}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.monthLabel, { color: getMonthTextColor(count, maxMonth) }]}>{MONTHS[i]}</Text>
-                {count > 0 && (
-                  <Text style={[styles.monthCount, { color: getMonthTextColor(count, maxMonth) }]}>{count}</Text>
-                )}
-              </TouchableOpacity>
-            ))}
-          </View>
         </View>
 
         {/* Tag bar chart */}
