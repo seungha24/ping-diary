@@ -56,6 +56,8 @@ export default function DiaryDetailScreen() {
   const remaining = useCountdown(entry.createdAt);
   const isUnlocked = remaining <= 0;
   const { groups } = useGroups();
+  // 내 글인지: authorId가 없으면 내 목록에서 연 글, 있으면 내 id와 비교 (그룹 피드에서 연 남의 글은 읽기 전용)
+  const isMine = !entry.authorId || entry.authorId === getCachedMe()?.id;
   const [shareOpen, setShareOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [published, setPublished] = useState(entry.visibility === 'friends');
@@ -175,21 +177,25 @@ export default function DiaryDetailScreen() {
           <IconChev dir="left" size={18} color="#9ca3af" />
           <Text style={styles.backText}>목록</Text>
         </TouchableOpacity>
-        <View style={styles.actions}>
-          <TouchableOpacity style={[styles.shareIconBtn, { backgroundColor: accent }]} onPress={() => setShareOpen(true)}>
-            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-              <Path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-              <Path d="M16 6l-4-4-4 4" />
-              <Line x1="12" y1="2" x2="12" y2="15" />
-            </Svg>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn} onPress={handleEdit}>
-            <IconEdit size={16} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconBtn} onPress={() => setDeleteOpen(true)}>
-            <IconTrash size={16} />
-          </TouchableOpacity>
-        </View>
+        {isMine ? (
+          <View style={styles.actions}>
+            <TouchableOpacity style={[styles.shareIconBtn, { backgroundColor: accent }]} onPress={() => setShareOpen(true)}>
+              <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
+                <Path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                <Path d="M16 6l-4-4-4 4" />
+                <Line x1="12" y1="2" x2="12" y2="15" />
+              </Svg>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconBtn} onPress={handleEdit}>
+              <IconEdit size={16} />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.iconBtn} onPress={() => setDeleteOpen(true)}>
+              <IconTrash size={16} />
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <Text style={styles.readOnlyBadge}>{entry.author ? `${entry.author} 님의 p!ng` : '멤버의 p!ng'}</Text>
+        )}
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
@@ -206,13 +212,15 @@ export default function DiaryDetailScreen() {
           {entry.tags.map((t) => <Tag key={t} label={t} />)}
         </View>
 
-        <TouchableOpacity style={styles.folderChip} onPress={() => setFolderOpen(true)}>
-          <IconFolder size={13} color={accent} />
-          <Text style={styles.folderChipText}>
-            {currentFolder ? `${currentFolder.emoji} ${currentFolder.name}` : '폴더에 넣기'}
-          </Text>
-          <IconChev dir="down" size={12} color="#9ca3af" />
-        </TouchableOpacity>
+        {isMine && (
+          <TouchableOpacity style={styles.folderChip} onPress={() => setFolderOpen(true)}>
+            <IconFolder size={13} color={accent} />
+            <Text style={styles.folderChipText}>
+              {currentFolder ? `${currentFolder.emoji} ${currentFolder.name}` : '폴더에 넣기'}
+            </Text>
+            <IconChev dir="down" size={12} color="#9ca3af" />
+          </TouchableOpacity>
+        )}
 
         <View style={styles.divider} />
 
@@ -223,15 +231,22 @@ export default function DiaryDetailScreen() {
           <View style={styles.aiTitleRow}>
             <IconSparkle size={15} color={accent} />
             <Text style={styles.aiTitle}>AI 코멘트</Text>
-            <TouchableOpacity
-              style={styles.aiPersonaBtn}
-              onPress={() => setPersonaOpen(true)}
-              disabled={genLoading}
-            >
-              <PersonaIcon persona={persona} size={13} color={accent} />
-              <Text style={[styles.aiPersona, { color: accent }]}>{persona}</Text>
-              <IconChev dir="down" size={12} color={accent} />
-            </TouchableOpacity>
+            {isMine ? (
+              <TouchableOpacity
+                style={styles.aiPersonaBtn}
+                onPress={() => setPersonaOpen(true)}
+                disabled={genLoading}
+              >
+                <PersonaIcon persona={persona} size={13} color={accent} />
+                <Text style={[styles.aiPersona, { color: accent }]}>{persona}</Text>
+                <IconChev dir="down" size={12} color={accent} />
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.aiPersonaRow}>
+                <PersonaIcon persona={persona} size={13} color="#9ca3af" />
+                <Text style={styles.aiPersona}>{persona}</Text>
+              </View>
+            )}
           </View>
 
           {aiComment ? (
@@ -255,15 +270,17 @@ export default function DiaryDetailScreen() {
                 {isUnlocked ? '아직 코멘트가 없어요' : 'p!ng 작성 24시간 후 공개돼요'}
               </Text>
               {!isUnlocked && <Text style={styles.aiCountdown}>{formatRemaining(remaining)}</Text>}
-              <TouchableOpacity
-                style={[styles.genBtn, { backgroundColor: accent }, genLoading && { opacity: 0.6 }]}
-                onPress={handleGenerateComment}
-                disabled={genLoading}
-              >
-                {genLoading
-                  ? <ActivityIndicator color="#fff" size="small" />
-                  : <Text style={styles.genBtnText}>{isUnlocked ? '지금 코멘트 받기' : '지금 미리 받기'}</Text>}
-              </TouchableOpacity>
+              {isMine && (
+                <TouchableOpacity
+                  style={[styles.genBtn, { backgroundColor: accent }, genLoading && { opacity: 0.6 }]}
+                  onPress={handleGenerateComment}
+                  disabled={genLoading}
+                >
+                  {genLoading
+                    ? <ActivityIndicator color="#fff" size="small" />
+                    : <Text style={styles.genBtnText}>{isUnlocked ? '지금 코멘트 받기' : '지금 미리 받기'}</Text>}
+                </TouchableOpacity>
+              )}
             </View>
           )}
         </View>
@@ -436,6 +453,7 @@ const styles = StyleSheet.create({
   backBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   backText: { fontSize: 13, color: '#6b7280' },
   actions: { flexDirection: 'row', gap: 8 },
+  readOnlyBadge: { fontSize: 12, color: '#9ca3af', fontWeight: '600' },
   iconBtn: {
     width: 36, height: 36, borderRadius: 10,
     backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
