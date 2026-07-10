@@ -3,6 +3,7 @@
 // - 그룹 멤버가 새 p!ng를 공유하면 → 'diary' 알림
 // 읽음 상태는 localStorage에 보관해 화면을 나가도 유지된다.
 import { fetchEntries, fetchGroups, fetchGroupEntries, getCachedMe, getMe } from '../api';
+import { DiaryEntry } from './types';
 
 export interface Notif {
   id: string;                 // 'ai-{entryId}' | 'diary-{groupId}-{entryId}'
@@ -11,6 +12,7 @@ export interface Notif {
   body: string;
   time: string;               // ISO
   read: boolean;
+  entry?: DiaryEntry;         // 탭하면 이동할 일기
 }
 
 let notifs: Notif[] = [];
@@ -90,6 +92,7 @@ export async function refreshNotifs() {
           body: `${e.persona || 'AI'} · ${e.title || '제목 없음'}`,
           time: e.createdAt,
           read: false,
+          entry: e,
         });
       }
     }
@@ -107,6 +110,21 @@ export async function refreshNotifs() {
             body: `${g.name} · ${r.title || (r.content || '').slice(0, 24)}`,
             time: r.created_at,
             read: false,
+            // 그룹 피드 행 → DiaryEntry (GroupScreen과 동일한 매핑)
+            entry: {
+              id: r.id,
+              title: r.title || '',
+              body: r.content || '',
+              dates: r.dates || [],
+              tags: r.tags || [],
+              photo: r.photo_url || null,
+              photos: Array.isArray(r.photos) ? r.photos : [],
+              persona: r.persona || '',
+              author: r.author || '멤버',
+              authorId: r.user_id,
+              createdAt: r.created_at,
+              aiComment: r.ai_comment ?? undefined,
+            },
           }));
       })
     );

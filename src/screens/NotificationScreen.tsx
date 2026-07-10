@@ -78,7 +78,10 @@ export default function NotificationScreen() {
             <TouchableOpacity
               key={n.id}
               style={[styles.notifCard, !n.read && styles.notifCardUnread]}
-              onPress={() => markRead(n.id)}
+              onPress={() => {
+                markRead(n.id);
+                if (n.entry) (navigation as any).navigate('DiaryDetail', { entry: n.entry });
+              }}
               activeOpacity={0.7}
             >
               <View style={[styles.iconBox, { backgroundColor: t.bg }]}>
