@@ -36,17 +36,19 @@ export default function PhotoLightbox({ photo, onClose }: Props) {
 
   const placeholder = photo.startsWith('ph:') ? getPhotoPlaceholder(photo) : null;
   const assetSource = photo.startsWith('asset:') ? PHOTO_ASSETS[photo.slice(6)] : null;
-  const size = 220;
+  // 폰 프레임(393pt) 안에서 여백만 남기고 크게
+  const boxW = 345;
+  const boxH = 520;
 
   return (
     <Modal visible transparent statusBarTranslucent animationType="none">
       <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={close} />
 
-        <Animated.View style={[styles.card, { width: size, height: size, transform: [{ scale: scaleAnim }] }]}>
+        <Animated.View style={[styles.card, { width: boxW, height: placeholder ? boxW : boxH, transform: [{ scale: scaleAnim }] }]}>
           {placeholder ? (
             <View style={[styles.placeholder, { backgroundColor: placeholder.bg }]}>
-              <Text style={{ fontSize: size * 0.38 }}>{placeholder.emoji}</Text>
+              <Text style={{ fontSize: boxW * 0.38 }}>{placeholder.emoji}</Text>
             </View>
           ) : (
             <Image source={assetSource ?? { uri: photo }} style={styles.image} resizeMode="contain" />
