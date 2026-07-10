@@ -15,6 +15,18 @@ function Base({ size = 16, color = '#6b7280', children }: { size?: number; color
 export function IconCamera({ color, size }: IconProps) {
   return <Base size={size} color={color}><Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" /><Circle cx="12" cy="13" r="4" /></Base>;
 }
+export function IconTrophy({ color, size }: IconProps) {
+  return (
+    <Base size={size} color={color}>
+      <Path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+      <Path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+      <Path d="M4 22h16" />
+      <Path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+      <Path d="M14 14.66V17c0 .55.47.98.97 1.21 1.18.54 2.03 2.03 2.03 4.34" />
+      <Path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+    </Base>
+  );
+}
 export function IconLock({ color, size }: IconProps) {
   return <Base size={size} color={color}><Rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><Path d="M7 11V7a5 5 0 0 1 10 0v4" /></Base>;
 }

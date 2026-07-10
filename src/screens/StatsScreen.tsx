@@ -10,7 +10,7 @@ import { MONTHS, entryDateLabel } from '../data/types';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { getMonthlyAwards, MonthlyAward } from '../api';
-import { IconX, PersonaIcon } from '../components/icons/Line';
+import { IconX, PersonaIcon, IconTrophy } from '../components/icons/Line';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -283,7 +283,7 @@ export default function StatsScreen() {
         {/* 월말 p!ng 어워즈 */}
         <View style={[styles.card, { borderColor: hexToRgba(accent, 0.3) }]}>
           <View style={styles.reportHeader}>
-            <Text style={{ fontSize: 15 }}>🏆</Text>
+            <IconTrophy size={15} color={accent} />
             <Text style={[styles.cardTitle, { flex: 1 }]}>{reportMonth + 1}월 p!ng 어워즈</Text>
           </View>
           {monthAwards ? (
@@ -300,7 +300,8 @@ export default function StatsScreen() {
                       onPress={() => revealAward(key)}
                       activeOpacity={0.8}
                     >
-                      <Text style={styles.awardEnvelopeText}>🏆 {a.award}</Text>
+                      <IconTrophy size={16} color="#9ca3af" />
+                      <Text style={styles.awardEnvelopeText}>{a.award}</Text>
                       <Text style={[styles.awardEnvelopeHint, { color: accent }]}>탭해서 개봉</Text>
                     </TouchableOpacity>
                   );
@@ -326,7 +327,7 @@ export default function StatsScreen() {
               })}
               {!!monthAwards.closing &&
                 monthAwards.awards.every((_, i) => revealed.has(`${reportMonth}-${i}`)) && (
-                <Text style={styles.awardClosing}>🎬 {monthAwards.closing}</Text>
+                <Text style={styles.awardClosing}>{monthAwards.closing}</Text>
               )}
             </>
           ) : (
@@ -342,7 +343,7 @@ export default function StatsScreen() {
               >
                 {awardsLoading
                   ? <ActivityIndicator color="#fff" size="small" />
-                  : <Text style={styles.reportBtnText}>시상식 열기 🏆</Text>}
+                  : <Text style={styles.reportBtnText}>시상식 열기</Text>}
               </TouchableOpacity>
             </>
           )}
