@@ -133,6 +133,27 @@ export default function HomeScreen() {
     setHoverIdx(index);
   }
 
+  // 드래그 중 미리보기 순서: 다른 폴더들이 빈 자리로 비켜나도록 각 카드의 이동 오프셋 계산
+  const previewOrder: DiaryFolder[] | null = (dragId && hoverIdx != null)
+    ? (() => {
+        const list = [...allFolders];
+        const from = list.findIndex((f) => f.id === dragId);
+        if (from < 0) return null;
+        const [m] = list.splice(from, 1);
+        list.splice(hoverIdx, 0, m);
+        return list;
+      })()
+    : null;
+
+  function slotOffset(fromIdx: number, toIdx: number) {
+    const pitchX = gridWRef.current * 0.52; // 칸 폭(48%) + 열 간격(4%)
+    const rowH = cellHRef.current + 12;
+    return {
+      x: ((toIdx % 2) - (fromIdx % 2)) * pitchX,
+      y: (Math.floor(toIdx / 2) - Math.floor(fromIdx / 2)) * rowH,
+    };
+  }
+
   // 폴더 커버·사용자 폴더(서버 저장분)를 로그인(토큰 준비) 후 불러오기 — 토큰 늦게 붙어도 재실행
   useEffect(() => {
     if (!token) return;
@@ -466,14 +487,21 @@ export default function HomeScreen() {
                   const count = entries.filter((e) => e.folder === folder.id).length;
                   const cover = folderCovers[folder.id];
                   const isDragging = dragId === folder.id;
-                  const isTarget = dragId !== null && !isDragging && hoverIdx === index;
+                  // 드래그 중이면 다른 카드들은 미리보기 위치로 비켜난다
+                  let shift = { x: 0, y: 0 };
+                  if (previewOrder && !isDragging) {
+                    const p = previewOrder.findIndex((f) => f.id === folder.id);
+                    if (p >= 0 && p !== index) shift = slotOffset(index, p);
+                  }
                   return (
                     <TouchableOpacity
                       key={folder.id}
                       style={[
                         styles.gridCell, styles.glowCard,
                         { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) },
-                        isTarget && { borderColor: accent, borderWidth: 2, borderStyle: 'dashed' },
+                        (shift.x !== 0 || shift.y !== 0) && {
+                          transform: [{ translateX: shift.x }, { translateY: shift.y }],
+                        },
                         isDragging && {
                           transform: [{ translateX: dragPos.dx }, { translateY: dragPos.dy }, { scale: 1.05 }],
                           zIndex: 20, elevation: 10, opacity: 0.92, borderColor: accent, borderWidth: 2,
