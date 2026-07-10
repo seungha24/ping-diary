@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView,
-  Modal, Pressable, Image, TextInput,
+  Modal, Pressable, Image, TextInput, PanResponder,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -64,23 +64,73 @@ export default function HomeScreen() {
   // 저장된 순서(사용자 재정렬 포함)대로 폴더 목록 구성
   const allFolders: DiaryFolder[] = mergeFolders(customFolders, hiddenFolders);
 
-  // 폴더 순서 바꾸기: 길게 눌러 선택 → 이동할 위치의 폴더를 탭
-  const [reorderId, setReorderId] = useState<string | null>(null);
+  // ── 폴더 드래그 재정렬: 길게 눌러 집어서 원하는 위치로 끌어다 놓기 ──
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dragPos, setDragPos] = useState({ dx: 0, dy: 0 });
+  const [hoverIdx, setHoverIdx] = useState<number | null>(null);
+  const dragIdRef = useRef<string | null>(null);
+  const dragIndexRef = useRef(0);
+  const gridWRef = useRef(340);
+  const cellHRef = useRef(150);
 
-  function moveFolder(targetId: string) {
-    if (!reorderId || reorderId === targetId) { setReorderId(null); return; }
-    const list = [...allFolders];
-    const fromIdx = list.findIndex((f) => f.id === reorderId);
-    const toIdx = list.findIndex((f) => f.id === targetId);
-    if (fromIdx < 0 || toIdx < 0) { setReorderId(null); return; }
-    const [moved] = list.splice(fromIdx, 1);
-    list.splice(toIdx, 0, moved);
-    // 숨긴 폴더 항목은 순서 목록 뒤에 붙여 보존
-    const hiddenEntries = customFolders.filter((f) => hiddenFolders.includes(f.id));
-    const next = [...list, ...hiddenEntries];
-    setCustomFolders(next);
-    setReorderId(null);
-    saveFolders(next).catch(() => notify('순서 저장에 실패했어요.'));
+  // PanResponder는 한 번만 생성하고, 최신 상태는 ref를 통해 참조 (stale closure 방지)
+  const dragHandlersRef = useRef({
+    move: (_dx: number, _dy: number) => {},
+    release: (_dx: number, _dy: number) => {},
+  });
+
+  function computeDragTarget(dx: number, dy: number): number {
+    const i = dragIndexRef.current;
+    const slotW = gridWRef.current * 0.52;              // 칸 폭(48%) + 열 간격(4%)
+    const rowH = cellHRef.current + 12;                 // 카드 높이 + rowGap
+    const col = i % 2;
+    const row = Math.floor(i / 2);
+    const nc = Math.min(1, Math.max(0, col + Math.round(dx / slotW)));
+    const nr = Math.max(0, row + Math.round(dy / rowH));
+    return Math.min(allFolders.length - 1, nr * 2 + nc);
+  }
+
+  dragHandlersRef.current = {
+    move(dx, dy) {
+      setDragPos({ dx, dy });
+      setHoverIdx(computeDragTarget(dx, dy));
+    },
+    release(dx, dy) {
+      const from = dragIndexRef.current;
+      const target = computeDragTarget(dx, dy);
+      dragIdRef.current = null;
+      setDragId(null);
+      setHoverIdx(null);
+      setDragPos({ dx: 0, dy: 0 });
+      if (target !== from) {
+        const list = [...allFolders];
+        const [moved] = list.splice(from, 1);
+        list.splice(target, 0, moved);
+        // 숨긴 폴더 항목은 순서 목록 뒤에 붙여 보존
+        const hiddenEntries = customFolders.filter((f) => hiddenFolders.includes(f.id));
+        const next = [...list, ...hiddenEntries];
+        setCustomFolders(next);
+        saveFolders(next).catch(() => notify('순서 저장에 실패했어요.'));
+      }
+    },
+  };
+
+  const dragPan = useRef(
+    PanResponder.create({
+      // 길게 눌러 드래그가 시작된 경우에만 제스처를 가로챈다 (평소엔 탭·스크롤 그대로)
+      onMoveShouldSetPanResponderCapture: () => dragIdRef.current != null,
+      onPanResponderMove: (_e, g) => dragHandlersRef.current.move(g.dx, g.dy),
+      onPanResponderRelease: (_e, g) => dragHandlersRef.current.release(g.dx, g.dy),
+      onPanResponderTerminate: (_e, g) => dragHandlersRef.current.release(g.dx, g.dy),
+    })
+  ).current;
+
+  function startDrag(folderId: string, index: number) {
+    dragIdRef.current = folderId;
+    dragIndexRef.current = index;
+    setDragId(folderId);
+    setDragPos({ dx: 0, dy: 0 });
+    setHoverIdx(index);
   }
 
   // 폴더 커버·사용자 폴더(서버 저장분)를 로그인(토큰 준비) 후 불러오기 — 토큰 늦게 붙어도 재실행
@@ -403,34 +453,37 @@ export default function HomeScreen() {
               </View>
 
               {personalView === 'folder' ? (
-            <ScrollView contentContainerStyle={styles.folderList}>
-              {reorderId ? (
-                <View style={[styles.reorderBanner, { borderColor: hexToRgba(accent, 0.3), backgroundColor: hexToRgba(accent, 0.07) }]}>
-                  <Text style={styles.reorderBannerText}>이동할 위치의 폴더를 탭하세요</Text>
-                  <TouchableOpacity onPress={() => setReorderId(null)}>
-                    <Text style={[styles.reorderCancel, { color: accent }]}>취소</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <Text style={styles.folderHint}>폴더를 길게 누르면 순서를 바꿀 수 있어요</Text>
-              )}
-              <View style={styles.folderGrid}>
-                {allFolders.map((folder) => {
+            <ScrollView contentContainerStyle={styles.folderList} scrollEnabled={!dragId}>
+              <Text style={styles.folderHint}>
+                {dragId ? '원하는 위치로 끌어다 놓으세요' : '폴더를 길게 누른 채 끌면 순서를 바꿀 수 있어요'}
+              </Text>
+              <View
+                style={styles.folderGrid}
+                {...dragPan.panHandlers}
+                onLayout={(e) => { gridWRef.current = e.nativeEvent.layout.width; }}
+              >
+                {allFolders.map((folder, index) => {
                   const count = entries.filter((e) => e.folder === folder.id).length;
                   const cover = folderCovers[folder.id];
-                  const picking = reorderId === folder.id;
+                  const isDragging = dragId === folder.id;
+                  const isTarget = dragId !== null && !isDragging && hoverIdx === index;
                   return (
                     <TouchableOpacity
                       key={folder.id}
                       style={[
                         styles.gridCell, styles.glowCard,
                         { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) },
-                        picking && { borderColor: accent, borderWidth: 2, opacity: 0.85 },
+                        isTarget && { borderColor: accent, borderWidth: 2, borderStyle: 'dashed' },
+                        isDragging && {
+                          transform: [{ translateX: dragPos.dx }, { translateY: dragPos.dy }, { scale: 1.05 }],
+                          zIndex: 20, elevation: 10, opacity: 0.92, borderColor: accent, borderWidth: 2,
+                        },
                       ]}
                       activeOpacity={0.85}
-                      onPress={() => reorderId ? moveFolder(folder.id) : setSelectedFolder(folder)}
-                      onLongPress={() => setReorderId(folder.id)}
+                      onPress={() => !dragId && setSelectedFolder(folder)}
+                      onLongPress={() => startDrag(folder.id, index)}
                       delayLongPress={300}
+                      onLayout={index === 0 ? (e) => { cellHRef.current = e.nativeEvent.layout.height; } : undefined}
                     >
                       <View style={styles.folderCoverWrap}>
                         {cover ? (
