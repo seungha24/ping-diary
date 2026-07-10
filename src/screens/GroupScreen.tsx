@@ -7,7 +7,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Line, Rect, Circle, Path } from 'react-native-svg';
 import { RootStackParamList } from '../navigation/RootNavigator';
-import { PhotoBlock } from '../components/PhotoThumb';
+import { PhotoBlock, PhotoThumb } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
@@ -128,14 +128,16 @@ function ListCard({
           <Text style={styles.moreDots}>⋯</Text>
         </TouchableOpacity>
       </View>
-      {entry.photo && (
-        <Pressable style={{ width: '100%' }} onPress={() => onPhotoPress(entry.photo!)}>
-          <PhotoBlock photo={entry.photo} height={140} />
-        </Pressable>
-      )}
       <Pressable style={styles.listCardBody} onPress={onOpen}>
         <Text style={styles.listCardTitle}>{entry.title}</Text>
-        <Text style={styles.listCardPreview} numberOfLines={2}>{entry.body}</Text>
+        <View style={styles.listCardRow}>
+          {entry.photo && (
+            <Pressable onPress={() => onPhotoPress(entry.photo!)}>
+              <PhotoThumb photo={entry.photo} size={48} radius={10} />
+            </Pressable>
+          )}
+          <Text style={[styles.listCardPreview, { flex: 1 }]} numberOfLines={3}>{entry.body}</Text>
+        </View>
         <View style={styles.tagRow}>
           {entry.tags.map((t) => <Tag key={t} label={t} />)}
         </View>
@@ -712,6 +714,7 @@ const styles = StyleSheet.create({
   authorName: { fontSize: 13, fontWeight: '700', color: '#1f2937' },
   entryDate: { fontSize: 11, color: '#9ca3af', marginTop: 1 },
   listCardBody: { padding: 14, paddingTop: 10, gap: 6 },
+  listCardRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   listCardTitle: { fontSize: 14, fontWeight: '700', color: '#111827' },
   listCardPreview: { fontSize: 12, color: '#6b7280', lineHeight: 18 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 },
