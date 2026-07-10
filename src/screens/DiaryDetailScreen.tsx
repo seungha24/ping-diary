@@ -51,9 +51,11 @@ function useCountdown(createdAt: string) {
 
 export default function DiaryDetailScreen() {
   const navigation = useNavigation<Nav>();
-  const { entry } = useRoute<Route>().params;
+  const { entry: routeEntry } = useRoute<Route>().params;
   const { accent } = useTheme();
-  const { deleteEntry, updateLocal, updateEntry } = useEntries();
+  const { deleteEntry, updateLocal, updateEntry, entries } = useEntries();
+  // 수정 후 돌아와도 최신 내용이 바로 보이게, 라우트 스냅샷 대신 컨텍스트의 최신 엔트리를 사용
+  const entry = entries.find((e) => e.id === routeEntry.id) ?? routeEntry;
   const remaining = useCountdown(entry.createdAt);
   const isUnlocked = remaining <= 0;
   const { groups } = useGroups();
@@ -79,6 +81,14 @@ export default function DiaryDetailScreen() {
   const [genLoading, setGenLoading] = useState(false);
   const [folder, setFolder] = useState<string | undefined>(entry.folder);
   const [folderOpen, setFolderOpen] = useState(false);
+
+  // 수정 화면에서 바꾼 내용(페르소나·코멘트·폴더·공개범위)이 돌아오자마자 반영되게 동기화
+  useEffect(() => {
+    setAiComment(entry.aiComment);
+    setPersona(entry.persona);
+    setFolder(entry.folder);
+    setPublished(entry.visibility === 'friends');
+  }, [entry.aiComment, entry.persona, entry.folder, entry.visibility]);
 
   // 홈 화면과 동일하게 기본 폴더(숨김 제외·이름/이모지 오버라이드) + 사용자 생성 폴더를 합친다.
   const cached = getCachedMe();
