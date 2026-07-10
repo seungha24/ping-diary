@@ -118,7 +118,7 @@ export default function DiaryWriteScreen() {
   const [calOpen, setCalOpen] = useState(false);
   const [promptIndex, setPromptIndex] = useState(0);
   const [personaModalOpen, setPersonaModalOpen] = useState(false);
-  const [folder, setFolder] = useState<string | undefined>(editEntry?.folder ?? undefined);
+  const [folder, setFolder] = useState<string | undefined>(editEntry?.folder ?? route.params?.folder ?? undefined);
   const [folderModalOpen, setFolderModalOpen] = useState(false);
   // 달력은 수정 시 원래 작성월, 새 글은 이번 달로 기본 설정
   const initDate = editEntry ? new Date(editEntry.createdAt) : today;

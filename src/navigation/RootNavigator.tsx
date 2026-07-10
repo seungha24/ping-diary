@@ -35,7 +35,7 @@ export interface GroupNav {
 export type RootStackParamList = {
   Splash: undefined;
   Main: undefined;
-  DiaryWrite: { entry?: DiaryEntry } | undefined;
+  DiaryWrite: { entry?: DiaryEntry; folder?: string } | undefined;
   DiaryDetail: { entry: DiaryEntry };
   Group: { group: GroupNav };
   GroupCreate: undefined;

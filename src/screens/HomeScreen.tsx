@@ -444,7 +444,11 @@ export default function HomeScreen() {
 
           <TouchableOpacity
             style={[styles.fab, { backgroundColor: accent }]}
-            onPress={() => setFabMenuOpen(true)}
+            onPress={() => {
+              // 폴더 안에서는 바로 그 폴더로 지정된 새 글 작성
+              if (selectedFolder) navigation.navigate('DiaryWrite', { folder: selectedFolder.id });
+              else setFabMenuOpen(true);
+            }}
           >
             <IconPlus color="#ffffff" size={22} />
           </TouchableOpacity>
