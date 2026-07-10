@@ -473,7 +473,7 @@ export default function DiaryWriteScreen() {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.aiCardTitle}>폴더</Text>
-            <Text style={styles.aiCardSub}>{currentFolder ? `${currentFolder.emoji} ${currentFolder.name}` : '폴더 없음'}</Text>
+            <Text style={styles.aiCardSub}>{currentFolder ? currentFolder.name : '폴더 없음'}</Text>
           </View>
           <IconChev dir="right" size={16} color="#9ca3af" />
         </TouchableOpacity>

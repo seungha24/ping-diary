@@ -242,7 +242,7 @@ export default function DiaryDetailScreen() {
           <TouchableOpacity style={styles.folderChip} onPress={() => setFolderOpen(true)}>
             <IconFolder size={13} color={accent} />
             <Text style={styles.folderChipText}>
-              {currentFolder ? `${currentFolder.emoji} ${currentFolder.name}` : '폴더에 넣기'}
+              {currentFolder ? currentFolder.name : '폴더에 넣기'}
             </Text>
             <IconChev dir="down" size={12} color="#9ca3af" />
           </TouchableOpacity>
