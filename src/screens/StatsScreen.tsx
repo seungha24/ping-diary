@@ -143,20 +143,6 @@ export default function StatsScreen() {
           </View>
         </View>
 
-        {/* 지난달 대비 / 평균 글 길이 */}
-        <View style={styles.statsGrid}>
-          <View style={styles.statCardSm}>
-            <Text style={[styles.statValSm, { color: monthDiff >= 0 ? '#10b981' : '#ef4444' }]}>
-              {monthDiff >= 0 ? `↗ +${monthDiff}개` : `↘ ${monthDiff}개`}
-            </Text>
-            <Text style={styles.statLabel}>지난달 대비</Text>
-          </View>
-          <View style={styles.statCardSm}>
-            <Text style={styles.statValSm}>{avgLen}자</Text>
-            <Text style={styles.statLabel}>평균 글 길이</Text>
-          </View>
-        </View>
-
         {/* Monthly heatmap */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>월별 기록 · {thisYear}</Text>
@@ -175,33 +161,6 @@ export default function StatsScreen() {
               </TouchableOpacity>
             ))}
           </View>
-        </View>
-
-        {/* AI 심층 리포트 */}
-        <View style={[styles.card, { borderColor: hexToRgba(accent, 0.3) }]}>
-          <View style={styles.reportHeader}>
-            <IconSparkle size={15} color={accent} />
-            <Text style={styles.cardTitle}>{thisMonth + 1}월 AI 리포트</Text>
-          </View>
-          {report ? (
-            <Text style={styles.reportText}>{report}</Text>
-          ) : (
-            <>
-              <Text style={styles.reportDesc}>
-                한 달치 기록을 AI가 읽고 감정 흐름·반복된 주제·하이라이트를 요약해줘요.
-              </Text>
-              {reportError && <Text style={styles.reportError}>{reportError}</Text>}
-              <TouchableOpacity
-                style={[styles.reportBtn, { backgroundColor: accent }, reportLoading && { opacity: 0.6 }]}
-                onPress={loadReport}
-                disabled={reportLoading}
-              >
-                {reportLoading
-                  ? <ActivityIndicator color="#fff" size="small" />
-                  : <Text style={styles.reportBtnText}>한 달 기록 요약받기</Text>}
-              </TouchableOpacity>
-            </>
-          )}
         </View>
 
         {/* Tag bar chart */}
@@ -293,6 +252,47 @@ export default function StatsScreen() {
             )}
           </View>
         )}
+
+        {/* 지난달 대비 / 평균 글 길이 */}
+        <View style={styles.statsGrid}>
+          <View style={styles.statCardSm}>
+            <Text style={[styles.statValSm, { color: monthDiff >= 0 ? '#10b981' : '#ef4444' }]}>
+              {monthDiff >= 0 ? `↗ +${monthDiff}개` : `↘ ${monthDiff}개`}
+            </Text>
+            <Text style={styles.statLabel}>지난달 대비</Text>
+          </View>
+          <View style={styles.statCardSm}>
+            <Text style={styles.statValSm}>{avgLen}자</Text>
+            <Text style={styles.statLabel}>평균 글 길이</Text>
+          </View>
+        </View>
+
+        {/* AI 심층 리포트 */}
+        <View style={[styles.card, { borderColor: hexToRgba(accent, 0.3) }]}>
+          <View style={styles.reportHeader}>
+            <IconSparkle size={15} color={accent} />
+            <Text style={styles.cardTitle}>{thisMonth + 1}월 AI 리포트</Text>
+          </View>
+          {report ? (
+            <Text style={styles.reportText}>{report}</Text>
+          ) : (
+            <>
+              <Text style={styles.reportDesc}>
+                한 달치 기록을 AI가 읽고 감정 흐름·반복된 주제·하이라이트를 요약해줘요.
+              </Text>
+              {reportError && <Text style={styles.reportError}>{reportError}</Text>}
+              <TouchableOpacity
+                style={[styles.reportBtn, { backgroundColor: accent }, reportLoading && { opacity: 0.6 }]}
+                onPress={loadReport}
+                disabled={reportLoading}
+              >
+                {reportLoading
+                  ? <ActivityIndicator color="#fff" size="small" />
+                  : <Text style={styles.reportBtnText}>한 달 기록 요약받기</Text>}
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
       </ScrollView>
 
       {/* 전체 p!ng 목록 — 화면 안에서 올라오는 시트 */}
