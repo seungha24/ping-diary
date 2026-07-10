@@ -314,17 +314,6 @@ export default function HomeScreen() {
                         >
                           <Text style={styles.folderEditChipText}>수정</Text>
                         </TouchableOpacity>
-                        {/* 커버 변경은 카메라 버튼을 정확히 눌렀을 때만 */}
-                        <TouchableOpacity
-                          style={styles.folderCameraChip}
-                          onPress={() => pickFolderCover(selectedFolder.id)}
-                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                        >
-                          <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                            <Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                            <Circle cx="12" cy="13" r="4"/>
-                          </Svg>
-                        </TouchableOpacity>
                       </View>
                     </View>
                   </View>
@@ -338,13 +327,6 @@ export default function HomeScreen() {
                   <View style={styles.folderHeaderActions}>
                     <TouchableOpacity style={styles.folderAddCoverBtn} onPress={() => openEditFolder(selectedFolder)}>
                       <Text style={styles.folderAddCoverText}>수정</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.folderAddCoverBtn} onPress={() => pickFolderCover(selectedFolder.id)}>
-                      <Svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                        <Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-                        <circle cx="12" cy="13" r="4"/>
-                      </Svg>
-                      <Text style={styles.folderAddCoverText}>커버</Text>
                     </TouchableOpacity>
                   </View>
                 </View>
