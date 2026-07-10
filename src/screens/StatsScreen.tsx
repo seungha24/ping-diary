@@ -156,8 +156,8 @@ export default function StatsScreen() {
         <View style={styles.statsGrid}>
           <View style={styles.statChip}>
             <Text style={styles.statChipLabel}>지난달 대비</Text>
-            <Text style={[styles.statChipVal, { color: monthDiff >= 0 ? '#10b981' : '#ef4444' }]}>
-              {monthDiff >= 0 ? `↗ +${monthDiff}개` : `↘ ${monthDiff}개`}
+            <Text style={[styles.statChipVal, { color: accent }]}>
+              {monthDiff >= 0 ? `+${monthDiff}개` : `${monthDiff}개`}
             </Text>
           </View>
           <View style={styles.statChip}>
