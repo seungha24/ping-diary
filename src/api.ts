@@ -198,6 +198,11 @@ export async function removeEntry(id: number): Promise<void> {
 }
 
 /** AI 코멘트 즉시 생성 (미리보기/데모용) */
+/** 한 달 기록 AI 심층 리포트 (통계 화면) */
+export async function getMonthlyReport(year: number, month: number): Promise<{ report: string | null; count: number }> {
+  return request(`/entries/report?year=${year}&month=${month}`);
+}
+
 export async function generateComment(id: number, persona?: string): Promise<DiaryEntry> {
   const row = await request(`/entries/${id}/comment`, {
     method: 'POST',

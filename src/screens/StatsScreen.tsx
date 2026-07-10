@@ -1,21 +1,22 @@
 import React, { useState } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, SafeAreaView,
-  TouchableOpacity, TextInput,
+  TouchableOpacity, TextInput, ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
-import { MONTH_COUNTS, MONTHS } from '../data/types';
+import { MONTHS, entryDateLabel } from '../data/types';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
-import { IconX } from '../components/icons/Line';
+import { getMonthlyReport } from '../api';
+import { IconX, IconSparkle } from '../components/icons/Line';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-function getMonthTextColor(count: number): string {
+function getMonthTextColor(count: number, max: number): string {
   if (count === 0) return '#9ca3af';
-  return count / 30 > 0.5 ? '#ffffff' : '#374151';
+  return count / max > 0.5 ? '#ffffff' : '#374151';
 }
 
 export default function StatsScreen() {
@@ -23,9 +24,9 @@ export default function StatsScreen() {
   const { accent } = useTheme();
   const { entries } = useEntries();
 
-  function getMonthBg(count: number): string {
+  function getMonthBg(count: number, max: number): string {
     if (count === 0) return '#f3f4f6';
-    const r = count / 30;
+    const r = count / max;
     if (r > 0.8) return accent;
     if (r > 0.5) return hexToRgba(accent, 0.65);
     if (r > 0.3) return hexToRgba(accent, 0.38);
@@ -35,6 +36,65 @@ export default function StatsScreen() {
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [listOpen, setListOpen] = useState(false);
   const [monthOpen, setMonthOpen] = useState(false);
+
+  // ── 실제 기록 기반 집계 ──
+  const now = new Date();
+  const thisYear = now.getFullYear();
+  const thisMonth = now.getMonth(); // 0~11
+
+  // 월별 기록 수 (올해, createdAt 기준)
+  const monthCounts = Array(12).fill(0) as number[];
+  entries.forEach((e) => {
+    const d = new Date(e.createdAt);
+    if (d.getFullYear() === thisYear) monthCounts[d.getMonth()]++;
+  });
+  const maxMonth = Math.max(...monthCounts, 1);
+
+  const thisMonthCount = monthCounts[thisMonth];
+  const lastMonthCount = thisMonth === 0 ? 0 : monthCounts[thisMonth - 1];
+  const monthDiff = thisMonthCount - lastMonthCount;
+
+  // 이번 달에 쓴 p!ng 목록 (시트용)
+  const thisMonthEntries = entries.filter((e) => {
+    const d = new Date(e.createdAt);
+    return d.getFullYear() === thisYear && d.getMonth() === thisMonth;
+  });
+
+  // 연속 기록일: 오늘(또는 어제)부터 거꾸로 하루도 빠짐없이 쓴 날 수
+  const dayKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  const writtenDays = new Set(entries.map((e) => dayKey(new Date(e.createdAt))));
+  let streak = 0;
+  const cursor = new Date();
+  if (!writtenDays.has(dayKey(cursor))) cursor.setDate(cursor.getDate() - 1); // 오늘 아직 안 썼으면 어제부터
+  while (writtenDays.has(dayKey(cursor))) {
+    streak++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  // 평균 글 길이 (본문 글자 수)
+  const avgLen = entries.length
+    ? Math.round(entries.reduce((sum, e) => sum + (e.body?.length || 0), 0) / entries.length)
+    : 0;
+
+  // ── AI 심층 리포트 ──
+  const [report, setReport] = useState<string | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
+
+  async function loadReport() {
+    if (reportLoading) return;
+    setReportLoading(true);
+    setReportError(null);
+    try {
+      const res = await getMonthlyReport(thisYear, thisMonth + 1);
+      if (res.report) setReport(res.report);
+      else setReportError('이번 달 기록이 아직 없어요. p!ng를 쓰면 리포트를 만들어드릴게요.');
+    } catch (e: any) {
+      setReportError(e?.message ?? '리포트 생성에 실패했어요. 잠시 후 다시 시도해주세요.');
+    } finally {
+      setReportLoading(false);
+    }
+  }
 
   const tagCounts: Record<string, number> = {};
   entries.forEach((e) => e.tags.forEach((t) => { tagCounts[t] = (tagCounts[t] || 0) + 1; }));
@@ -76,26 +136,70 @@ export default function StatsScreen() {
             <Text style={styles.statLabel}>총 p!ng</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.statCard} onPress={() => setMonthOpen(true)} activeOpacity={0.7}>
-            <Text style={[styles.statVal, { color: accent }]}>{entries.length}개</Text>
+            <Text style={[styles.statVal, { color: accent }]}>{thisMonthCount}개</Text>
             <Text style={styles.statLabel}>이번 달</Text>
           </TouchableOpacity>
+          <View style={[styles.statCard, { backgroundColor: hexToRgba(accent, 0.07), borderColor: hexToRgba(accent, 0.25) }]}>
+            <Text style={[styles.statVal, { color: accent }]}>🔥 {streak}일</Text>
+            <Text style={styles.statLabel}>연속 기록</Text>
+          </View>
         </View>
 
+        {/* 지난달 대비 / 평균 글 길이 */}
+        <View style={styles.statsGrid}>
+          <View style={styles.statCardSm}>
+            <Text style={[styles.statValSm, { color: monthDiff >= 0 ? '#10b981' : '#ef4444' }]}>
+              {monthDiff >= 0 ? `↗ +${monthDiff}개` : `↘ ${monthDiff}개`}
+            </Text>
+            <Text style={styles.statLabel}>지난달 대비</Text>
+          </View>
+          <View style={styles.statCardSm}>
+            <Text style={styles.statValSm}>{avgLen}자</Text>
+            <Text style={styles.statLabel}>평균 글 길이</Text>
+          </View>
+        </View>
+
+        {/* AI 심층 리포트 */}
+        <View style={[styles.card, { borderColor: hexToRgba(accent, 0.3) }]}>
+          <View style={styles.reportHeader}>
+            <IconSparkle size={15} color={accent} />
+            <Text style={styles.cardTitle}>{thisMonth + 1}월 AI 리포트</Text>
+          </View>
+          {report ? (
+            <Text style={styles.reportText}>{report}</Text>
+          ) : (
+            <>
+              <Text style={styles.reportDesc}>
+                한 달치 기록을 AI가 읽고 감정 흐름·반복된 주제·하이라이트를 요약해줘요.
+              </Text>
+              {reportError && <Text style={styles.reportError}>{reportError}</Text>}
+              <TouchableOpacity
+                style={[styles.reportBtn, { backgroundColor: accent }, reportLoading && { opacity: 0.6 }]}
+                onPress={loadReport}
+                disabled={reportLoading}
+              >
+                {reportLoading
+                  ? <ActivityIndicator color="#fff" size="small" />
+                  : <Text style={styles.reportBtnText}>한 달 기록 요약받기</Text>}
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
 
         {/* Monthly heatmap */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>월별 기록 · 2026</Text>
+          <Text style={styles.cardTitle}>월별 기록 · {thisYear}</Text>
           <View style={styles.monthGrid}>
-            {MONTH_COUNTS.map((count, i) => (
+            {monthCounts.map((count, i) => (
               <TouchableOpacity
                 key={i}
-                style={[styles.monthCell, { backgroundColor: getMonthBg(count) }]}
+                style={[styles.monthCell, { backgroundColor: getMonthBg(count, maxMonth) }]}
                 onPress={() => (navigation as any).navigate('Calendar', { month: i })}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.monthLabel, { color: getMonthTextColor(count) }]}>{MONTHS[i]}</Text>
+                <Text style={[styles.monthLabel, { color: getMonthTextColor(count, maxMonth) }]}>{MONTHS[i]}</Text>
                 {count > 0 && (
-                  <Text style={[styles.monthCount, { color: getMonthTextColor(count) }]}>{count}</Text>
+                  <Text style={[styles.monthCount, { color: getMonthTextColor(count, maxMonth) }]}>{count}</Text>
                 )}
               </TouchableOpacity>
             ))}
@@ -172,7 +276,7 @@ export default function StatsScreen() {
                   >
                     <View style={styles.resultTop}>
                       <Text style={styles.resultTitle} numberOfLines={1}>{e.title}</Text>
-                      <Text style={styles.resultDate}>6월 {e.dates.join(',')}일</Text>
+                      <Text style={styles.resultDate}>{entryDateLabel(e)}</Text>
                     </View>
                     <Text style={styles.resultPreview} numberOfLines={2}>{e.body}</Text>
                     <View style={styles.resultTagRow}>
@@ -200,13 +304,13 @@ export default function StatsScreen() {
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
             <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>이번 달 p!ng · {entries.length}개</Text>
+              <Text style={styles.sheetTitle}>이번 달 p!ng · {thisMonthEntries.length}개</Text>
               <TouchableOpacity onPress={() => setMonthOpen(false)}>
                 <IconX size={18} color="#9ca3af" />
               </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
-              {entries.map((e) => (
+              {thisMonthEntries.map((e) => (
                 <TouchableOpacity
                   key={e.id}
                   style={styles.entryRow}
@@ -214,7 +318,7 @@ export default function StatsScreen() {
                 >
                   <View style={styles.entryRowLeft}>
                     <Text style={styles.entryRowTitle} numberOfLines={1}>{e.title}</Text>
-                    <Text style={styles.entryRowDate}>6월 {e.dates.join(', ')}일</Text>
+                    <Text style={styles.entryRowDate}>{entryDateLabel(e)}</Text>
                   </View>
                   <View style={styles.entryTagRow}>
                     {e.tags.slice(0, 2).map((t) => (
@@ -248,7 +352,7 @@ export default function StatsScreen() {
                 >
                   <View style={styles.entryRowLeft}>
                     <Text style={styles.entryRowTitle} numberOfLines={1}>{e.title}</Text>
-                    <Text style={styles.entryRowDate}>6월 {e.dates.join(', ')}일</Text>
+                    <Text style={styles.entryRowDate}>{entryDateLabel(e)}</Text>
                   </View>
                   <View style={styles.entryTagRow}>
                     {e.tags.slice(0, 2).map((t) => (
@@ -308,6 +412,19 @@ const styles = StyleSheet.create({
   },
   statVal: { fontSize: 24, fontWeight: '800', color: '#374151' },
   statLabel: { fontSize: 12, color: '#9ca3af' },
+  statCardSm: {
+    flex: 1, backgroundColor: '#ffffff', borderRadius: 16, padding: 14,
+    borderWidth: 1, borderColor: '#f3f4f6', alignItems: 'center', gap: 3,
+  },
+  statValSm: { fontSize: 17, fontWeight: '800', color: '#374151' },
+
+  // AI 리포트
+  reportHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  reportDesc: { fontSize: 12.5, color: '#9ca3af', lineHeight: 19 },
+  reportText: { fontSize: 13.5, color: '#374151', lineHeight: 22 },
+  reportError: { fontSize: 12, color: '#ef4444' },
+  reportBtn: { borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  reportBtnText: { fontSize: 13, fontWeight: '700', color: '#ffffff' },
 
   card: {
     backgroundColor: '#ffffff', borderRadius: 16, padding: 16,
