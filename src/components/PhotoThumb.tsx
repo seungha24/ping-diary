@@ -42,8 +42,8 @@ export function PhotoBlock({ photo, height = 140 }: { photo: string | null; heig
   return <Image source={resolveSource(photo)} style={{ width: '100%', height }} resizeMode="cover" />;
 }
 
-/** 원본 비율 그대로 보여주는 전체 너비 사진 (일기 상세용) */
-export function AspectPhoto({ photo, radius = 0 }: { photo: string | null; radius?: number }) {
+/** 원본 비율 그대로 보여주는 전체 너비 사진 (일기 상세용). minRatio로 세로 사진 높이 제한 */
+export function AspectPhoto({ photo, radius = 0, minRatio = 0.6 }: { photo: string | null; radius?: number; minRatio?: number }) {
   const [ratio, setRatio] = useState<number | null>(null);
 
   useEffect(() => {
@@ -65,8 +65,8 @@ export function AspectPhoto({ photo, radius = 0 }: { photo: string | null; radiu
 
   if (!photo) return null;
   if (photo.startsWith('ph:')) return <PhotoBlock photo={photo} height={200} />;
-  // 세로로 극단적으로 긴 사진은 살짝만 제한 (화면 독점 방지)
-  const r = Math.max(ratio ?? 4 / 3, 0.6);
+  // 세로로 긴 사진은 minRatio까지만 (화면 독점 방지, 탭하면 어차피 원본 확대)
+  const r = Math.max(ratio ?? 4 / 3, minRatio);
   return (
     <Image
       source={resolveSource(photo)}

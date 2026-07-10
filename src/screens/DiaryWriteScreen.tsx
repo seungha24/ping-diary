@@ -353,13 +353,16 @@ export default function DiaryWriteScreen() {
                 base.getHours(), base.getMinutes(), base.getSeconds());
               const createdAtISO = isNaN(diaryDate.getTime()) ? base.toISOString() : diaryDate.toISOString();
               const storedBody = toStorageBody(body, inlinePhotos); // [사진N] → [photo:URL]
+              // 대표 사진이 없으면 본문 첫 사진을 대표로 (목록 썸네일용)
+              const bodyFirstPhoto = (storedBody.match(/\[photo:([^\]\s]+)\]/) || [])[1] ?? null;
+              const mainPhoto = photoList[0] ?? bodyFirstPhoto ?? null;
 
               if (editEntry) {
                 const personaChanged = editEntry.persona !== persona;
                 const needRegen = personaChanged && !!editEntry.aiComment;
                 const updated = {
                   ...editEntry, title, body: storedBody, tags, persona, folder, dates: selectedDates,
-                  photo: photoList[0] ?? null, photos: photoList.slice(1), visibility,
+                  photo: mainPhoto, photos: photoList.slice(1), visibility,
                   sharedGroups: visibility === 'friends' && shareGroupIds.size > 0 ? Array.from(shareGroupIds) : null,
                   createdAt: createdAtISO,
                 };
@@ -386,7 +389,7 @@ export default function DiaryWriteScreen() {
                   persona,
                   folder,
                   dates: selectedDates,
-                  photo: photoList[0] ?? null,
+                  photo: mainPhoto,
                   photos: photoList.slice(1),
                   visibility,
                   sharedGroups: visibility === 'friends' && shareGroupIds.size > 0 ? Array.from(shareGroupIds) : null,

@@ -62,7 +62,12 @@ export default function DiaryDetailScreen() {
   // 내 글인지: authorId가 없으면 내 목록에서 연 글, 있으면 내 id와 비교 (그룹 피드에서 연 남의 글은 읽기 전용)
   const isMine = !entry.authorId || entry.authorId === getCachedMe()?.id;
   // 사진 갤러리: 대표는 크게, 나머지는 작게. 탭하면 확대 보기
-  const gallery = [entry.photo, ...(entry.photos ?? [])].filter(Boolean) as string[];
+  // 본문 중간([photo:URL])에 이미 들어간 사진은 상단에서 중복 표시하지 않는다
+  const bodyPhotoUrls = new Set(
+    parseBodySegments(entry.body).filter((s) => s.type === 'photo').map((s: any) => s.url)
+  );
+  const gallery = ([entry.photo, ...(entry.photos ?? [])].filter(Boolean) as string[])
+    .filter((u) => !bodyPhotoUrls.has(u));
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const [shareOpen, setShareOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -215,7 +220,7 @@ export default function DiaryDetailScreen() {
         {gallery.length > 0 && (
           <>
             <TouchableOpacity style={styles.photoWrapper} activeOpacity={0.9} onPress={() => setLightboxPhoto(gallery[0])}>
-              <AspectPhoto photo={gallery[0]} />
+              <AspectPhoto photo={gallery[0]} minRatio={1} />
             </TouchableOpacity>
             {gallery.length > 1 && (
               <View style={styles.galleryRow}>
@@ -251,7 +256,7 @@ export default function DiaryDetailScreen() {
             <Text key={i} style={styles.body}>{seg.text}</Text>
           ) : (
             <TouchableOpacity key={i} style={styles.photoWrapper} activeOpacity={0.9} onPress={() => setLightboxPhoto(seg.url)}>
-              <AspectPhoto photo={seg.url} />
+              <AspectPhoto photo={seg.url} minRatio={1} />
             </TouchableOpacity>
           )
         )}
