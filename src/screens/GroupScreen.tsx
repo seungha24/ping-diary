@@ -196,6 +196,34 @@ export default function GroupScreen() {
   const { refresh: refreshGroups } = useGroups();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
+  // 초대 코드/링크 공유
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  async function copyText(text: string) {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+        return true;
+      }
+    } catch {}
+    return false;
+  }
+
+  async function shareInviteLink() {
+    const msg = `p!ng 그룹 '${groupName}'에 초대해요!\n초대 코드: ${group.invite_code}\nhttps://ping-diary.vercel.app`;
+    try {
+      if (typeof navigator !== 'undefined' && (navigator as any).share) {
+        await (navigator as any).share({ title: 'p!ng 그룹 초대', text: msg });
+        return;
+      }
+    } catch {}
+    const ok = await copyText(msg);
+    notify(ok ? '초대 메시지를 복사했어요. 붙여넣어 공유하세요!' : '공유에 실패했어요.');
+  }
+
   // 그룹 관리 메뉴(이름 수정/나가기/삭제) — 폰 프레임 안 인앱 다이얼로그
   const [menuOpen, setMenuOpen] = useState(false);
   const [confirmMode, setConfirmMode] = useState<null | 'leave' | 'delete'>(null);
@@ -356,12 +384,21 @@ export default function GroupScreen() {
           <View style={styles.headerText}>
             <Text style={styles.groupName}>{groupName}</Text>
             <Text style={styles.groupMembers} numberOfLines={1}>
-              멤버 {group.member_count ?? 1}명 · 코드 {group.invite_code}
+              멤버 {group.member_count ?? 1}명
             </Text>
           </View>
         </View>
 
         <View style={styles.headerRight}>
+          {/* 초대 코드/링크 공유 */}
+          <TouchableOpacity style={styles.bellBtn} onPress={() => { setCopied(false); setInviteOpen(true); }}>
+            <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+              <Path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+              <Path d="M16 6l-4-4-4 4" />
+              <Line x1="12" y1="2" x2="12" y2="15" />
+            </Svg>
+          </TouchableOpacity>
+
           {/* 그룹 관리 메뉴(나가기/삭제) */}
           <TouchableOpacity style={styles.leaveBtn} onPress={() => setMenuOpen(true)}>
             <Text style={styles.leaveBtnText}>관리</Text>
@@ -479,6 +516,33 @@ export default function GroupScreen() {
             </TouchableOpacity>
             <TouchableOpacity style={styles.actionRow} onPress={() => setConfirmReport(null)}>
               <Text style={[styles.actionText, { color: '#9ca3af' }]}>취소</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* 초대 코드/링크 공유 */}
+      {inviteOpen && (
+        <View style={styles.overlayWrap}>
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setInviteOpen(false)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.actionSheetTitle}>친구 초대하기</Text>
+            <Text style={styles.confirmMsg}>아래 코드를 알려주거나 초대 메시지를 공유하면 친구가 '{groupName}'에 참여할 수 있어요.</Text>
+            <View style={styles.inviteCodeBox}>
+              <Text style={[styles.inviteCodeText, { color: accent }]}>{group.invite_code}</Text>
+              <TouchableOpacity
+                style={[styles.inviteCopyBtn, { borderColor: hexToRgba(accent, 0.4) }]}
+                onPress={() => copyText(group.invite_code ?? '')}
+              >
+                <Text style={[styles.inviteCopyText, { color: accent }]}>{copied ? '복사됨 ✓' : '코드 복사'}</Text>
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity style={[styles.saveBtn, { backgroundColor: accent }]} onPress={shareInviteLink}>
+              <Text style={styles.saveBtnText}>초대 메시지 공유</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionRow} onPress={() => setInviteOpen(false)}>
+              <Text style={[styles.actionText, { color: '#9ca3af' }]}>닫기</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -783,6 +847,14 @@ const styles = StyleSheet.create({
   actionText: { fontSize: 15, color: '#374151', fontWeight: '600' },
   actionDanger: { color: '#ef4444' },
   confirmMsg: { fontSize: 13, color: '#6b7280', lineHeight: 20, marginBottom: 14 },
+  inviteCodeBox: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12,
+    backgroundColor: '#f9fafb', borderRadius: 14, borderWidth: 1, borderColor: '#e5e7eb',
+    paddingVertical: 14, paddingHorizontal: 16, marginBottom: 12,
+  },
+  inviteCodeText: { fontSize: 22, fontWeight: '800', letterSpacing: 3 },
+  inviteCopyBtn: { borderWidth: 1.5, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
+  inviteCopyText: { fontSize: 12, fontWeight: '700' },
   renameInput: {
     fontSize: 15, color: '#111827',
     borderWidth: 1.5, borderColor: '#e5e7eb', borderRadius: 12,
