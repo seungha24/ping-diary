@@ -70,19 +70,30 @@ export default function StatsScreen() {
   }
 
   // ── AI 심층 리포트 ──
-  const [report, setReport] = useState<string | null>(null);
+  const [reportMonth, setReportMonth] = useState(thisMonth); // 리포트를 볼 달 (월별 기록에서 선택)
+  const [reports, setReports] = useState<Record<number, string>>({}); // 달별 리포트 캐시
   const [reportLoading, setReportLoading] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
   const [reportOpen, setReportOpen] = useState(true); // 리포트 접기/펼치기
+  const report = reports[reportMonth] ?? null;
+
+  // 월별 기록에서 달 선택 → 그 달의 리포트 카드로 전환
+  function selectReportMonth(m: number) {
+    if (m === reportMonth) return;
+    setReportMonth(m);
+    setReportError(null);
+    setReportOpen(true);
+  }
 
   async function loadReport() {
     if (reportLoading) return;
+    const target = reportMonth;
     setReportLoading(true);
     setReportError(null);
     try {
-      const res = await getMonthlyReport(thisYear, thisMonth + 1);
-      if (res.report) setReport(res.report);
-      else setReportError('이번 달 기록이 아직 없어요. p!ng를 쓰면 리포트를 만들어드릴게요.');
+      const res = await getMonthlyReport(thisYear, target + 1);
+      if (res.report) setReports((prev) => ({ ...prev, [target]: res.report! }));
+      else setReportError(`${target + 1}월 기록이 없어요. p!ng를 쓰면 리포트를 만들어드릴게요.`);
     } catch (e: any) {
       setReportError(e?.message ?? '리포트 생성에 실패했어요. 잠시 후 다시 시도해주세요.');
     } finally {
@@ -142,8 +153,12 @@ export default function StatsScreen() {
             {monthCounts.map((count, i) => (
               <TouchableOpacity
                 key={i}
-                style={[styles.monthCell, { backgroundColor: getMonthBg(count) }]}
-                onPress={() => (navigation as any).navigate('Calendar', { month: i })}
+                style={[
+                  styles.monthCell,
+                  { backgroundColor: getMonthBg(count) },
+                  reportMonth === i && { borderWidth: 2, borderColor: accent },
+                ]}
+                onPress={() => selectReportMonth(i)}
                 activeOpacity={0.7}
               >
                 <Text style={[styles.monthLabel, { color: getMonthTextColor(count) }]}>{MONTHS[i]}</Text>
@@ -267,7 +282,7 @@ export default function StatsScreen() {
             activeOpacity={report ? 0.7 : 1}
           >
             <IconSparkle size={15} color={accent} />
-            <Text style={[styles.cardTitle, { flex: 1 }]}>{thisMonth + 1}월 AI 리포트</Text>
+            <Text style={[styles.cardTitle, { flex: 1 }]}>{reportMonth + 1}월 AI 리포트</Text>
             {report && (
               <Text style={[styles.reportToggle, { color: accent }]}>{reportOpen ? '접기 ∧' : '펼치기 ∨'}</Text>
             )}
@@ -277,7 +292,7 @@ export default function StatsScreen() {
           ) : (
             <>
               <Text style={styles.reportDesc}>
-                한 달치 기록을 AI가 읽고 감정 흐름·반복된 주제·하이라이트를 요약해줘요.
+                {reportMonth + 1}월 기록을 AI가 읽고 감정 흐름·반복된 주제·하이라이트를 요약해줘요. 위 월별 기록에서 다른 달을 누르면 그 달의 리포트를 볼 수 있어요.
               </Text>
               {reportError && <Text style={styles.reportError}>{reportError}</Text>}
               <TouchableOpacity
