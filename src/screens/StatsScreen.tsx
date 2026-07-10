@@ -73,6 +73,7 @@ export default function StatsScreen() {
   const [report, setReport] = useState<string | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
+  const [reportOpen, setReportOpen] = useState(true); // 리포트 접기/펼치기
 
   async function loadReport() {
     if (reportLoading) return;
@@ -260,12 +261,19 @@ export default function StatsScreen() {
 
         {/* AI 심층 리포트 */}
         <View style={[styles.card, { borderColor: hexToRgba(accent, 0.3) }]}>
-          <View style={styles.reportHeader}>
+          <TouchableOpacity
+            style={styles.reportHeader}
+            onPress={() => report && setReportOpen((v) => !v)}
+            activeOpacity={report ? 0.7 : 1}
+          >
             <IconSparkle size={15} color={accent} />
-            <Text style={styles.cardTitle}>{thisMonth + 1}월 AI 리포트</Text>
-          </View>
+            <Text style={[styles.cardTitle, { flex: 1 }]}>{thisMonth + 1}월 AI 리포트</Text>
+            {report && (
+              <Text style={[styles.reportToggle, { color: accent }]}>{reportOpen ? '접기 ∧' : '펼치기 ∨'}</Text>
+            )}
+          </TouchableOpacity>
           {report ? (
-            <Text style={styles.reportText}>{report}</Text>
+            reportOpen && <Text style={styles.reportText}>{report}</Text>
           ) : (
             <>
               <Text style={styles.reportDesc}>
@@ -411,6 +419,7 @@ const styles = StyleSheet.create({
   reportHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   reportDesc: { fontSize: 12.5, color: '#9ca3af', lineHeight: 19 },
   reportText: { fontSize: 13.5, color: '#374151', lineHeight: 22 },
+  reportToggle: { fontSize: 12, fontWeight: '700' },
   reportError: { fontSize: 12, color: '#ef4444' },
   reportBtn: { borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
   reportBtnText: { fontSize: 13, fontWeight: '700', color: '#ffffff' },
