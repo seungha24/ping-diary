@@ -14,9 +14,10 @@ import { IconX, IconSparkle } from '../components/icons/Line';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-function getMonthTextColor(count: number, max: number): string {
+// 개수 기준 단계형 그라데이션 (기록이 쌓일수록 진해짐)
+function getMonthTextColor(count: number): string {
   if (count === 0) return '#9ca3af';
-  return count / max > 0.5 ? '#ffffff' : '#374151';
+  return count >= 10 ? '#ffffff' : '#374151';
 }
 
 export default function StatsScreen() {
@@ -24,13 +25,12 @@ export default function StatsScreen() {
   const { accent } = useTheme();
   const { entries } = useEntries();
 
-  function getMonthBg(count: number, max: number): string {
+  function getMonthBg(count: number): string {
     if (count === 0) return '#f3f4f6';
-    const r = count / max;
-    if (r > 0.8) return accent;
-    if (r > 0.5) return hexToRgba(accent, 0.65);
-    if (r > 0.3) return hexToRgba(accent, 0.38);
-    return hexToRgba(accent, 0.18);
+    if (count >= 15) return accent;                 // 15개 이상: 가장 진함
+    if (count >= 8) return hexToRgba(accent, 0.65); // 8~14개
+    if (count >= 3) return hexToRgba(accent, 0.4);  // 3~7개
+    return hexToRgba(accent, 0.2);                  // 1~2개: 가장 연함
   }
   const [searchTag, setSearchTag] = useState('');
   const [activeTag, setActiveTag] = useState<string | null>(null);
@@ -48,8 +48,6 @@ export default function StatsScreen() {
     const d = new Date(e.createdAt);
     if (d.getFullYear() === thisYear) monthCounts[d.getMonth()]++;
   });
-  const maxMonth = Math.max(...monthCounts, 1);
-
   const thisMonthCount = monthCounts[thisMonth];
   const lastMonthCount = thisMonth === 0 ? 0 : monthCounts[thisMonth - 1];
   const monthDiff = thisMonthCount - lastMonthCount;
@@ -166,13 +164,13 @@ export default function StatsScreen() {
             {monthCounts.map((count, i) => (
               <TouchableOpacity
                 key={i}
-                style={[styles.monthCell, { backgroundColor: getMonthBg(count, maxMonth) }]}
+                style={[styles.monthCell, { backgroundColor: getMonthBg(count) }]}
                 onPress={() => (navigation as any).navigate('Calendar', { month: i })}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.monthLabel, { color: getMonthTextColor(count, maxMonth) }]}>{MONTHS[i]}</Text>
+                <Text style={[styles.monthLabel, { color: getMonthTextColor(count) }]}>{MONTHS[i]}</Text>
                 {count > 0 && (
-                  <Text style={[styles.monthCount, { color: getMonthTextColor(count, maxMonth) }]}>{count}</Text>
+                  <Text style={[styles.monthCount, { color: getMonthTextColor(count) }]}>{count}</Text>
                 )}
               </TouchableOpacity>
             ))}
