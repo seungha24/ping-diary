@@ -263,12 +263,20 @@ export default function DiaryWriteScreen() {
           <TouchableOpacity
             style={[styles.saveBtn, { backgroundColor: accent }]}
             onPress={async () => {
+              // 달력에서 고른 연·월·일을 일기 날짜(createdAt)로 반영 (시각은 원래 것 유지)
+              const base = editEntry ? new Date(editEntry.createdAt) : new Date();
+              const diaryDay = selectedDates[0] ?? base.getDate();
+              const diaryDate = new Date(calYear, calMonth, diaryDay,
+                base.getHours(), base.getMinutes(), base.getSeconds());
+              const createdAtISO = isNaN(diaryDate.getTime()) ? base.toISOString() : diaryDate.toISOString();
+
               if (editEntry) {
                 const personaChanged = editEntry.persona !== persona;
                 const needRegen = personaChanged && !!editEntry.aiComment;
                 const updated = {
                   ...editEntry, title, body, tags, persona, folder, dates: selectedDates,
                   photo: photoList[0] ?? null, photos: photoList.slice(1), visibility,
+                  createdAt: createdAtISO,
                 };
                 updateLocal(updated); // 화면 즉시 반영
                 playPing();
@@ -296,7 +304,7 @@ export default function DiaryWriteScreen() {
                   photo: photoList[0] ?? null,
                   photos: photoList.slice(1),
                   visibility,
-                  createdAt: new Date().toISOString(),
+                  createdAt: createdAtISO,
                 });
                 clearDraft(); // 발행했으니 임시저장본 정리
                 playPing();

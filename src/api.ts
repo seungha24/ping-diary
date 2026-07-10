@@ -173,6 +173,7 @@ export async function createEntry(entry: DiaryEntry): Promise<DiaryEntry> {
       photos: entry.photos ?? [],
       visibility: entry.visibility ?? 'private',
       shared_groups: entry.sharedGroups ?? null,
+      created_at: entry.createdAt,
     }),
   });
   return fromServer(row);
@@ -193,6 +194,7 @@ export async function patchEntry(entry: DiaryEntry): Promise<DiaryEntry> {
       photos: entry.photos ?? [],
       visibility: entry.visibility ?? 'private',
       shared_groups: entry.sharedGroups ?? null,
+      created_at: entry.createdAt,
     }),
   });
   return fromServer(row);
