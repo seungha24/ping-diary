@@ -383,7 +383,7 @@ export default function HomeScreen() {
                           onPress={() => openEditFolder(selectedFolder)}
                           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
-                          <Text style={styles.folderEditChipText}>수정</Text>
+                          <IconPencil size={13} color="#fff" />
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -396,8 +396,12 @@ export default function HomeScreen() {
                   </TouchableOpacity>
                   <Text style={styles.folderHeaderTitle}>{selectedFolder.name}</Text>
                   <View style={styles.folderHeaderActions}>
-                    <TouchableOpacity style={styles.folderAddCoverBtn} onPress={() => openEditFolder(selectedFolder)}>
-                      <Text style={styles.folderAddCoverText}>수정</Text>
+                    <TouchableOpacity
+                      style={styles.folderEditChipLight}
+                      onPress={() => openEditFolder(selectedFolder)}
+                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                      <IconPencil size={13} color="#6b7280" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -961,11 +965,15 @@ const styles = StyleSheet.create({
   },
   folderHeaderActions: { flexDirection: 'row', alignItems: 'center', gap: 6, minWidth: 60, justifyContent: 'flex-end' },
   folderEditChip: {
-    paddingHorizontal: 10, height: 28, borderRadius: 14,
+    width: 28, height: 28, borderRadius: 14,
     backgroundColor: 'rgba(0,0,0,0.35)',
     alignItems: 'center', justifyContent: 'center',
   },
-  folderEditChipText: { fontSize: 11.5, color: '#fff', fontWeight: '600' },
+  folderEditChipLight: {
+    width: 28, height: 28, borderRadius: 14,
+    backgroundColor: '#f3f4f6',
+    alignItems: 'center', justifyContent: 'center',
+  },
   reorderBanner: {
     flexDirection: 'row', alignItems: 'center', gap: 10,
     borderWidth: 1, borderRadius: 12,
