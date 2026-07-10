@@ -190,6 +190,75 @@ export default function StatsScreen() {
           </View>
         </View>
 
+        {/* 월말 p!ng 어워즈 */}
+        <View style={[styles.card, { borderColor: hexToRgba(accent, 0.3) }]}>
+          <View style={styles.reportHeader}>
+            <IconTrophy size={15} color={accent} />
+            <Text style={[styles.cardTitle, { flex: 1 }]}>{reportMonth + 1}월 p!ng 어워즈</Text>
+          </View>
+          {monthAwards ? (
+            <>
+              {monthAwards.awards.map((a, i) => {
+                const key = `${reportMonth}-${i}`;
+                const open = revealed.has(key);
+                const winner = entries.find((e) => e.id === a.entry_id);
+                if (!open) {
+                  return (
+                    <TouchableOpacity
+                      key={key}
+                      style={[styles.awardEnvelope, { borderColor: hexToRgba(accent, 0.35) }]}
+                      onPress={() => revealAward(key)}
+                      activeOpacity={0.8}
+                    >
+                      <IconTrophy size={16} color="#9ca3af" />
+                      <Text style={styles.awardEnvelopeText}>{a.award}</Text>
+                      <Text style={[styles.awardEnvelopeHint, { color: accent }]}>탭해서 개봉</Text>
+                    </TouchableOpacity>
+                  );
+                }
+                return (
+                  <View key={key} style={[styles.awardCard, { borderColor: hexToRgba(accent, 0.25) }]}>
+                    <View style={styles.awardHeader}>
+                      <PersonaIcon persona={a.persona} size={15} color={accent} />
+                      <Text style={[styles.awardName, { color: accent }]}>{a.award}</Text>
+                    </View>
+                    {winner && (
+                      <Text style={styles.awardWinner}>수상작 「{winner.title || '제목 없음'}」 · {entryDateLabel(winner)}</Text>
+                    )}
+                    {a.quote ? <Text style={styles.awardQuote}>“{a.quote}”</Text> : null}
+                    <Text style={styles.awardComment}>{a.comment}  — {a.persona}</Text>
+                    {winner && (
+                      <TouchableOpacity onPress={() => navigation.navigate('DiaryDetail', { entry: winner })}>
+                        <Text style={[styles.awardLink, { color: accent }]}>일기 보러가기 →</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                );
+              })}
+              {!!monthAwards.closing &&
+                monthAwards.awards.every((_, i) => revealed.has(`${reportMonth}-${i}`)) && (
+                <Text style={styles.awardClosing}>{monthAwards.closing}</Text>
+              )}
+            </>
+          ) : (
+            <>
+              <Text style={styles.reportDesc}>
+                페르소나 심사위원들이 {reportMonth + 1}월 일기에 상을 드려요. 위 월별 기록에서 다른 달을 누르면 그 달 시상식도 열 수 있어요.
+              </Text>
+              {awardsError && <Text style={styles.reportError}>{awardsError}</Text>}
+              <TouchableOpacity
+                style={[styles.reportBtn, { backgroundColor: accent }, awardsLoading && { opacity: 0.6 }]}
+                onPress={loadAwards}
+                disabled={awardsLoading}
+              >
+                {awardsLoading
+                  ? <ActivityIndicator color="#fff" size="small" />
+                  : <Text style={styles.reportBtnText}>시상식 열기</Text>}
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
+
         {/* Tag bar chart */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>자주 쓴 태그 · 탭하여 검색</Text>
@@ -279,76 +348,6 @@ export default function StatsScreen() {
             )}
           </View>
         )}
-
-
-        {/* 월말 p!ng 어워즈 */}
-        <View style={[styles.card, { borderColor: hexToRgba(accent, 0.3) }]}>
-          <View style={styles.reportHeader}>
-            <IconTrophy size={15} color={accent} />
-            <Text style={[styles.cardTitle, { flex: 1 }]}>{reportMonth + 1}월 p!ng 어워즈</Text>
-          </View>
-          {monthAwards ? (
-            <>
-              {monthAwards.awards.map((a, i) => {
-                const key = `${reportMonth}-${i}`;
-                const open = revealed.has(key);
-                const winner = entries.find((e) => e.id === a.entry_id);
-                if (!open) {
-                  return (
-                    <TouchableOpacity
-                      key={key}
-                      style={[styles.awardEnvelope, { borderColor: hexToRgba(accent, 0.35) }]}
-                      onPress={() => revealAward(key)}
-                      activeOpacity={0.8}
-                    >
-                      <IconTrophy size={16} color="#9ca3af" />
-                      <Text style={styles.awardEnvelopeText}>{a.award}</Text>
-                      <Text style={[styles.awardEnvelopeHint, { color: accent }]}>탭해서 개봉</Text>
-                    </TouchableOpacity>
-                  );
-                }
-                return (
-                  <View key={key} style={[styles.awardCard, { borderColor: hexToRgba(accent, 0.25) }]}>
-                    <View style={styles.awardHeader}>
-                      <PersonaIcon persona={a.persona} size={15} color={accent} />
-                      <Text style={[styles.awardName, { color: accent }]}>{a.award}</Text>
-                    </View>
-                    {winner && (
-                      <Text style={styles.awardWinner}>수상작 「{winner.title || '제목 없음'}」 · {entryDateLabel(winner)}</Text>
-                    )}
-                    {a.quote ? <Text style={styles.awardQuote}>“{a.quote}”</Text> : null}
-                    <Text style={styles.awardComment}>{a.comment}  — {a.persona}</Text>
-                    {winner && (
-                      <TouchableOpacity onPress={() => navigation.navigate('DiaryDetail', { entry: winner })}>
-                        <Text style={[styles.awardLink, { color: accent }]}>일기 보러가기 →</Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                );
-              })}
-              {!!monthAwards.closing &&
-                monthAwards.awards.every((_, i) => revealed.has(`${reportMonth}-${i}`)) && (
-                <Text style={styles.awardClosing}>{monthAwards.closing}</Text>
-              )}
-            </>
-          ) : (
-            <>
-              <Text style={styles.reportDesc}>
-                페르소나 심사위원들이 {reportMonth + 1}월 일기에 상을 드려요. 위 월별 기록에서 다른 달을 누르면 그 달 시상식도 열 수 있어요.
-              </Text>
-              {awardsError && <Text style={styles.reportError}>{awardsError}</Text>}
-              <TouchableOpacity
-                style={[styles.reportBtn, { backgroundColor: accent }, awardsLoading && { opacity: 0.6 }]}
-                onPress={loadAwards}
-                disabled={awardsLoading}
-              >
-                {awardsLoading
-                  ? <ActivityIndicator color="#fff" size="small" />
-                  : <Text style={styles.reportBtnText}>시상식 열기</Text>}
-              </TouchableOpacity>
-            </>
-          )}
-        </View>
       </ScrollView>
 
       {/* 전체 p!ng 목록 — 화면 안에서 올라오는 시트 */}
