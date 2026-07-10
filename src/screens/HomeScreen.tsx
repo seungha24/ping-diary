@@ -13,7 +13,7 @@ import IconBell from '../components/icons/IconBell';
 import { getUnreadCount as getNotifUnread, subscribeNotifs, refreshNotifs } from '../data/notifStore';
 import { PhotoThumb } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
-import { FOLDERS, DiaryEntry, DiaryFolder, entryDateLabel, mergeFolders } from '../data/types';
+import { FOLDERS, DiaryEntry, DiaryFolder, entryDateLabel, mergeFolders, stripPhotoMarkers } from '../data/types';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { useGroups } from '../context/GroupsContext';
@@ -438,7 +438,7 @@ export default function HomeScreen() {
                           <PhotoThumb photo={entry.photo} size={48} radius={10} />
                         </TouchableOpacity>
                       )}
-                      <Text style={styles.entryPreview} numberOfLines={3}>{entry.body}</Text>
+                      <Text style={styles.entryPreview} numberOfLines={3}>{stripPhotoMarkers(entry.body)}</Text>
                     </View>
                     <View style={styles.tagRow}>
                       {entry.tags.map((t) => <Tag key={t} label={t} />)}
@@ -568,7 +568,7 @@ export default function HomeScreen() {
                           <PhotoThumb photo={entry.photo} size={48} radius={10} />
                         </TouchableOpacity>
                       )}
-                      <Text style={styles.entryPreview} numberOfLines={3}>{entry.body}</Text>
+                      <Text style={styles.entryPreview} numberOfLines={3}>{stripPhotoMarkers(entry.body)}</Text>
                     </View>
                     <View style={styles.tagRow}>
                       {entry.tags.map((t) => <Tag key={t} label={t} />)}

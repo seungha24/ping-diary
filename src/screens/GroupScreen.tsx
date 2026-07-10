@@ -12,7 +12,7 @@ import PhotoLightbox from '../components/PhotoLightbox';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import IconPlus from '../components/icons/IconPlus';
-import { DiaryEntry, entryDateLabel } from '../data/types';
+import { DiaryEntry, entryDateLabel, stripPhotoMarkers } from '../data/types';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useGroups } from '../context/GroupsContext';
 import { fetchGroupEntries, leaveGroup, deleteGroup, renameGroup, reportContent, saveBlockedUsers, getCachedMe } from '../api';
@@ -137,7 +137,7 @@ function ListCard({
               <PhotoThumb photo={entry.photo} size={48} radius={10} />
             </Pressable>
           )}
-          <Text style={[styles.listCardPreview, { flex: 1 }]} numberOfLines={3}>{entry.body}</Text>
+          <Text style={[styles.listCardPreview, { flex: 1 }]} numberOfLines={3}>{stripPhotoMarkers(entry.body)}</Text>
         </View>
         <View style={styles.tagRow}>
           {entry.tags.map((t) => <Tag key={t} label={t} />)}
@@ -176,7 +176,7 @@ function GridCard({
         </View>
         <Pressable onPress={onOpen}>
           <Text style={styles.gridTitle} numberOfLines={2}>{entry.title}</Text>
-          <Text style={styles.gridPreview} numberOfLines={2}>{entry.body}</Text>
+          <Text style={styles.gridPreview} numberOfLines={2}>{stripPhotoMarkers(entry.body)}</Text>
           <View style={styles.gridTagRow}>
             {entry.tags.slice(0, 2).map((t) => (
               <Text key={t} style={styles.gridTag}>#{t}</Text>

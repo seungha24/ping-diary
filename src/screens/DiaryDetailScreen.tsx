@@ -15,7 +15,7 @@ import IconTrash from '../components/icons/IconTrash';
 import { useTheme } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { useGroups } from '../context/GroupsContext';
-import { PERSONAS, DiaryFolder, entryDateLabel, mergeFolders } from '../data/types';
+import { PERSONAS, DiaryFolder, entryDateLabel, mergeFolders, parseBodySegments } from '../data/types';
 import { generateComment, reportContent, getCachedMe } from '../api';
 import { notify } from '../notify';
 import Svg, { Path, Line } from 'react-native-svg';
@@ -245,7 +245,16 @@ export default function DiaryDetailScreen() {
 
         <View style={styles.divider} />
 
-        <Text style={styles.body}>{entry.body}</Text>
+        {/* 본문 — [photo:URL] 마커 자리에 사진이 글 중간에 렌더됨 */}
+        {parseBodySegments(entry.body).map((seg, i) =>
+          seg.type === 'text' ? (
+            <Text key={i} style={styles.body}>{seg.text}</Text>
+          ) : (
+            <TouchableOpacity key={i} style={styles.photoWrapper} activeOpacity={0.9} onPress={() => setLightboxPhoto(seg.url)}>
+              <AspectPhoto photo={seg.url} />
+            </TouchableOpacity>
+          )
+        )}
 
         {/* AI 코멘트 */}
         <View style={styles.aiSection}>

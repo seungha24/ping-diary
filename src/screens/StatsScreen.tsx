@@ -6,7 +6,7 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
-import { MONTHS, entryDateLabel } from '../data/types';
+import { MONTHS, entryDateLabel, stripPhotoMarkers } from '../data/types';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { getMonthlyAwards, MonthlyAward } from '../api';
@@ -331,7 +331,7 @@ export default function StatsScreen() {
                       <Text style={styles.resultTitle} numberOfLines={1}>{e.title}</Text>
                       <Text style={styles.resultDate}>{entryDateLabel(e)}</Text>
                     </View>
-                    <Text style={styles.resultPreview} numberOfLines={2}>{e.body}</Text>
+                    <Text style={styles.resultPreview} numberOfLines={2}>{stripPhotoMarkers(e.body)}</Text>
                     <View style={styles.resultTagRow}>
                       {e.tags.map((t) => (
                         <Text

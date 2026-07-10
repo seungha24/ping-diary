@@ -141,6 +141,32 @@ export function mergeFolders(stored: DiaryFolder[], hidden: string[]): DiaryFold
   return hasDefaultsInStored ? [...storedVisible, ...rest] : [...rest, ...storedVisible];
 }
 
+// ── 본문 중간 사진: 저장 형식은 [photo:URL] 마커 ──
+
+/** 목록 미리보기 등에서 사진 마커 제거 */
+export function stripPhotoMarkers(text: string): string {
+  return text.replace(/\[photo:[^\]\s]+\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+export type BodySegment = { type: 'text'; text: string } | { type: 'photo'; url: string };
+
+/** 본문을 텍스트/사진 세그먼트로 분해 (상세 화면 렌더용) */
+export function parseBodySegments(body: string): BodySegment[] {
+  const segments: BodySegment[] = [];
+  const re = /\[photo:([^\]\s]+)\]/g;
+  let last = 0;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(body)) !== null) {
+    const text = body.slice(last, m.index).trim();
+    if (text) segments.push({ type: 'text', text });
+    segments.push({ type: 'photo', url: m[1] });
+    last = m.index + m[0].length;
+  }
+  const tail = body.slice(last).trim();
+  if (tail) segments.push({ type: 'text', text: tail });
+  return segments;
+}
+
 /** 일기 날짜 라벨 — 작성 시각(createdAt)의 실제 월 + 선택 일자들 */
 export function entryDateLabel(entry: { createdAt: string; dates: number[] }): string {
   const month = new Date(entry.createdAt).getMonth() + 1;

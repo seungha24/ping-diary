@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
   StyleSheet, SafeAreaView, Modal, Image, ActivityIndicator,
@@ -10,6 +10,24 @@ import Svg, { Path, Rect, Circle, Polyline } from 'react-native-svg';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import { PERSONAS, MONTHS, DAYS, DiaryFolder, mergeFolders } from '../data/types';
+
+// 저장 형식([photo:URL]) ↔ 편집 형식([사진N]) 변환
+function toEditorBody(raw: string): { text: string; urls: string[] } {
+  const urls: string[] = [];
+  const text = raw.replace(/\[photo:([^\]\s]+)\]/g, (_m, u) => {
+    urls.push(u);
+    return `[사진${urls.length}]`;
+  });
+  return { text, urls };
+}
+function toStorageBody(text: string, urls: string[]): string {
+  return text
+    .replace(/\[사진(\d+)\]/g, (_m, n) => {
+      const u = urls[parseInt(n, 10) - 1];
+      return u ? `[photo:${u}]` : '';
+    })
+    .replace(/\n{3,}/g, '\n\n');
+}
 import { PersonaIcon, IconFolder } from '../components/icons/Line';
 import { AspectPhoto } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
@@ -110,7 +128,12 @@ export default function DiaryWriteScreen() {
   const { addEntry, updateEntry, updateLocal } = useEntries();
   const today = new Date();
   const [title, setTitle] = useState(editEntry?.title ?? '');
-  const [body, setBody] = useState(editEntry?.body ?? '');
+  // 본문: 편집 중엔 [사진N] 토큰, 저장 시 [photo:URL]로 변환
+  const initBody = editEntry ? toEditorBody(editEntry.body) : { text: '', urls: [] };
+  const [body, setBody] = useState(initBody.text);
+  const [inlinePhotos, setInlinePhotos] = useState<string[]>(initBody.urls);
+  const bodySelRef = useRef({ start: 0, end: 0 }); // 본문 커서 위치 (사진 삽입용)
+  const [inlineUploading, setInlineUploading] = useState(false);
   const [tags, setTags] = useState<string[]>(editEntry?.tags ?? []);
   const [tagInput, setTagInput] = useState('');
   const [persona, setPersona] = useState(editEntry?.persona ?? '선생님');
@@ -172,7 +195,7 @@ export default function DiaryWriteScreen() {
       return;
     }
     saveDraft({
-      title, body, tags, persona, folder,
+      title, body: toStorageBody(body, inlinePhotos), tags, persona, folder,
       dates: selectedDates,
       photo: photoList[0] ?? null,
       photos: photoList.slice(1),
@@ -188,7 +211,9 @@ export default function DiaryWriteScreen() {
     const d = draftBanner;
     if (!d) return;
     setTitle(d.title);
-    setBody(d.body);
+    const parsed = toEditorBody(d.body);
+    setBody(parsed.text);
+    setInlinePhotos(parsed.urls);
     setTags(d.tags);
     setPersona(d.persona);
     setFolder(d.folder);
@@ -256,6 +281,33 @@ export default function DiaryWriteScreen() {
     }
   }
 
+  // 본문 커서 위치에 사진 삽입 ([사진N] 토큰)
+  async function pickInlinePhoto() {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets[0]) return;
+    setInlineUploading(true);
+    try {
+      const url = await uploadPhoto(result.assets[0].uri);
+      const token = `[사진${inlinePhotos.length + 1}]`;
+      setInlinePhotos((prev) => [...prev, url]);
+      const pos = Math.min(bodySelRef.current.start ?? body.length, body.length);
+      const before = body.slice(0, pos);
+      const after = body.slice(pos);
+      const insert = `${before && !before.endsWith('\n') ? '\n' : ''}${token}\n`;
+      setBody(before + insert + after);
+    } catch (e: any) {
+      notify(e?.message ?? '사진 업로드에 실패했어요. 다시 시도해주세요.');
+    } finally {
+      setInlineUploading(false);
+    }
+  }
+
   // 작은 사진을 대표(맨 앞)로 승격
   function makeMainPhoto(idx: number) {
     setPhotoList((prev) => {
@@ -300,12 +352,13 @@ export default function DiaryWriteScreen() {
               const diaryDate = new Date(calYear, calMonth, diaryDay,
                 base.getHours(), base.getMinutes(), base.getSeconds());
               const createdAtISO = isNaN(diaryDate.getTime()) ? base.toISOString() : diaryDate.toISOString();
+              const storedBody = toStorageBody(body, inlinePhotos); // [사진N] → [photo:URL]
 
               if (editEntry) {
                 const personaChanged = editEntry.persona !== persona;
                 const needRegen = personaChanged && !!editEntry.aiComment;
                 const updated = {
-                  ...editEntry, title, body, tags, persona, folder, dates: selectedDates,
+                  ...editEntry, title, body: storedBody, tags, persona, folder, dates: selectedDates,
                   photo: photoList[0] ?? null, photos: photoList.slice(1), visibility,
                   sharedGroups: visibility === 'friends' && shareGroupIds.size > 0 ? Array.from(shareGroupIds) : null,
                   createdAt: createdAtISO,
@@ -328,7 +381,7 @@ export default function DiaryWriteScreen() {
                 addEntry({
                   id: Date.now(),
                   title,
-                  body,
+                  body: storedBody,
                   tags,
                   persona,
                   folder,
@@ -419,11 +472,27 @@ export default function DiaryWriteScreen() {
           style={styles.bodyInput}
           value={body}
           onChangeText={setBody}
+          onSelectionChange={(e) => { bodySelRef.current = e.nativeEvent.selection; }}
           placeholder="오늘의 일상을 자유롭게 p!ng해보세요..."
           placeholderTextColor="#d1d5db"
           multiline
           textAlignVertical="top"
         />
+
+        {/* 본문 중간 사진 삽입 */}
+        <TouchableOpacity style={styles.inlinePhotoBtn} onPress={pickInlinePhoto} disabled={inlineUploading}>
+          {inlineUploading
+            ? <ActivityIndicator color="#9ca3af" size="small" />
+            : (
+              <>
+                <IconCamera color="#6b7280" size={14} />
+                <Text style={styles.inlinePhotoBtnText}>커서 위치에 사진 넣기</Text>
+              </>
+            )}
+        </TouchableOpacity>
+        {inlinePhotos.length > 0 && (
+          <Text style={styles.photoHint}>본문의 [사진N] 자리에 사진이 들어가요. 토큰을 지우면 사진도 빠져요.</Text>
+        )}
 
         {/* Photo — 대표 1장 크게 + 나머지 작게 (최대 4장) */}
         {photoList.length > 0 ? (
@@ -784,6 +853,12 @@ const styles = StyleSheet.create({
   },
   photoThumbAddPlus: { fontSize: 22, color: '#9ca3af' },
   photoHint: { fontSize: 11.5, color: '#9ca3af', marginTop: 6 },
+  inlinePhotoBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    alignSelf: 'flex-start', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 999,
+    paddingHorizontal: 12, paddingVertical: 7, backgroundColor: '#f9fafb',
+  },
+  inlinePhotoBtnText: { fontSize: 12, color: '#6b7280', fontWeight: '600' },
   photoAddBtn: {
     borderWidth: 1.5, borderColor: '#e5e7eb', borderStyle: 'dashed',
     borderRadius: 14, paddingVertical: 16, alignItems: 'center',
