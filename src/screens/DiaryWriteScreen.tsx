@@ -4,7 +4,7 @@ import {
   StyleSheet, SafeAreaView, Modal, Image, ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { Audio } from 'expo-av';
+import { createAudioPlayer } from 'expo-audio';
 import * as ImagePicker from 'expo-image-picker';
 import Svg, { Path, Rect, Circle, Polyline } from 'react-native-svg';
 import Tag from '../components/Tag';
@@ -14,6 +14,7 @@ import { PersonaIcon, IconFolder } from '../components/icons/Line';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { uploadPhoto, getCachedMe, patchEntry, generateComment } from '../api';
+import { saveDraft, getDraft, clearDraft, DiaryDraft } from '../data/draftStore';
 import { notify } from '../notify';
 import { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -83,13 +84,11 @@ const PROMPTS = [
 
 async function playPing() {
   try {
-    const { sound } = await Audio.Sound.createAsync(
-      require('../../assets/ping.wav'),
-      { shouldPlay: true },
-    );
-    sound.setOnPlaybackStatusUpdate((status) => {
-      if (status.isLoaded && status.didJustFinish) sound.unloadAsync();
+    const player = createAudioPlayer(require('../../assets/ping.wav'));
+    player.addListener('playbackStatusUpdate', (status) => {
+      if (status.didJustFinish) player.remove();
     });
+    player.play();
   } catch (_) {}
 }
 
@@ -125,6 +124,44 @@ export default function DiaryWriteScreen() {
   const [calYear] = useState(initDate.getFullYear());
   const [calMonth, setCalMonth] = useState(initDate.getMonth());
   const [selectedDates, setSelectedDates] = useState<number[]>(editEntry?.dates ?? [today.getDate()]);
+
+  // ── 임시저장 (새 글에서만) ──
+  const [draftBanner, setDraftBanner] = useState<DiaryDraft | null>(() => (editEntry ? null : getDraft()));
+  const [draftSaved, setDraftSaved] = useState(false);
+
+  function handleSaveDraft() {
+    if (!title.trim() && !body.trim()) {
+      notify('내용을 입력한 뒤 임시저장할 수 있어요.');
+      return;
+    }
+    saveDraft({
+      title, body, tags, persona, folder,
+      dates: selectedDates, photo, visibility,
+      savedAt: new Date().toISOString(),
+    });
+    setDraftSaved(true);
+    setDraftBanner(null);
+    notify('임시저장했어요. 다음에 이어서 쓸 수 있어요.');
+  }
+
+  function restoreDraft() {
+    const d = draftBanner;
+    if (!d) return;
+    setTitle(d.title);
+    setBody(d.body);
+    setTags(d.tags);
+    setPersona(d.persona);
+    setFolder(d.folder);
+    setSelectedDates(d.dates);
+    setPhoto(d.photo);
+    setVisibility(d.visibility);
+    setDraftBanner(null);
+  }
+
+  function discardDraft() {
+    clearDraft();
+    setDraftBanner(null);
+  }
 
   // 홈 화면과 동일하게 기본 폴더(숨김 제외·이름/이모지 오버라이드) + 사용자 생성 폴더
   const cachedMe = getCachedMe();
@@ -195,10 +232,11 @@ export default function DiaryWriteScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{editEntry ? 'p!ng 수정' : '오늘의 p!ng'}</Text>
         <View style={styles.headerRight}>
-          <View style={styles.autoSaveBadge}>
-            <View style={styles.autoSaveDot} />
-            <Text style={styles.autoSaveText}>자동저장됨</Text>
-          </View>
+          {!editEntry && (
+            <TouchableOpacity style={styles.draftBtn} onPress={handleSaveDraft}>
+              <Text style={styles.draftBtnText}>{draftSaved ? '저장됨 ✓' : '임시저장'}</Text>
+            </TouchableOpacity>
+          )}
           <TouchableOpacity
             style={[styles.saveBtn, { backgroundColor: accent }]}
             onPress={async () => {
@@ -233,6 +271,7 @@ export default function DiaryWriteScreen() {
                   visibility,
                   createdAt: new Date().toISOString(),
                 });
+                clearDraft(); // 발행했으니 임시저장본 정리
                 playPing();
                 navigation.goBack();
               }
@@ -244,6 +283,21 @@ export default function DiaryWriteScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+        {/* 임시저장된 글 불러오기 배너 */}
+        {draftBanner && (
+          <View style={[styles.draftBanner, { borderColor: hexToRgba(accent, 0.3), backgroundColor: hexToRgba(accent, 0.07) }]}>
+            <Text style={styles.draftBannerText} numberOfLines={1}>
+              📝 임시저장된 글이 있어요{draftBanner.title ? ` · "${draftBanner.title}"` : ''}
+            </Text>
+            <TouchableOpacity onPress={restoreDraft}>
+              <Text style={[styles.draftBannerAction, { color: accent }]}>이어쓰기</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={discardDraft}>
+              <Text style={[styles.draftBannerAction, { color: '#9ca3af' }]}>지우기</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Date + Tags (같은 줄) */}
         <View style={styles.dateTagRow}>
           <TouchableOpacity style={styles.dateBtn} onPress={() => setCalOpen(true)}>
@@ -490,9 +544,19 @@ const styles = StyleSheet.create({
   cancelText: { fontSize: 14, color: '#9ca3af' },
   headerTitle: { fontSize: 14, fontWeight: '700', color: '#1f2937' },
   headerRight: { alignItems: 'flex-end', gap: 6 },
-  autoSaveBadge: { flexDirection: 'row', alignItems: 'center', gap: 5 },
-  autoSaveDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4ade80' },
-  autoSaveText: { fontSize: 11, color: '#9ca3af' },
+  // 임시저장
+  draftBtn: {
+    borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 9,
+    paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#f9fafb',
+  },
+  draftBtnText: { fontSize: 12, color: '#6b7280', fontWeight: '600' },
+  draftBanner: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderWidth: 1, borderRadius: 12,
+    paddingHorizontal: 12, paddingVertical: 10,
+  },
+  draftBannerText: { flex: 1, fontSize: 12.5, color: '#374151' },
+  draftBannerAction: { fontSize: 12.5, fontWeight: '700' },
   saveBtn: { paddingHorizontal: 22, paddingVertical: 9, borderRadius: 999, backgroundColor: '#111827' },
   saveBtnText: { fontSize: 14, fontWeight: '800', color: '#ffffff' },
   content: { padding: 20, gap: 14, paddingBottom: 48 },
