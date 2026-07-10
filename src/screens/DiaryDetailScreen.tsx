@@ -72,6 +72,7 @@ export default function DiaryDetailScreen() {
     return new Set(groups.map((g) => g.id));
   });
   const [aiComment, setAiComment] = useState<string | undefined>(entry.aiComment);
+  const [aiOpen, setAiOpen] = useState(true); // AI 코멘트 접기/펼치기
   const [persona, setPersona] = useState(entry.persona);
   const [personaOpen, setPersonaOpen] = useState(false);
   const [genLoading, setGenLoading] = useState(false);
@@ -244,7 +245,16 @@ export default function DiaryDetailScreen() {
         <View style={styles.aiSection}>
           <View style={styles.aiTitleRow}>
             <IconSparkle size={15} color={accent} />
-            <Text style={styles.aiTitle}>AI 코멘트</Text>
+            <TouchableOpacity
+              style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}
+              onPress={() => aiComment && setAiOpen((v) => !v)}
+              activeOpacity={aiComment ? 0.7 : 1}
+            >
+              <Text style={styles.aiTitle}>AI 코멘트</Text>
+              {aiComment && (
+                <Text style={[styles.aiToggle, { color: accent }]}>{aiOpen ? '접기 ∧' : '펼치기 ∨'}</Text>
+              )}
+            </TouchableOpacity>
             {isMine ? (
               <TouchableOpacity
                 style={styles.aiPersonaBtn}
@@ -264,6 +274,7 @@ export default function DiaryDetailScreen() {
           </View>
 
           {aiComment ? (
+            aiOpen &&
             <View style={styles.aiCommentBox}>
               {genLoading ? (
                 <View style={styles.aiRegenRow}>
@@ -489,7 +500,8 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   aiDotInner: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#ffffff' },
-  aiTitle: { fontSize: 13, fontWeight: '700', color: '#374151', flex: 1 },
+  aiTitle: { fontSize: 13, fontWeight: '700', color: '#374151' },
+  aiToggle: { fontSize: 11.5, fontWeight: '700' },
   aiPersona: { fontSize: 12, color: '#9ca3af' },
   aiPersonaRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   aiPersonaBtn: {
