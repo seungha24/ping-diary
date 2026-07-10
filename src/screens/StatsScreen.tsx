@@ -69,11 +69,6 @@ export default function StatsScreen() {
     cursor.setDate(cursor.getDate() - 1);
   }
 
-  // 평균 글 길이 (본문 글자 수)
-  const avgLen = entries.length
-    ? Math.round(entries.reduce((sum, e) => sum + (e.body?.length || 0), 0) / entries.length)
-    : 0;
-
   // ── AI 심층 리포트 ──
   const [report, setReport] = useState<string | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
@@ -137,10 +132,6 @@ export default function StatsScreen() {
             <Text style={[styles.statVal, { color: accent }]}>{thisMonthCount}개</Text>
             <Text style={styles.statLabel}>이번 달</Text>
           </TouchableOpacity>
-          <View style={[styles.statCard, { backgroundColor: hexToRgba(accent, 0.07), borderColor: hexToRgba(accent, 0.25) }]}>
-            <Text style={[styles.statVal, { color: accent }]}>{streak}일</Text>
-            <Text style={styles.statLabel}>연속 기록</Text>
-          </View>
         </View>
 
         {/* Monthly heatmap */}
@@ -261,9 +252,9 @@ export default function StatsScreen() {
             </Text>
             <Text style={styles.statLabel}>지난달 대비</Text>
           </View>
-          <View style={styles.statCardSm}>
-            <Text style={styles.statValSm}>{avgLen}자</Text>
-            <Text style={styles.statLabel}>평균 글 길이</Text>
+          <View style={[styles.statCardSm, { backgroundColor: hexToRgba(accent, 0.07), borderColor: hexToRgba(accent, 0.25) }]}>
+            <Text style={[styles.statValSm, { color: accent }]}>{streak}일</Text>
+            <Text style={styles.statLabel}>연속 기록</Text>
           </View>
         </View>
 
