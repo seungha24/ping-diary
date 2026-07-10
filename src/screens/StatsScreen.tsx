@@ -9,8 +9,8 @@ import { RootStackParamList } from '../navigation/RootNavigator';
 import { MONTHS, entryDateLabel } from '../data/types';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
-import { getMonthlyReport } from '../api';
-import { IconX, IconSparkle } from '../components/icons/Line';
+import { getMonthlyAwards, MonthlyAward } from '../api';
+import { IconX, PersonaIcon } from '../components/icons/Line';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -69,36 +69,42 @@ export default function StatsScreen() {
     cursor.setDate(cursor.getDate() - 1);
   }
 
-  // ── AI 심층 리포트 ──
-  const [reportMonth, setReportMonth] = useState(thisMonth); // 리포트를 볼 달 (월별 기록에서 선택)
-  const [reports, setReports] = useState<Record<number, string>>({}); // 달별 리포트 캐시
-  const [reportLoading, setReportLoading] = useState(false);
-  const [reportError, setReportError] = useState<string | null>(null);
-  const [reportOpen, setReportOpen] = useState(true); // 리포트 접기/펼치기
-  const report = reports[reportMonth] ?? null;
+  // ── 월말 p!ng 어워즈 (페르소나 심사위원 시상식) ──
+  const [reportMonth, setReportMonth] = useState(thisMonth); // 시상식을 볼 달 (월별 기록에서 선택)
+  const [awardsByMonth, setAwardsByMonth] = useState<Record<number, { awards: MonthlyAward[]; closing: string | null }>>({});
+  const [awardsLoading, setAwardsLoading] = useState(false);
+  const [awardsError, setAwardsError] = useState<string | null>(null);
+  const [revealed, setRevealed] = useState<Set<string>>(new Set()); // 개봉한 상 (달-인덱스)
+  const monthAwards = awardsByMonth[reportMonth] ?? null;
 
-  // 월별 기록에서 달 선택 → 그 달의 리포트 카드로 전환
+  // 월별 기록에서 달 선택 → 그 달의 시상식 카드로 전환
   function selectReportMonth(m: number) {
     if (m === reportMonth) return;
     setReportMonth(m);
-    setReportError(null);
-    setReportOpen(true);
+    setAwardsError(null);
   }
 
-  async function loadReport() {
-    if (reportLoading) return;
+  async function loadAwards() {
+    if (awardsLoading) return;
     const target = reportMonth;
-    setReportLoading(true);
-    setReportError(null);
+    setAwardsLoading(true);
+    setAwardsError(null);
     try {
-      const res = await getMonthlyReport(thisYear, target + 1);
-      if (res.report) setReports((prev) => ({ ...prev, [target]: res.report! }));
-      else setReportError(`${target + 1}월 기록이 없어요. p!ng를 쓰면 리포트를 만들어드릴게요.`);
+      const res = await getMonthlyAwards(thisYear, target + 1);
+      if (res.awards.length > 0) {
+        setAwardsByMonth((prev) => ({ ...prev, [target]: { awards: res.awards, closing: res.closing } }));
+      } else {
+        setAwardsError(`${target + 1}월 기록이 없어요. p!ng를 쓰면 시상식을 열어드릴게요.`);
+      }
     } catch (e: any) {
-      setReportError(e?.message ?? '리포트 생성에 실패했어요. 잠시 후 다시 시도해주세요.');
+      setAwardsError(e?.message ?? '시상식 준비에 실패했어요. 잠시 후 다시 시도해주세요.');
     } finally {
-      setReportLoading(false);
+      setAwardsLoading(false);
     }
+  }
+
+  function revealAward(key: string) {
+    setRevealed((prev) => new Set(prev).add(key));
   }
 
   const tagCounts: Record<string, number> = {};
@@ -274,35 +280,69 @@ export default function StatsScreen() {
           </View>
         </View>
 
-        {/* AI 심층 리포트 */}
+        {/* 월말 p!ng 어워즈 */}
         <View style={[styles.card, { borderColor: hexToRgba(accent, 0.3) }]}>
-          <TouchableOpacity
-            style={styles.reportHeader}
-            onPress={() => report && setReportOpen((v) => !v)}
-            activeOpacity={report ? 0.7 : 1}
-          >
-            <IconSparkle size={15} color={accent} />
-            <Text style={[styles.cardTitle, { flex: 1 }]}>{reportMonth + 1}월 AI 리포트</Text>
-            {report && (
-              <Text style={[styles.reportToggle, { color: accent }]}>{reportOpen ? '접기 ∧' : '펼치기 ∨'}</Text>
-            )}
-          </TouchableOpacity>
-          {report ? (
-            reportOpen && <Text style={styles.reportText}>{report}</Text>
+          <View style={styles.reportHeader}>
+            <Text style={{ fontSize: 15 }}>🏆</Text>
+            <Text style={[styles.cardTitle, { flex: 1 }]}>{reportMonth + 1}월 p!ng 어워즈</Text>
+          </View>
+          {monthAwards ? (
+            <>
+              {monthAwards.awards.map((a, i) => {
+                const key = `${reportMonth}-${i}`;
+                const open = revealed.has(key);
+                const winner = entries.find((e) => e.id === a.entry_id);
+                if (!open) {
+                  return (
+                    <TouchableOpacity
+                      key={key}
+                      style={[styles.awardEnvelope, { borderColor: hexToRgba(accent, 0.35) }]}
+                      onPress={() => revealAward(key)}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.awardEnvelopeText}>🏆 {a.award}</Text>
+                      <Text style={[styles.awardEnvelopeHint, { color: accent }]}>탭해서 개봉</Text>
+                    </TouchableOpacity>
+                  );
+                }
+                return (
+                  <View key={key} style={[styles.awardCard, { borderColor: hexToRgba(accent, 0.25) }]}>
+                    <View style={styles.awardHeader}>
+                      <PersonaIcon persona={a.persona} size={15} color={accent} />
+                      <Text style={[styles.awardName, { color: accent }]}>{a.award}</Text>
+                    </View>
+                    {winner && (
+                      <Text style={styles.awardWinner}>수상작 「{winner.title || '제목 없음'}」 · {entryDateLabel(winner)}</Text>
+                    )}
+                    {a.quote ? <Text style={styles.awardQuote}>“{a.quote}”</Text> : null}
+                    <Text style={styles.awardComment}>{a.comment}  — {a.persona}</Text>
+                    {winner && (
+                      <TouchableOpacity onPress={() => navigation.navigate('DiaryDetail', { entry: winner })}>
+                        <Text style={[styles.awardLink, { color: accent }]}>일기 보러가기 →</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                );
+              })}
+              {!!monthAwards.closing &&
+                monthAwards.awards.every((_, i) => revealed.has(`${reportMonth}-${i}`)) && (
+                <Text style={styles.awardClosing}>🎬 {monthAwards.closing}</Text>
+              )}
+            </>
           ) : (
             <>
               <Text style={styles.reportDesc}>
-                {reportMonth + 1}월 기록을 AI가 읽고 감정 흐름·반복된 주제·하이라이트를 요약해줘요. 위 월별 기록에서 다른 달을 누르면 그 달의 리포트를 볼 수 있어요.
+                페르소나 심사위원들이 {reportMonth + 1}월 일기에 상을 드려요. 위 월별 기록에서 다른 달을 누르면 그 달 시상식도 열 수 있어요.
               </Text>
-              {reportError && <Text style={styles.reportError}>{reportError}</Text>}
+              {awardsError && <Text style={styles.reportError}>{awardsError}</Text>}
               <TouchableOpacity
-                style={[styles.reportBtn, { backgroundColor: accent }, reportLoading && { opacity: 0.6 }]}
-                onPress={loadReport}
-                disabled={reportLoading}
+                style={[styles.reportBtn, { backgroundColor: accent }, awardsLoading && { opacity: 0.6 }]}
+                onPress={loadAwards}
+                disabled={awardsLoading}
               >
-                {reportLoading
+                {awardsLoading
                   ? <ActivityIndicator color="#fff" size="small" />
-                  : <Text style={styles.reportBtnText}>한 달 기록 요약받기</Text>}
+                  : <Text style={styles.reportBtnText}>시상식 열기 🏆</Text>}
               </TouchableOpacity>
             </>
           )}
@@ -435,6 +475,25 @@ const styles = StyleSheet.create({
   reportDesc: { fontSize: 12.5, color: '#9ca3af', lineHeight: 19 },
   reportText: { fontSize: 13.5, color: '#374151', lineHeight: 22 },
   reportToggle: { fontSize: 12, fontWeight: '700' },
+
+  // 어워즈
+  awardEnvelope: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderWidth: 1.5, borderStyle: 'dashed', borderRadius: 14,
+    paddingHorizontal: 14, paddingVertical: 14, backgroundColor: '#fafafa',
+  },
+  awardEnvelopeText: { flex: 1, fontSize: 13.5, fontWeight: '700', color: '#374151' },
+  awardEnvelopeHint: { fontSize: 12, fontWeight: '700' },
+  awardCard: {
+    borderWidth: 1, borderRadius: 14, padding: 14, gap: 6, backgroundColor: '#fbfbfd',
+  },
+  awardHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  awardName: { fontSize: 13.5, fontWeight: '800' },
+  awardWinner: { fontSize: 12.5, color: '#374151', fontWeight: '600' },
+  awardQuote: { fontSize: 13, color: '#4b5563', fontStyle: 'italic', lineHeight: 20 },
+  awardComment: { fontSize: 13, color: '#4b5563', lineHeight: 20 },
+  awardLink: { fontSize: 12.5, fontWeight: '700', marginTop: 2 },
+  awardClosing: { fontSize: 12.5, color: '#9ca3af', textAlign: 'center', paddingVertical: 4 },
   reportError: { fontSize: 12, color: '#ef4444' },
   reportBtn: { borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
   reportBtnText: { fontSize: 13, fontWeight: '700', color: '#ffffff' },

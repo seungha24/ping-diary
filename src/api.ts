@@ -211,6 +211,18 @@ export async function getMonthlyReport(year: number, month: number): Promise<{ r
   return request(`/entries/report?year=${year}&month=${month}`);
 }
 
+/** 월말 p!ng 어워즈 — 페르소나 심사위원 시상식 (통계 화면) */
+export interface MonthlyAward {
+  award: string;
+  persona: string;
+  entry_id: number;
+  comment: string;
+  quote?: string | null;
+}
+export async function getMonthlyAwards(year: number, month: number): Promise<{ awards: MonthlyAward[]; closing: string | null; count: number }> {
+  return request(`/entries/awards?year=${year}&month=${month}`);
+}
+
 export async function generateComment(id: number, persona?: string): Promise<DiaryEntry> {
   const row = await request(`/entries/${id}/comment`, {
     method: 'POST',
