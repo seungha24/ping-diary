@@ -1,31 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import IconChev from '../components/icons/IconChev';
-import { IconBellOff, IconBell, IconUsers, IconPencil, IconSparkle } from '../components/icons/Line';
+import { IconBellOff, IconPencil, IconSparkle } from '../components/icons/Line';
 import { useTheme } from '../context/ThemeContext';
 import {
-  Notif, getNotifs, getUnreadCount, subscribeNotifs,
+  Notif, getNotifs, getUnreadCount, subscribeNotifs, refreshNotifs, timeAgo,
   markAllRead as storeMarkAllRead, markRead as storeMarkRead,
 } from '../data/notifStore';
 
 // 알림 종류별 아이콘·색 (이모지 대신 라인 아이콘)
 const TYPE_ICON: Record<Notif['type'], { bg: string; color: string; Icon: React.ComponentType<{ size?: number; color?: string }> }> = {
-  ai:       { bg: '#f3e8ff', color: '#8b5cf6', Icon: IconSparkle },
-  diary:    { bg: '#e0f2fe', color: '#0ea5e9', Icon: IconPencil },
-  invite:   { bg: '#fef3c7', color: '#f59e0b', Icon: IconUsers },
-  reminder: { bg: '#dcfce7', color: '#10b981', Icon: IconBell },
+  ai:    { bg: '#f3e8ff', color: '#8b5cf6', Icon: IconSparkle },
+  diary: { bg: '#e0f2fe', color: '#0ea5e9', Icon: IconPencil },
 };
 
 export default function NotificationScreen() {
   const navigation = useNavigation();
   const { accent } = useTheme();
   const [, forceUpdate] = useState(0);
+  const [loading, setLoading] = useState(getNotifs().length === 0);
 
   // 공유 스토어 구독 → 어느 화면에서 읽음 처리해도 반영
   useEffect(() => subscribeNotifs(() => forceUpdate((v) => v + 1)), []);
+  // 실제 데이터(내 AI 코멘트·그룹 새 글)로 알림 갱신
+  useEffect(() => {
+    refreshNotifs().finally(() => setLoading(false));
+  }, []);
 
   const notifs = getNotifs();
   const unreadCount = getUnreadCount();
@@ -57,8 +60,15 @@ export default function NotificationScreen() {
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
         {notifs.length === 0 ? (
           <View style={styles.empty}>
-            <IconBellOff size={40} color="#d1d5db" />
-            <Text style={styles.emptyText}>알림이 없어요</Text>
+            {loading ? (
+              <ActivityIndicator color="#d1d5db" size="small" />
+            ) : (
+              <>
+                <IconBellOff size={40} color="#d1d5db" />
+                <Text style={styles.emptyText}>알림이 없어요</Text>
+                <Text style={styles.emptySubText}>AI 코멘트가 도착하거나{'\n'}그룹에 새 p!ng가 올라오면 알려드릴게요</Text>
+              </>
+            )}
           </View>
         ) : (
           notifs.map((n) => {
@@ -79,7 +89,7 @@ export default function NotificationScreen() {
                   {n.title}
                 </Text>
                 <Text style={styles.notifSub}>{n.body}</Text>
-                <Text style={styles.notifTime}>{n.time}</Text>
+                <Text style={styles.notifTime}>{timeAgo(n.time)}</Text>
               </View>
               {!n.read && <View style={[styles.unreadDot, { backgroundColor: accent }]} />}
             </TouchableOpacity>
@@ -138,4 +148,5 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', paddingTop: 80, gap: 10 },
   emptyEmoji: { fontSize: 40 },
   emptyText: { fontSize: 14, color: '#9ca3af' },
+  emptySubText: { fontSize: 12, color: '#d1d5db', textAlign: 'center', lineHeight: 18 },
 });

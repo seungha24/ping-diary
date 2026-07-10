@@ -302,6 +302,7 @@ export async function updateGroupPhoto(id: number, photo_url: string | null): Pr
 export interface UserFolder { id: string; name: string; emoji: string }
 
 export interface Me {
+  id: string | null;
   email: string | null;
   folder_covers: Record<string, string>;
   theme: string | null;
@@ -353,6 +354,7 @@ export async function getMe(): Promise<Me> {
   meInflight = (async () => {
     const r = await request('/auth/me');
     const me: Me = {
+      id: r?.id ?? null,
       email: r?.email ?? null,
       folder_covers: r?.folder_covers ?? {},
       theme: r?.theme ?? null,

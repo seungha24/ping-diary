@@ -1,30 +1,125 @@
-// 알림(목업) 공유 스토어. 화면 간 읽음 상태를 유지하고, 홈 종 배지도 이 상태를 구독한다.
+// 실제 데이터 기반 알림 스토어.
+// - 내 일기에 AI 코멘트가 달리면 → 'ai' 알림
+// - 그룹 멤버가 새 p!ng를 공유하면 → 'diary' 알림
+// 읽음 상태는 localStorage에 보관해 화면을 나가도 유지된다.
+import { fetchEntries, fetchGroups, fetchGroupEntries, getCachedMe, getMe } from '../api';
+
 export interface Notif {
-  id: number;
-  type: 'diary' | 'invite' | 'reminder' | 'ai';
+  id: string;                 // 'ai-{entryId}' | 'diary-{groupId}-{entryId}'
+  type: 'ai' | 'diary';
   title: string;
   body: string;
-  time: string;
+  time: string;               // ISO
   read: boolean;
 }
 
-const INITIAL: Notif[] = [
-  { id: 1, type: 'ai',       title: 'AI 코멘트가 도착했어요',      body: '선생님 · 오늘도 평범한 하루',     time: '방금 전',  read: false },
-  { id: 2, type: 'diary',    title: '엄마가 새 p!ng를 작성했어요', body: '가족 p!ng · 가족 외식한 날',      time: '1시간 전', read: false },
-  { id: 3, type: 'ai',       title: 'AI 코멘트가 도착했어요',      body: '엄마 · 오랜 친구를 만난 날',      time: '2시간 전', read: false },
-  { id: 4, type: 'diary',    title: '민준이 새 p!ng를 작성했어요', body: '여행크루 · 제주 첫째 날',         time: '3시간 전', read: false },
-  { id: 5, type: 'reminder', title: '가족 p!ng 알림',            body: '오늘 p!ng를 아직 쓰지 않았어요!', time: '4시간 전', read: false },
-  { id: 6, type: 'invite',   title: '독서모임에 초대받았어요',     body: '지연님이 그룹에 초대했어요',       time: '어제',     read: true  },
-  { id: 7, type: 'diary',    title: '소희가 새 p!ng를 작성했어요', body: '여행크루 · 성산일출봉 등반',      time: '어제',     read: true  },
-  { id: 8, type: 'reminder', title: '여행크루 알림',             body: '매주 월요일 p!ng 알림이에요',     time: '2일 전',   read: true  },
-  { id: 9, type: 'diary',    title: '아빠가 새 p!ng를 작성했어요', body: '가족 p!ng · 주말 드라이브',       time: '3일 전',   read: true  },
-];
-
-let notifs: Notif[] = INITIAL.map((n) => ({ ...n }));
+let notifs: Notif[] = [];
+let refreshing = false;
 const listeners = new Set<() => void>();
+
+const READ_KEY = 'ping_notif_read';
+let memoryRead: string[] = [];
+
+function storage(): Storage | null {
+  try {
+    if (typeof localStorage !== 'undefined') return localStorage;
+  } catch {}
+  return null;
+}
+
+function loadReadSet(): Set<string> {
+  const s = storage();
+  if (s) {
+    try { return new Set(JSON.parse(s.getItem(READ_KEY) || '[]')); } catch {}
+  }
+  return new Set(memoryRead);
+}
+
+function persistReadSet(set: Set<string>) {
+  const arr = Array.from(set).slice(-500); // 무한 성장 방지
+  memoryRead = arr;
+  const s = storage();
+  if (s) {
+    try { s.setItem(READ_KEY, JSON.stringify(arr)); } catch {}
+  }
+}
 
 function emit() {
   listeners.forEach((fn) => fn());
+}
+
+/** 상대 시간 라벨 ("방금 전", "3시간 전", "어제", "6월 9일") */
+export function timeAgo(iso: string): string {
+  const t = new Date(iso).getTime();
+  if (!t) return '';
+  const diff = Date.now() - t;
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return '방금 전';
+  if (min < 60) return `${min}분 전`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}시간 전`;
+  const day = Math.floor(hr / 24);
+  if (day === 1) return '어제';
+  if (day < 7) return `${day}일 전`;
+  const d = new Date(iso);
+  return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+}
+
+/** 서버 데이터로 알림 목록 재구성 */
+export async function refreshNotifs() {
+  if (refreshing) return;
+  refreshing = true;
+  try {
+    const me = getCachedMe() ?? await getMe().catch(() => null);
+    const myId = me?.id ?? null;
+
+    const [entries, groups] = await Promise.all([
+      fetchEntries().catch(() => []),
+      fetchGroups().catch(() => []),
+    ]);
+
+    const items: Notif[] = [];
+
+    // 1) 내 일기에 도착한 AI 코멘트
+    for (const e of entries) {
+      if (e.aiComment) {
+        items.push({
+          id: `ai-${e.id}`,
+          type: 'ai',
+          title: 'AI 코멘트가 도착했어요',
+          body: `${e.persona || 'AI'} · ${e.title || '제목 없음'}`,
+          time: e.createdAt,
+          read: false,
+        });
+      }
+    }
+
+    // 2) 그룹 멤버들의 새 p!ng (내 글 제외)
+    const feeds = await Promise.all(
+      groups.map(async (g) => {
+        const rows = await fetchGroupEntries(g.id).catch(() => []);
+        return rows
+          .filter((r: any) => !myId || r.user_id !== myId)
+          .map((r: any): Notif => ({
+            id: `diary-${g.id}-${r.id}`,
+            type: 'diary',
+            title: `${r.author || '멤버'}님이 새 p!ng를 작성했어요`,
+            body: `${g.name} · ${r.title || (r.content || '').slice(0, 24)}`,
+            time: r.created_at,
+            read: false,
+          }));
+      })
+    );
+    feeds.forEach((list) => items.push(...list));
+
+    // 최신순 정렬 + 상한
+    items.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+    const readSet = loadReadSet();
+    notifs = items.slice(0, 50).map((n) => ({ ...n, read: readSet.has(n.id) }));
+    emit();
+  } finally {
+    refreshing = false;
+  }
 }
 
 export function getNotifs(): Notif[] {
@@ -36,11 +131,17 @@ export function getUnreadCount(): number {
 }
 
 export function markAllRead() {
+  const readSet = loadReadSet();
+  notifs.forEach((n) => readSet.add(n.id));
+  persistReadSet(readSet);
   notifs = notifs.map((n) => (n.read ? n : { ...n, read: true }));
   emit();
 }
 
-export function markRead(id: number) {
+export function markRead(id: string) {
+  const readSet = loadReadSet();
+  readSet.add(id);
+  persistReadSet(readSet);
   notifs = notifs.map((n) => (n.id === id ? { ...n, read: true } : n));
   emit();
 }

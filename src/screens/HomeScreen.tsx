@@ -10,7 +10,7 @@ import { RootStackParamList } from '../navigation/RootNavigator';
 import Tag from '../components/Tag';
 import IconPlus from '../components/icons/IconPlus';
 import IconBell from '../components/icons/IconBell';
-import { getUnreadCount as getNotifUnread, subscribeNotifs } from '../data/notifStore';
+import { getUnreadCount as getNotifUnread, subscribeNotifs, refreshNotifs } from '../data/notifStore';
 import { PhotoThumb } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
 import { FOLDERS, DiaryEntry, DiaryFolder, entryDateLabel } from '../data/types';
@@ -40,6 +40,7 @@ export default function HomeScreen() {
   // 알림 읽음 상태 구독 → 종 배지(빨간 점)를 안 읽은 알림이 있을 때만 표시
   const [, forceNotif] = useState(0);
   useEffect(() => subscribeNotifs(() => forceNotif((v) => v + 1)), []);
+  useEffect(() => { refreshNotifs(); }, []); // 실제 알림(AI 코멘트·그룹 새 글) 로드
   const hasUnreadNotif = getNotifUnread() > 0;
   const [selectedFolder, setSelectedFolder] = useState<DiaryFolder | null>(null);
   const [personalView, setPersonalView] = useState<'folder' | 'all'>('folder');
