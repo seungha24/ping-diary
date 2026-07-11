@@ -404,11 +404,6 @@ export default function GroupScreen() {
             <Text style={styles.leaveBtnText}>관리</Text>
           </TouchableOpacity>
 
-          {/* 알림 설정 버튼 */}
-          <TouchableOpacity style={styles.bellBtn} onPress={openModal}>
-            <IconBell hasNotif={hasNotif} accent={accent} />
-          </TouchableOpacity>
-
           {/* 리스트/그리드 토글 */}
           <View style={styles.viewToggle}>
             <TouchableOpacity
@@ -427,6 +422,14 @@ export default function GroupScreen() {
         </View>
       </View>
 
+      {/* 알림 주기 배너 — 탭하면 알림 설정 */}
+      <TouchableOpacity style={styles.notifBanner} onPress={openModal}>
+        <IconBellLine size={15} color={frequency === 'off' ? '#9ca3af' : accent} />
+        <Text style={styles.notifBannerText}>
+          {frequency === 'off' ? '알림이 꺼져 있어요' : `${freqSummary()} p!ng 알림 중`}
+        </Text>
+        <Text style={styles.notifBannerEdit}>변경</Text>
+      </TouchableOpacity>
 
       {/* Feed */}
       {loading ? (
