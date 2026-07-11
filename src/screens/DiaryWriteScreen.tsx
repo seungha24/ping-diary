@@ -9,7 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 import Svg, { Path, Rect, Circle, Polyline } from 'react-native-svg';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
-import { PERSONAS, MONTHS, DAYS, DiaryEntry, DiaryFolder, mergeFolders, parseBodySegments } from '../data/types';
+import { PERSONAS, MONTHS, DAYS, DiaryEntry, DiaryFolder, mergeFolders, parseBodySegments, extractQuestion } from '../data/types';
 
 // ── 블록 에디터: 본문을 텍스트/사진 블록으로 편집, 저장 시 [photo:URL] 마커로 직렬화 ──
 type EditorBlock = { type: 'text'; text: string } | { type: 'photo'; url: string };
@@ -158,7 +158,12 @@ export default function DiaryWriteScreen() {
   const today = new Date();
   const [title, setTitle] = useState(editEntry?.title ?? '');
   // 본문: 텍스트/사진 블록 에디터 (사진이 입력창 사이에 실제로 보임)
-  const [blocks, setBlocks] = useState<EditorBlock[]>(() => entryToBlocks(editEntry));
+  // 본문 맨 앞의 [q:질문] 마커는 분리해서 '오늘의 질문' 선택 상태로
+  const initQ = extractQuestion(editEntry?.body ?? '');
+  const [selectedPrompt, setSelectedPrompt] = useState<string | null>(initQ.question);
+  const [blocks, setBlocks] = useState<EditorBlock[]>(
+    () => entryToBlocks(editEntry ? { ...editEntry, body: initQ.rest } : undefined)
+  );
   const focusRef = useRef({ block: 0, sel: { start: 0, end: 0 } }); // 사진 삽입 위치(커서)
   const [blockHeights, setBlockHeights] = useState<Record<number, number>>({}); // 자동 높이
   const [tags, setTags] = useState<string[]>(editEntry?.tags ?? []);
@@ -213,7 +218,7 @@ export default function DiaryWriteScreen() {
   const [draftSaved, setDraftSaved] = useState(false);
 
   function handleSaveDraft() {
-    const draftBody = blocksToBody(blocks);
+    const draftBody = (selectedPrompt ? `[q:${selectedPrompt}]\n` : '') + blocksToBody(blocks);
     if (!title.trim() && !draftBody.trim()) {
       notify('내용을 입력한 뒤 임시저장할 수 있어요.');
       return;
@@ -236,7 +241,9 @@ export default function DiaryWriteScreen() {
     const d = draftBanner;
     if (!d) return;
     setTitle(d.title);
-    setBlocks(entryToBlocks({ body: d.body, photo: null, photos: [] }));
+    const dq = extractQuestion(d.body);
+    setSelectedPrompt(dq.question);
+    setBlocks(entryToBlocks({ body: dq.rest, photo: null, photos: [] }));
     setTags(d.tags);
     setPersona(d.persona);
     setFolder(d.folder);
@@ -350,7 +357,7 @@ export default function DiaryWriteScreen() {
               const diaryDate = new Date(calYear, calMonth, diaryDay,
                 base.getHours(), base.getMinutes(), base.getSeconds());
               const createdAtISO = isNaN(diaryDate.getTime()) ? base.toISOString() : diaryDate.toISOString();
-              const storedBody = blocksToBody(blocks); // 블록 → [photo:URL] 마커 본문
+              const storedBody = (selectedPrompt ? `[q:${selectedPrompt}]\n` : '') + blocksToBody(blocks); // 질문+블록 → 마커 본문
               // 본문 첫 사진이 대표 (목록 썸네일용)
               const mainPhoto = (blocks.find((b) => b.type === 'photo') as any)?.url ?? null;
 
@@ -449,14 +456,31 @@ export default function DiaryWriteScreen() {
           </View>
         </View>
 
-        {/* AI prompt */}
-        <View style={[styles.promptCard, { backgroundColor: hexToRgba(accent, 0.1), borderColor: hexToRgba(accent, 0.2) }]}>
+        {/* 오늘의 질문 — 탭하면 '이 질문에 답하기'로 선택되고 일기에 함께 저장됨 */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => setSelectedPrompt((cur) => (cur ? null : PROMPTS[promptIndex]))}
+          style={[
+            styles.promptCard,
+            { backgroundColor: hexToRgba(accent, selectedPrompt ? 0.18 : 0.1), borderColor: hexToRgba(accent, selectedPrompt ? 0.5 : 0.2) },
+          ]}
+        >
           <IconQuote color={accent} size={15} />
-          <Text style={styles.promptText}>{PROMPTS[promptIndex]}</Text>
-          <TouchableOpacity onPress={() => setPromptIndex((i) => (i + 1) % PROMPTS.length)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <IconRefresh color={accent} size={16} />
-          </TouchableOpacity>
-        </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.promptText}>{selectedPrompt ?? PROMPTS[promptIndex]}</Text>
+            <Text style={[styles.promptSelectHint, { color: accent }]}>
+              {selectedPrompt ? '✓ 이 질문에 답하는 중 · 탭하면 해제' : '탭하면 이 질문에 답하는 일기가 돼요'}
+            </Text>
+          </View>
+          {!selectedPrompt && (
+            <TouchableOpacity
+              onPress={(e) => { e.stopPropagation(); setPromptIndex((i) => (i + 1) % PROMPTS.length); }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <IconRefresh color={accent} size={16} />
+            </TouchableOpacity>
+          )}
+        </TouchableOpacity>
 
         {/* Title */}
         <TextInput
@@ -776,6 +800,7 @@ const styles = StyleSheet.create({
   },
   promptQuote: { fontSize: 16, fontWeight: '800', marginTop: -2 },
   promptText: { fontSize: 13, color: '#4b5563', flex: 1, lineHeight: 19, fontWeight: '500' },
+  promptSelectHint: { fontSize: 10.5, fontWeight: '600', marginTop: 3 },
   promptRefresh: { fontSize: 17, fontWeight: '700' },
   titleInput: {
     fontSize: 18, fontWeight: '700', color: '#1f2937',

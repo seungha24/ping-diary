@@ -141,11 +141,23 @@ export function mergeFolders(stored: DiaryFolder[], hidden: string[]): DiaryFold
   return hasDefaultsInStored ? [...storedVisible, ...rest] : [...rest, ...storedVisible];
 }
 
-// ── 본문 중간 사진: 저장 형식은 [photo:URL] 마커 ──
+// ── 본문 마커: [q:질문] (오늘의 질문), [photo:URL] (본문 사진) ──
 
-/** 목록 미리보기 등에서 사진 마커 제거 */
+const QUESTION_RE = /^\[q:([^\]]+)\]\s*/;
+
+/** 본문 맨 앞의 '오늘의 질문' 마커 분리 */
+export function extractQuestion(body: string): { question: string | null; rest: string } {
+  const m = (body || '').match(QUESTION_RE);
+  return m ? { question: m[1], rest: (body || '').slice(m[0].length) } : { question: null, rest: body || '' };
+}
+
+/** 목록 미리보기 등에서 마커(질문·사진) 제거 */
 export function stripPhotoMarkers(text: string): string {
-  return text.replace(/\[photo:[^\]\s]+\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
+  return (text || '')
+    .replace(QUESTION_RE, '')
+    .replace(/\[photo:[^\]\s]+\]/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }
 
 export type BodySegment = { type: 'text'; text: string } | { type: 'photo'; url: string };

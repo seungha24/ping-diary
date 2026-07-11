@@ -12,10 +12,10 @@ import PhotoLightbox from '../components/PhotoLightbox';
 import IconChev from '../components/icons/IconChev';
 import IconEdit from '../components/icons/IconEdit';
 import IconTrash from '../components/icons/IconTrash';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { useGroups } from '../context/GroupsContext';
-import { PERSONAS, DiaryFolder, entryDateLabel, mergeFolders, parseBodySegments } from '../data/types';
+import { PERSONAS, DiaryFolder, entryDateLabel, mergeFolders, parseBodySegments, extractQuestion } from '../data/types';
 import { generateComment, reportContent, getCachedMe } from '../api';
 import { notify } from '../notify';
 import Svg, { Path, Line } from 'react-native-svg';
@@ -63,8 +63,9 @@ export default function DiaryDetailScreen() {
   const isMine = !entry.authorId || entry.authorId === getCachedMe()?.id;
   // 사진 갤러리: 대표는 크게, 나머지는 작게. 탭하면 확대 보기
   // 본문 중간([photo:URL])에 이미 들어간 사진은 상단에서 중복 표시하지 않는다
+  const { question, rest: bodyText } = extractQuestion(entry.body);
   const bodyPhotoUrls = new Set(
-    parseBodySegments(entry.body).filter((s) => s.type === 'photo').map((s: any) => s.url)
+    parseBodySegments(bodyText).filter((s) => s.type === 'photo').map((s: any) => s.url)
   );
   const gallery = ([entry.photo, ...(entry.photos ?? [])].filter(Boolean) as string[])
     .filter((u) => !bodyPhotoUrls.has(u));
@@ -250,8 +251,16 @@ export default function DiaryDetailScreen() {
 
         <View style={styles.divider} />
 
+        {/* 오늘의 질문 (질문에 답한 일기) */}
+        {question && (
+          <View style={[styles.questionCard, { backgroundColor: hexToRgba(accent, 0.08), borderColor: hexToRgba(accent, 0.25) }]}>
+            <Text style={[styles.questionQ, { color: accent }]}>Q</Text>
+            <Text style={styles.questionText}>{question}</Text>
+          </View>
+        )}
+
         {/* 본문 — [photo:URL] 마커 자리에 사진이 글 중간에 렌더됨 */}
-        {parseBodySegments(entry.body).map((seg, i) =>
+        {parseBodySegments(bodyText).map((seg, i) =>
           seg.type === 'text' ? (
             <Text key={i} style={styles.body}>{seg.text}</Text>
           ) : (
@@ -516,6 +525,12 @@ const styles = StyleSheet.create({
   meta: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   divider: { height: 1, backgroundColor: '#f3f4f6' },
   body: { fontSize: 15, color: '#374151', lineHeight: 26 },
+  questionCard: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 10,
+    borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 11,
+  },
+  questionQ: { fontSize: 15, fontWeight: '800' },
+  questionText: { flex: 1, fontSize: 13.5, color: '#374151', lineHeight: 20, fontWeight: '600' },
 
   aiSection: { gap: 10, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
   aiTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
