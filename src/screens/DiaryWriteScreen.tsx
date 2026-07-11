@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
   StyleSheet, SafeAreaView, Modal, Image, ActivityIndicator,
@@ -9,7 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 import Svg, { Path, Rect, Circle, Polyline } from 'react-native-svg';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
-import { PERSONAS, MONTHS, DAYS, DiaryEntry, DiaryFolder, mergeFolders, parseBodySegments, extractQuestion } from '../data/types';
+import { PERSONAS, MONTHS, DAYS, DiaryEntry, DiaryFolder, mergeFolders, parseBodySegments, extractQuestion, stripPhotoMarkers } from '../data/types';
 
 // ── 블록 에디터: 본문을 텍스트/사진 블록으로 편집, 저장 시 [photo:URL] 마커로 직렬화 ──
 type EditorBlock = { type: 'text'; text: string } | { type: 'photo'; url: string };
@@ -64,7 +64,7 @@ import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { useGroups } from '../context/GroupsContext';
 import { uploadPhoto, getCachedMe, patchEntry, generateComment } from '../api';
-import { saveDraft, getDraft, clearDraft, DiaryDraft } from '../data/draftStore';
+import { saveDraft, listDrafts, deleteDraft, DiaryDraft } from '../data/draftStore';
 import { notify } from '../notify';
 import { RootStackParamList } from '../navigation/RootNavigator';
 
@@ -225,33 +225,47 @@ export default function DiaryWriteScreen() {
   const [calMonth, setCalMonth] = useState(initDate.getMonth());
   const [selectedDates, setSelectedDates] = useState<number[]>(editEntry?.dates ?? [today.getDate()]);
 
-  // ── 임시저장 (새 글에서만) ──
-  const [draftBanner, setDraftBanner] = useState<DiaryDraft | null>(() => (editEntry ? null : getDraft()));
+  // ── 임시저장함 (새 글에서만) ──
+  const [drafts, setDrafts] = useState<DiaryDraft[]>([]);
+  const [draftsOpen, setDraftsOpen] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(null); // 이어쓰는 중인 초안 id
   const [draftSaved, setDraftSaved] = useState(false);
 
-  function handleSaveDraft() {
+  useEffect(() => {
+    if (editEntry) return;
+    let cancelled = false;
+    listDrafts().then((list) => { if (!cancelled) setDrafts(list); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [editEntry]);
+
+  /** 현재 작성 중인 내용을 임시저장함에 저장한다 (이어쓰던 초안이면 갱신) */
+  async function handleSaveDraft() {
     const draftBody = (selectedPrompt ? `[q:${selectedPrompt}]\n` : '') + blocksToBody(blocks);
     if (!title.trim() && !draftBody.trim()) {
       notify('내용을 입력한 뒤 임시저장할 수 있어요.');
       return;
     }
     const firstPhoto = (blocks.find((b) => b.type === 'photo') as any)?.url ?? null;
-    saveDraft({
-      title, body: draftBody, tags, persona, folder,
-      dates: selectedDates,
-      photo: firstPhoto,
-      photos: [],
-      visibility,
-      savedAt: new Date().toISOString(),
-    });
-    setDraftSaved(true);
-    setDraftBanner(null);
-    notify('임시저장했어요. 다음에 이어서 쓸 수 있어요.');
+    try {
+      const saved = await saveDraft({
+        id: draftId,
+        title, body: draftBody, tags, persona, folder,
+        dates: selectedDates,
+        photo: firstPhoto,
+        photos: [],
+        visibility,
+      });
+      setDraftId(saved.id);
+      setDrafts(await listDrafts());
+      setDraftSaved(true);
+      notify('임시저장했어요. 임시저장함에서 이어쓸 수 있어요.');
+    } catch {
+      notify('임시저장에 실패했어요.');
+    }
   }
 
-  function restoreDraft() {
-    const d = draftBanner;
-    if (!d) return;
+  /** 임시저장함의 초안을 작성 화면으로 불러온다 */
+  function restoreDraft(d: DiaryDraft) {
     setTitle(d.title);
     const dq = extractQuestion(d.body);
     setSelectedPrompt(dq.question);
@@ -261,12 +275,29 @@ export default function DiaryWriteScreen() {
     setFolder(d.folder);
     setSelectedDates(d.dates);
     setVisibility(d.visibility);
-    setDraftBanner(null);
+    setDraftId(d.id);
+    setDraftSaved(false);
+    setDraftsOpen(false);
   }
 
-  function discardDraft() {
-    clearDraft();
-    setDraftBanner(null);
+  /** 초안 하나를 임시저장함에서 삭제한다 */
+  async function removeDraft(id: string) {
+    try {
+      await deleteDraft(id);
+      if (id === draftId) setDraftId(null);
+      setDrafts(await listDrafts());
+    } catch {
+      notify('삭제에 실패했어요.');
+    }
+  }
+
+  /** 초안 저장 시각을 "7월 12일 14:03" 형태로 표시한다 */
+  function draftTimeLabel(iso: string): string {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `${d.getMonth() + 1}월 ${d.getDate()}일 ${hh}:${mm}`;
   }
 
   // 홈 화면과 동일한 순서(사용자 재정렬 반영)로 폴더 목록 구성
@@ -411,7 +442,7 @@ export default function DiaryWriteScreen() {
                   sharedGroups: visibility === 'friends' && shareGroupIds.size > 0 ? Array.from(shareGroupIds) : null,
                   createdAt: createdAtISO,
                 });
-                clearDraft(); // 발행했으니 임시저장본 정리
+                if (draftId) deleteDraft(draftId).catch(() => {}); // 발행했으니 이 초안만 정리
                 playPing();
                 navigation.goBack();
               }
@@ -423,17 +454,14 @@ export default function DiaryWriteScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-        {/* 임시저장된 글 불러오기 배너 */}
-        {draftBanner && (
+        {/* 임시저장함 배너 (새 글에서만) */}
+        {!editEntry && drafts.length > 0 && (
           <View style={[styles.draftBanner, { borderColor: hexToRgba(accent, 0.3), backgroundColor: hexToRgba(accent, 0.07) }]}>
             <Text style={styles.draftBannerText} numberOfLines={1}>
-              📝 임시저장된 글이 있어요{draftBanner.title ? ` · "${draftBanner.title}"` : ''}
+              📝 임시저장함에 {drafts.length}개의 글이 있어요
             </Text>
-            <TouchableOpacity onPress={restoreDraft}>
-              <Text style={[styles.draftBannerAction, { color: accent }]}>이어쓰기</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={discardDraft}>
-              <Text style={[styles.draftBannerAction, { color: '#9ca3af' }]}>지우기</Text>
+            <TouchableOpacity onPress={() => setDraftsOpen(true)}>
+              <Text style={[styles.draftBannerAction, { color: accent }]}>열기</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -602,6 +630,41 @@ export default function DiaryWriteScreen() {
       </ScrollView>
 
       {/* 페르소나 선택 모달 */}
+      {/* 임시저장함 모달 */}
+      <Modal visible={draftsOpen} transparent animationType="fade">
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setDraftsOpen(false)}>
+          <TouchableOpacity activeOpacity={1}>
+            <View style={styles.personaModal}>
+              <Text style={styles.personaModalTitle}>임시저장함</Text>
+              <Text style={styles.personaModalSub}>이어 쓸 글을 골라주세요</Text>
+              {drafts.length === 0 ? (
+                <Text style={styles.draftEmptyText}>임시저장된 글이 없어요.</Text>
+              ) : (
+                <ScrollView style={{ maxHeight: 320 }} showsVerticalScrollIndicator={false}>
+                  {drafts.map((d) => (
+                    <TouchableOpacity
+                      key={d.id}
+                      style={[styles.draftRow, d.id === draftId && { borderColor: accent, backgroundColor: hexToRgba(accent, 0.08) }]}
+                      onPress={() => restoreDraft(d)}
+                    >
+                      <View style={styles.draftRowBody}>
+                        <Text style={styles.draftRowTitle} numberOfLines={1}>
+                          {d.title.trim() || stripPhotoMarkers(extractQuestion(d.body).rest).trim() || '(제목 없음)'}
+                        </Text>
+                        <Text style={styles.draftRowTime}>{draftTimeLabel(d.savedAt)}</Text>
+                      </View>
+                      <TouchableOpacity hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} onPress={() => removeDraft(d.id)}>
+                        <Text style={styles.draftRowDelete}>삭제</Text>
+                      </TouchableOpacity>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
+
       <Modal visible={personaModalOpen} transparent animationType="fade">
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setPersonaModalOpen(false)}>
           <TouchableOpacity activeOpacity={1}>
@@ -779,6 +842,17 @@ const styles = StyleSheet.create({
   },
   draftBannerText: { flex: 1, fontSize: 12.5, color: '#374151' },
   draftBannerAction: { fontSize: 12.5, fontWeight: '700' },
+  // 임시저장함 모달
+  draftEmptyText: { fontSize: 13, color: '#9ca3af', textAlign: 'center', paddingVertical: 20 },
+  draftRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    borderWidth: 1, borderColor: '#f3f4f6', borderRadius: 12,
+    paddingHorizontal: 12, paddingVertical: 10, marginBottom: 8,
+  },
+  draftRowBody: { flex: 1, gap: 2 },
+  draftRowTitle: { fontSize: 13.5, color: '#111827', fontWeight: '600' },
+  draftRowTime: { fontSize: 11.5, color: '#9ca3af' },
+  draftRowDelete: { fontSize: 12.5, color: '#ef4444', fontWeight: '600' },
   saveBtn: { paddingHorizontal: 22, paddingVertical: 9, borderRadius: 999, backgroundColor: '#111827' },
   saveBtnText: { fontSize: 14, fontWeight: '800', color: '#ffffff' },
   content: { padding: 20, gap: 14, paddingBottom: 48 },
