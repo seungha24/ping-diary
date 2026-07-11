@@ -54,7 +54,7 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <PingLogo />
-        <Text style={styles.headerTitle}>프로필</Text>
+        <View style={{ width: 36, height: 36 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>

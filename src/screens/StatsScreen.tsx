@@ -138,9 +138,10 @@ export default function StatsScreen() {
     <SafeAreaView style={styles.container} collapsable={false}>
       <View style={styles.header}>
         <PingLogo />
+        <View style={{ width: 36, height: 36 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <ScrollView style={{ backgroundColor: '#f9fafb' }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* Summary */}
         <View style={styles.statsGrid}>
           <TouchableOpacity style={styles.statCard} onPress={() => setListOpen(true)} activeOpacity={0.7}>
@@ -424,7 +425,7 @@ export default function StatsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f9fafb' },
+  container: { flex: 1, backgroundColor: '#ffffff' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingTop: 4, paddingBottom: 12,

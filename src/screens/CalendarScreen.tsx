@@ -51,6 +51,7 @@ export default function CalendarScreen() {
       {/* 상단 로고 (모든 탭 공통) */}
       <View style={styles.header}>
         <PingLogo />
+        <View style={{ width: 36, height: 36 }} />
       </View>
 
       {/* Month nav */}
