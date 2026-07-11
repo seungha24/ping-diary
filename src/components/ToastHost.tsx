@@ -4,15 +4,24 @@ import { setNotifyListener } from '../notify';
 import { useThemedStyles } from '../theme/themed';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 
-/** 배경색 밝기에 따라 잘 보이는 글자색 선택 (파스텔 테마 대응) */
-function readableTextOn(hex: string): string {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
-  if (!m) return '#ffffff';
-  const n = parseInt(m[1], 16);
-  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+/** 배경색 밝기에 따라 잘 보이는 글자색 선택 (파스텔 테마 대응)
+ *  반투명 배경은 뒤 화면과 섞여 보이므로, 섞인 뒤의 색 기준으로 판단한다 */
+function readableTextOn(hex: string, bgOpacity: number, screenBg: string): string {
+  const parse = (h: string): [number, number, number] => {
+    const m = /^#?([0-9a-f]{6})$/i.exec(h);
+    const n = m ? parseInt(m[1], 16) : 0xffffff;
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  };
+  const [r1, g1, b1] = parse(hex);
+  const [r2, g2, b2] = parse(screenBg);
+  const r = r1 * bgOpacity + r2 * (1 - bgOpacity);
+  const g = g1 * bgOpacity + g2 * (1 - bgOpacity);
+  const b = b1 * bgOpacity + b2 * (1 - bgOpacity);
   const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return luminance > 0.6 ? '#111827' : '#ffffff';
 }
+
+const TOAST_BG_OPACITY = 0.45;
 
 /**
  * 폰 프레임 안에 뜨는 전역 토스트. App 루트에 한 번 마운트하면
@@ -20,7 +29,8 @@ function readableTextOn(hex: string): string {
  */
 export default function ToastHost() {
   const styles = useThemedStyles(lightStyles);
-  const { accent } = useTheme();
+  const { accent, mode } = useTheme();
+  const screenBg = mode === 'dark' ? '#111827' : '#ffffff';
   const [message, setMessage] = useState<string | null>(null);
   const opacity = useRef(new Animated.Value(0)).current;
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -47,8 +57,8 @@ export default function ToastHost() {
 
   return (
     <View pointerEvents="none" style={styles.wrap}>
-      <Animated.View style={[styles.toast, { opacity, backgroundColor: hexToRgba(accent, 0.72) }]}>
-        <Text style={[styles.text, { color: readableTextOn(accent) }]}>{message}</Text>
+      <Animated.View style={[styles.toast, { opacity, backgroundColor: hexToRgba(accent, TOAST_BG_OPACITY) }]}>
+        <Text style={[styles.text, { color: readableTextOn(accent, TOAST_BG_OPACITY, screenBg) }]}>{message}</Text>
       </Animated.View>
     </View>
   );
