@@ -142,8 +142,8 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 14,
-    borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
+    paddingHorizontal: 20, paddingTop: 4, paddingBottom: 12,
+    borderBottomWidth: 1, borderBottomColor: '#f3f4f6', backgroundColor: '#ffffff',
   },
   headerTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
   editBtn: { fontSize: 14, color: '#6b7280' },

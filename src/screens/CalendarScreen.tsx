@@ -48,9 +48,13 @@ export default function CalendarScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Month nav */}
+      {/* 상단 로고 (모든 탭 공통) */}
       <View style={styles.header}>
         <PingLogo />
+      </View>
+
+      {/* Month nav */}
+      <View style={styles.monthNav}>
         <TouchableOpacity style={styles.navBtn} onPress={() => setMonth((m) => Math.max(0, m - 1))}>
           <IconChev dir="left" size={20} />
         </TouchableOpacity>
@@ -128,8 +132,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 24, paddingVertical: 14,
-    borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
+    paddingHorizontal: 20, paddingTop: 4, paddingBottom: 12,
+    borderBottomWidth: 1, borderBottomColor: '#f3f4f6', backgroundColor: '#ffffff',
+  },
+  monthNav: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 24, paddingVertical: 10,
   },
   navBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
   monthTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },

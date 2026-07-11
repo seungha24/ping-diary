@@ -138,7 +138,6 @@ export default function StatsScreen() {
     <SafeAreaView style={styles.container} collapsable={false}>
       <View style={styles.header}>
         <PingLogo />
-        <Text style={styles.headerTitle}>통계</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
@@ -428,7 +427,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9fafb' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 14,
+    paddingHorizontal: 20, paddingTop: 4, paddingBottom: 12,
     borderBottomWidth: 1, borderBottomColor: '#f3f4f6', backgroundColor: '#ffffff',
   },
   headerTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },

@@ -6,7 +6,7 @@ import { useNavigation } from '@react-navigation/native';
  * 헤더용 p!ng 로고. 누르면 홈 탭 첫 화면으로 이동한다.
  * (reset 파라미터로 홈 내부 상태도 초기화)
  */
-export default function PingLogo({ size = 20 }: { size?: number }) {
+export default function PingLogo({ size = 22 }: { size?: number }) {
   const navigation = useNavigation<any>();
   return (
     <TouchableOpacity
