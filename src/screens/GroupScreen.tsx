@@ -13,6 +13,7 @@ import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
 import IconPlus from '../components/icons/IconPlus';
 import { DiaryEntry, entryDateLabel, stripPhotoMarkers } from '../data/types';
+import { sortByNewest } from '../data/entrySort';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useGroups } from '../context/GroupsContext';
 import { fetchGroupEntries, leaveGroup, deleteGroup, renameGroup, reportContent, saveBlockedUsers, getCachedMe, uploadPhoto, updateGroupPhoto } from '../api';
@@ -307,7 +308,7 @@ export default function GroupScreen() {
   useEffect(() => {
     let cancelled = false;
     fetchGroupEntries(group.id)
-      .then((rows) => { if (!cancelled) setEntries(rows.map(mapGroupEntry)); })
+      .then((rows) => { if (!cancelled) setEntries(sortByNewest(rows.map(mapGroupEntry))); })
       .catch(() => { if (!cancelled) setEntries([]); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };

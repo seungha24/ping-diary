@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { DiaryEntry, INITIAL_ENTRIES } from '../data/types';
+import { sortByNewest } from '../data/entrySort';
 import { useAuth } from './AuthContext';
 import { fetchEntries, createEntry, patchEntry, removeEntry } from '../api';
 import { notify } from '../notify';
@@ -47,7 +48,7 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
           await Promise.all(demoIds.map((id) => removeEntry(id).catch(() => {})));
           list = list.filter((e) => !demoIds.includes(e.id));
         }
-        if (!cancelled) { setEntries(list); setLoading(false); }
+        if (!cancelled) { setEntries(sortByNewest(list)); setLoading(false); }
       } catch {
         if (!cancelled) { setEntries([]); setLoading(false); }
       }
@@ -57,12 +58,12 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
     return () => { cancelled = true; };
   }, [ready, token]);
 
-  // 낙관적 추가: 화면에 먼저 반영하고 서버 저장 후 실제 엔트리로 교체
+  // 낙관적 추가: 화면에 먼저 반영하고 서버 저장 후 실제 엔트리로 교체 (항상 최신순 유지)
   function addEntry(entry: DiaryEntry) {
-    setEntries((prev) => [entry, ...prev]);
+    setEntries((prev) => sortByNewest([entry, ...prev]));
     createEntry(entry)
       .then((saved) => {
-        setEntries((prev) => prev.map((e) => (e.id === entry.id ? saved : e)));
+        setEntries((prev) => sortByNewest(prev.map((e) => (e.id === entry.id ? saved : e))));
       })
       .catch(() => {
         // 저장 실패 시 낙관적 항목 롤백
@@ -71,13 +72,13 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
       });
   }
 
-  // 낙관적 수정: 화면에 먼저 반영하고 서버에 저장
+  // 낙관적 수정: 화면에 먼저 반영하고 서버에 저장 (날짜가 바뀌었을 수 있으니 재정렬)
   function updateEntry(updated: DiaryEntry) {
     const backup = entries;
-    setEntries((prev) => prev.map((e) => (e.id === updated.id ? updated : e)));
+    setEntries((prev) => sortByNewest(prev.map((e) => (e.id === updated.id ? updated : e))));
     patchEntry(updated)
       .then((saved) => {
-        setEntries((prev) => prev.map((e) => (e.id === updated.id ? saved : e)));
+        setEntries((prev) => sortByNewest(prev.map((e) => (e.id === updated.id ? saved : e))));
       })
       .catch(() => {
         // 저장 실패 시 롤백
