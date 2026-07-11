@@ -1008,7 +1008,7 @@ const lightStyles = StyleSheet.create({
   },
   tabRow: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 12 },
   tabPill: { flexDirection: 'row', backgroundColor: '#f3f4f6', borderRadius: 12, padding: 4 },
-  tabItem: { flex: 1, paddingVertical: 7, borderRadius: 9, alignItems: 'center' },
+  tabItem: { flex: 1, paddingVertical: 10, borderRadius: 9, alignItems: 'center' },
   tabItemActive: {
     backgroundColor: '#ffffff',
     shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 2,
