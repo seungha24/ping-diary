@@ -9,6 +9,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import Tag from '../components/Tag';
 import IconPlus from '../components/icons/IconPlus';
+import IconChev from '../components/icons/IconChev';
 import IconBell from '../components/icons/IconBell';
 import { getUnreadCount as getNotifUnread, subscribeNotifs, refreshNotifs } from '../data/notifStore';
 import { PhotoThumb } from '../components/PhotoThumb';
@@ -382,8 +383,8 @@ export default function HomeScreen() {
                   <Image source={{ uri: folderCovers[selectedFolder.id] }} style={styles.folderCoverBanner} />
                   <View style={styles.folderCoverOverlay}>
                     <View style={styles.folderHeader}>
-                      <TouchableOpacity style={styles.folderBackBtn} onPress={() => setSelectedFolder(null)}>
-                        <Text style={[styles.folderBackText, { color: '#fff' }]}>← 폴더</Text>
+                      <TouchableOpacity style={styles.folderBackBtn} onPress={() => setSelectedFolder(null)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                        <IconChev dir="left" size={20} color="#fff" />
                       </TouchableOpacity>
                       <Text style={[styles.folderHeaderTitle, { color: '#fff' }]}>{selectedFolder.name}</Text>
                       <View style={styles.folderHeaderActions}>
@@ -401,8 +402,8 @@ export default function HomeScreen() {
                 </View>
               ) : (
                 <View style={styles.folderHeader}>
-                  <TouchableOpacity style={styles.folderBackBtn} onPress={() => setSelectedFolder(null)}>
-                    <Text style={styles.folderBackText}>← 폴더</Text>
+                  <TouchableOpacity style={styles.folderBackBtn} onPress={() => setSelectedFolder(null)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <IconChev dir="left" size={20} color="#6b7280" />
                   </TouchableOpacity>
                   <Text style={styles.folderHeaderTitle}>{selectedFolder.name}</Text>
                   <View style={styles.folderHeaderActions}>
