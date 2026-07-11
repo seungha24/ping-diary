@@ -41,8 +41,10 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
       try {
         let list = await fetchEntries();
         // 예전에 자동 시드됐던 데모 글 정리 (제목+본문이 데모와 정확히 일치하는 것만 삭제)
+        // 서버 행이 헤어 스페이스(U+200A) 삽입 전/후 어느 시점에 시드됐어도 매칭되도록 정규화해 비교
+        const normDemo = (t: string) => (t || '').replace(/ /g, '');
         const demoIds = list
-          .filter((e) => INITIAL_ENTRIES.some((s) => s.title === e.title && s.body === e.body))
+          .filter((e) => INITIAL_ENTRIES.some((s) => normDemo(s.title) === normDemo(e.title) && normDemo(s.body) === normDemo(e.body)))
           .map((e) => e.id);
         if (demoIds.length > 0) {
           await Promise.all(demoIds.map((id) => removeEntry(id).catch(() => {})));
@@ -75,15 +77,15 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
 
   // 낙관적 수정: 화면에 먼저 반영하고 서버에 저장 (날짜가 바뀌었을 수 있으니 재정렬)
   function updateEntry(updated: DiaryEntry) {
-    const backup = entries;
+    // 실패 시 이 항목만 되돌린다 — 전체 스냅샷 복원은 그 사이 반영된 다른 변경까지 지워버림
+    const original = entries.find((e) => e.id === updated.id);
     setEntries((prev) => sortByNewest(prev.map((e) => (e.id === updated.id ? updated : e))));
     patchEntry(updated)
       .then((saved) => {
         setEntries((prev) => sortByNewest(prev.map((e) => (e.id === updated.id ? saved : e))));
       })
       .catch(() => {
-        // 저장 실패 시 롤백
-        setEntries(backup);
+        if (original) setEntries((prev) => sortByNewest(prev.map((e) => (e.id === updated.id ? original : e))));
         notify('수정 저장에 실패했어요.');
       });
   }
@@ -95,11 +97,11 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
 
   // 낙관적 삭제
   function deleteEntry(id: number) {
-    const backup = entries;
+    // 실패 시 지운 항목만 되살린다 (전체 스냅샷 복원 금지 — updateEntry와 동일한 이유)
+    const removed = entries.find((e) => e.id === id);
     setEntries((prev) => prev.filter((e) => e.id !== id));
     removeEntry(id).catch(() => {
-      // 실패 시 복구
-      setEntries(backup);
+      if (removed) setEntries((prev) => sortByNewest([removed, ...prev.filter((e) => e.id !== id)]));
       notify('삭제에 실패했어요.');
     });
   }
