@@ -1031,6 +1031,7 @@ const styles = StyleSheet.create({
   viewToggleRow: {
     paddingHorizontal: 20, paddingVertical: 10,
     borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
+    alignItems: 'flex-end',
   },
   viewTogglePill: {
     flexDirection: 'row',
