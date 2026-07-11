@@ -544,10 +544,11 @@ export default function DiaryWriteScreen() {
               key={`t${i}`}
               style={[
                 styles.bodyInput,
-                { height: Math.max(blocks.length === 1 ? 180 : 44, blockHeights[i] ?? 0) },
+                { minHeight: Math.max(blocks.length === 1 ? 180 : 44, blockHeights[i] ?? 0) },
               ]}
               value={b.text}
               multiline
+              scrollEnabled={false}
               textAlignVertical="top"
               placeholder={i === 0 ? '오늘의 일상을 자유롭게 p!ng해보세요...' : undefined}
               placeholderTextColor="#d1d5db"
