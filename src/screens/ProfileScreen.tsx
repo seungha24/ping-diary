@@ -10,7 +10,7 @@ import PingLogo from '../components/PingLogo';
 import { useTheme, THEMES } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { getMe, getCachedMe } from '../api';
-import { IconUser, IconCamera } from '../components/icons/Line';
+import { IconUser, IconPencil } from '../components/icons/Line';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -69,7 +69,7 @@ export default function ProfileScreen() {
               </View>
             )}
             <View style={styles.avatarBadge}>
-              <IconCamera size={13} color="#ffffff" />
+              <IconPencil size={11} color="#6b7280" />
             </View>
           </TouchableOpacity>
 
