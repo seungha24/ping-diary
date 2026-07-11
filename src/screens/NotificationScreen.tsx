@@ -8,6 +8,7 @@ import IconChev from '../components/icons/IconChev';
 import { IconBellOff, IconPencil, IconSparkle } from '../components/icons/Line';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedStyles } from '../theme/themed';
+import FadeIn from '../components/FadeIn';
 import {
   Notif, getNotifs, getUnreadCount, subscribeNotifs, refreshNotifs, timeAgo,
   markAllRead as storeMarkAllRead, markRead as storeMarkRead,
@@ -61,6 +62,7 @@ export default function NotificationScreen() {
       )}
 
       <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+        <FadeIn key={loading ? 'loading' : 'loaded'}>
         {notifs.length === 0 ? (
           <View style={styles.empty}>
             {loading ? (
@@ -102,6 +104,7 @@ export default function NotificationScreen() {
             );
           })
         )}
+        </FadeIn>
       </ScrollView>
     </SafeAreaView>
   );

@@ -23,6 +23,7 @@ import Svg, { Path, Line } from 'react-native-svg';
 import { IconLock, IconX, IconSparkle, IconTrash as IconTrashLine, IconFolder, PersonaIcon } from '../components/icons/Line';
 import { useThemedStyles } from '../theme/themed';
 import SheetWrap from '../components/SheetWrap';
+import { animateLayout } from '../anim';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -298,7 +299,7 @@ export default function DiaryDetailScreen() {
             <IconSparkle size={15} color={accent} />
             <TouchableOpacity
               style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6 }}
-              onPress={() => aiComment && setAiOpen((v) => !v)}
+              onPress={() => { if (aiComment) { animateLayout(); setAiOpen((v) => !v); } }}
               activeOpacity={aiComment ? 0.7 : 1}
             >
               <Text style={styles.aiTitle}>AI 코멘트</Text>

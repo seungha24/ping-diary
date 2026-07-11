@@ -24,6 +24,7 @@ import { IconUsers, IconUser, IconBell as IconBellLine, IconSprout, IconSparkle,
 import * as ImagePicker from 'expo-image-picker';
 import { useThemedStyles } from '../theme/themed';
 import SheetWrap from '../components/SheetWrap';
+import FadeIn from '../components/FadeIn';
 
 /** 그룹 나가기용 문/화살표 아이콘 (라인 스타일) */
 function IconExit({ color = '#374151', size = 16 }: { color?: string; size?: number }) {
@@ -469,6 +470,7 @@ export default function GroupScreen() {
       </TouchableOpacity>
 
       {/* Feed */}
+      <FadeIn key={loading ? 'loading' : viewMode} style={{ flex: 1 }}>
       {loading ? (
         <View style={styles.feedEmpty}>
           <ActivityIndicator color={accent} />
@@ -516,6 +518,7 @@ export default function GroupScreen() {
           </View>
         </ScrollView>
       )}
+      </FadeIn>
 
       {lightboxPhoto && (
         <PhotoLightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />

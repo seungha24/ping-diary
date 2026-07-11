@@ -26,6 +26,8 @@ import Svg, { Path, Line, Circle } from 'react-native-svg';
 import { IconFolder, IconList, IconUsers, IconPencil, IconX, IconCamera } from '../components/icons/Line';
 import { useThemedStyles } from '../theme/themed';
 import SheetWrap from '../components/SheetWrap';
+import FadeIn from '../components/FadeIn';
+import PopWrap from '../components/PopWrap';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -470,18 +472,22 @@ export default function HomeScreen() {
         <PhotoLightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
       )}
 
-      <Modal visible={!!zoomedGroup} transparent animationType="fade">
-        <Pressable style={styles.zoomOverlay} onPress={() => setZoomedGroup(null)}>
+      {zoomedGroup && (
+        <PopWrap style={styles.zoomOverlayWrap} onBackdropPress={() => setZoomedGroup(null)}>
           <View style={styles.zoomCard}>
-            {zoomedGroup?.photo
+            {zoomedGroup.photo
               ? <Image source={{ uri: zoomedGroup.photo }} style={styles.zoomPhoto} />
-              : <Text style={styles.zoomEmoji}>{zoomedGroup?.emoji}</Text>
+              : <Text style={styles.zoomEmoji}>{zoomedGroup.emoji}</Text>
             }
-            <Text style={styles.zoomName}>{zoomedGroup?.name}</Text>
+            <Text style={styles.zoomName}>{zoomedGroup.name}</Text>
           </View>
-        </Pressable>
-      </Modal>
+        </PopWrap>
+      )}
 
+      <FadeIn
+        key={tab === 'group' ? 'group' : selectedFolder ? `folder-${selectedFolder.id}` : `personal-${personalView}`}
+        style={{ flex: 1 }}
+      >
       {tab === 'personal' ? (
         <>
           {selectedFolder ? (
@@ -778,6 +784,7 @@ export default function HomeScreen() {
           </View>
         </ScrollView>
       )}
+      </FadeIn>
 
       {shareEntry && (
         <SheetWrap style={styles.overlayWrap}>
@@ -1172,8 +1179,9 @@ const lightStyles = StyleSheet.create({
     borderRadius: 20, backgroundColor: '#ffffff',
   },
   groupEmptyHint: { fontSize: 13, color: '#9ca3af', textAlign: 'center', lineHeight: 20, paddingVertical: 16 },
-  zoomOverlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.75)',
+  zoomOverlayWrap: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.75)',
     alignItems: 'center', justifyContent: 'center',
   },
   zoomCard: { alignItems: 'center', gap: 14 },

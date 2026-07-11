@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, ScrollView, TextInput,
-  StyleSheet, SafeAreaView, Modal, Image, ActivityIndicator,
+  StyleSheet, SafeAreaView, Modal, Image, ActivityIndicator, Keyboard,
 } from 'react-native';
 import TouchableOpacity from '../components/Touchable';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -70,6 +70,8 @@ import { saveDraft, listDrafts, deleteDraft, DiaryDraft } from '../data/draftSto
 import { notify } from '../notify';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { useThemedStyles } from '../theme/themed';
+import FadeIn from '../components/FadeIn';
+import SheetWrap from '../components/SheetWrap';
 
 type WriteRoute = RouteProp<RootStackParamList, 'DiaryWrite'>;
 
@@ -203,6 +205,7 @@ export default function DiaryWriteScreen() {
     if (shareGroupIds.size === 0 && groups.length > 0) {
       setShareGroupIds(new Set(groups.map((g) => g.id)));
     }
+    Keyboard.dismiss();
     setGroupPickOpen(true);
   }
 
@@ -473,20 +476,20 @@ export default function DiaryWriteScreen() {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* 임시저장함 배너 (새 글에서만) */}
         {!editEntry && drafts.length > 0 && (
-          <View style={[styles.draftBanner, { borderColor: hexToRgba(accent, 0.3), backgroundColor: hexToRgba(accent, 0.07) }]}>
+          <FadeIn style={[styles.draftBanner, { borderColor: hexToRgba(accent, 0.3), backgroundColor: hexToRgba(accent, 0.07) }]}>
             <IconPencil size={14} color={accent} />
             <Text style={styles.draftBannerText} numberOfLines={1}>
               임시저장함에 {drafts.length} 개의 글이 있어요
             </Text>
-            <TouchableOpacity onPress={() => setDraftsOpen(true)}>
+            <TouchableOpacity onPress={() => { Keyboard.dismiss(); setDraftsOpen(true); }}>
               <Text style={[styles.draftBannerAction, { color: accent }]}>열기</Text>
             </TouchableOpacity>
-          </View>
+          </FadeIn>
         )}
 
         {/* Date + Tags (같은 줄) */}
         <View style={styles.dateTagRow}>
-          <TouchableOpacity style={styles.dateBtn} onPress={() => setCalOpen(true)}>
+          <TouchableOpacity style={styles.dateBtn} onPress={() => { Keyboard.dismiss(); setCalOpen(true); }}>
             <View style={styles.dateDot} />
             <Text style={styles.dateBtnText}>{dateLabel()}</Text>
             <IconChev dir="right" size={14} color="#9ca3af" />
@@ -624,7 +627,7 @@ export default function DiaryWriteScreen() {
         )}
 
         {/* Folder card */}
-        <TouchableOpacity style={styles.aiCard} onPress={() => setFolderModalOpen(true)} activeOpacity={0.85}>
+        <TouchableOpacity style={styles.aiCard} onPress={() => { Keyboard.dismiss(); setFolderModalOpen(true); }} activeOpacity={0.85}>
           <View style={[styles.aiCardIcon, { backgroundColor: hexToRgba(accent, 0.12) }]}>
             <IconFolder color={accent} size={16} />
           </View>
@@ -636,7 +639,7 @@ export default function DiaryWriteScreen() {
         </TouchableOpacity>
 
         {/* AI comment card */}
-        <TouchableOpacity style={styles.aiCard} onPress={() => setPersonaModalOpen(true)} activeOpacity={0.85}>
+        <TouchableOpacity style={styles.aiCard} onPress={() => { Keyboard.dismiss(); setPersonaModalOpen(true); }} activeOpacity={0.85}>
           <View style={[styles.aiCardIcon, { backgroundColor: hexToRgba(accent, 0.12) }]}>
             <IconMessage color={accent} size={16} />
           </View>
@@ -650,7 +653,8 @@ export default function DiaryWriteScreen() {
 
       {/* 페르소나 선택 모달 */}
       {/* 임시저장함 모달 */}
-      <Modal visible={draftsOpen} transparent animationType="fade">
+      {draftsOpen && (
+      <SheetWrap style={styles.overlayWrap}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setDraftsOpen(false)}>
           <TouchableOpacity activeOpacity={1}>
             <View style={styles.personaModal}>
@@ -682,9 +686,11 @@ export default function DiaryWriteScreen() {
             </View>
           </TouchableOpacity>
         </TouchableOpacity>
-      </Modal>
+      </SheetWrap>
+      )}
 
-      <Modal visible={personaModalOpen} transparent animationType="fade">
+      {personaModalOpen && (
+      <SheetWrap style={styles.overlayWrap}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setPersonaModalOpen(false)}>
           <TouchableOpacity activeOpacity={1}>
             <View style={styles.personaModal}>
@@ -705,10 +711,12 @@ export default function DiaryWriteScreen() {
             </View>
           </TouchableOpacity>
         </TouchableOpacity>
-      </Modal>
+      </SheetWrap>
+      )}
 
       {/* 폴더 선택 모달 */}
-      <Modal visible={folderModalOpen} transparent animationType="fade">
+      {folderModalOpen && (
+      <SheetWrap style={styles.overlayWrap}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setFolderModalOpen(false)}>
           <TouchableOpacity activeOpacity={1}>
             <View style={styles.personaModal}>
@@ -733,10 +741,12 @@ export default function DiaryWriteScreen() {
             </View>
           </TouchableOpacity>
         </TouchableOpacity>
-      </Modal>
+      </SheetWrap>
+      )}
 
       {/* 그룹 공개 대상 선택 모달 */}
-      <Modal visible={groupPickOpen} transparent animationType="fade">
+      {groupPickOpen && (
+      <SheetWrap style={styles.overlayWrap}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={confirmGroupPick}>
           <TouchableOpacity activeOpacity={1}>
             <View style={styles.personaModal}>
@@ -774,10 +784,12 @@ export default function DiaryWriteScreen() {
             </View>
           </TouchableOpacity>
         </TouchableOpacity>
-      </Modal>
+      </SheetWrap>
+      )}
 
       {/* Calendar modal */}
-      <Modal visible={calOpen} transparent animationType="fade">
+      {calOpen && (
+      <SheetWrap style={styles.overlayWrap}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setCalOpen(false)}>
           <TouchableOpacity activeOpacity={1}>
             <View style={styles.calModal}>
@@ -829,7 +841,8 @@ export default function DiaryWriteScreen() {
             </View>
           </TouchableOpacity>
         </TouchableOpacity>
-      </Modal>
+      </SheetWrap>
+      )}
 
       {lightboxPhoto && (
         <PhotoLightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
@@ -1023,6 +1036,7 @@ const lightStyles = StyleSheet.create({
   personaModalSub: { fontSize: 12, color: '#9ca3af', marginTop: 3, marginBottom: 16 },
   personaGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   // Calendar modal
+  overlayWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   modalOverlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.4)',
     alignItems: 'center', justifyContent: 'center',

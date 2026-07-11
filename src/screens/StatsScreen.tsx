@@ -14,6 +14,7 @@ import { IconX, PersonaIcon, IconTrophy } from '../components/icons/Line';
 import PingLogo from '../components/PingLogo';
 import { useThemedStyles } from '../theme/themed';
 import SheetWrap from '../components/SheetWrap';
+import { animateLayout } from '../anim';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -109,6 +110,7 @@ export default function StatsScreen() {
   }
 
   function revealAward(key: string) {
+    animateLayout();
     setRevealed((prev) => new Set(prev).add(key));
   }
 

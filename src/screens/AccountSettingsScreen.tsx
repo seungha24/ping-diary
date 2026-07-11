@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { changePassword, deleteAccount, getMe, getCachedMe, saveProfile } from '../api';
 import { notify } from '../notify';
 import { useThemedStyles } from '../theme/themed';
+import SheetWrap from '../components/SheetWrap';
 
 function Row({ label, value, onPress }: { label: string; value?: string; onPress?: () => void }) {
   const styles = useThemedStyles(lightStyles);
@@ -209,7 +210,8 @@ export default function AccountSettingsScreen() {
       </ScrollView>
 
       {/* 비밀번호 변경 모달 */}
-      <Modal visible={pwOpen} transparent animationType="fade" onRequestClose={() => setPwOpen(false)}>
+      {pwOpen && (
+      <SheetWrap style={styles.overlayWrap}>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>비밀번호 변경</Text>
@@ -252,10 +254,12 @@ export default function AccountSettingsScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </SheetWrap>
+      )}
 
       {/* 계정 삭제 확인 (폰 프레임 안) */}
-      <Modal visible={delOpen} transparent animationType="fade" onRequestClose={() => setDelOpen(false)}>
+      {delOpen && (
+      <SheetWrap style={styles.overlayWrap}>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
             <Text style={styles.modalTitle}>계정을 삭제할까요?</Text>
@@ -280,12 +284,14 @@ export default function AccountSettingsScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      </SheetWrap>
+      )}
     </SafeAreaView>
   );
 }
 
 const lightStyles = StyleSheet.create({
+  overlayWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   container: { flex: 1, backgroundColor: '#f9fafb' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
