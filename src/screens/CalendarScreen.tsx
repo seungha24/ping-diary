@@ -6,8 +6,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, TabParamList } from '../navigation/RootNavigator';
 import IconChev from '../components/icons/IconChev';
 import PingLogo from '../components/PingLogo';
+import PopWrap from '../components/PopWrap';
 import { MONTHS, DAYS } from '../data/types';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { IconPencil } from '../components/icons/Line';
 import { useThemedStyles } from '../theme/themed';
@@ -27,6 +28,19 @@ export default function CalendarScreen() {
   const [selectedDay, setSelectedDay] = useState(today.getDate());
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(route.params?.month ?? today.getMonth());
+  // 연·월 피커: 제목을 누르면 열리고, 피커 안에서 연도만 따로 넘길 수 있다
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerYear, setPickerYear] = useState(today.getFullYear());
+
+  function openPicker() {
+    setPickerYear(year);
+    setPickerOpen(true);
+  }
+  function pickMonth(m: number) {
+    setYear(pickerYear);
+    setMonth(m);
+    setPickerOpen(false);
+  }
 
   useEffect(() => {
     // 홈에서 넘어온 month 칩은 '올해' 기준이므로 연도도 함께 리셋
@@ -73,7 +87,10 @@ export default function CalendarScreen() {
         <TouchableOpacity style={styles.navBtn} onPress={() => shiftMonth(-1)}>
           <IconChev dir="left" size={20} />
         </TouchableOpacity>
-        <Text style={styles.monthTitle}>{year} 년 {MONTHS[month]}</Text>
+        <TouchableOpacity style={styles.monthTitleBtn} onPress={openPicker}>
+          <Text style={styles.monthTitle}>{year} 년 {MONTHS[month]}</Text>
+          <IconChev dir="down" size={14} color="#9ca3af" />
+        </TouchableOpacity>
         <TouchableOpacity style={styles.navBtn} onPress={() => shiftMonth(1)}>
           <IconChev dir="right" size={20} />
         </TouchableOpacity>
@@ -139,6 +156,44 @@ export default function CalendarScreen() {
           )}
         </ScrollView>
       </View>
+
+      {/* 연·월 피커 팝업 */}
+      {pickerOpen && (
+        <PopWrap style={styles.pickerOverlay} onBackdropPress={() => setPickerOpen(false)}>
+          <View style={styles.pickerCard}>
+            <View style={styles.pickerYearRow}>
+              <TouchableOpacity style={styles.pickerYearBtn} onPress={() => setPickerYear((y) => y - 1)}>
+                <IconChev dir="left" size={16} color="#6b7280" />
+              </TouchableOpacity>
+              <Text style={styles.pickerYearText}>{pickerYear} 년</Text>
+              <TouchableOpacity style={styles.pickerYearBtn} onPress={() => setPickerYear((y) => y + 1)}>
+                <IconChev dir="right" size={16} color="#6b7280" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.pickerGrid}>
+              {MONTHS.map((label, m) => {
+                const active = pickerYear === year && m === month;
+                const isThisMonth = pickerYear === today.getFullYear() && m === today.getMonth();
+                return (
+                  <TouchableOpacity
+                    key={m}
+                    style={[
+                      styles.pickerMonthCell,
+                      isThisMonth && !active && styles.pickerMonthCellToday,
+                      active && { backgroundColor: hexToRgba(accent, 0.15) },
+                    ]}
+                    onPress={() => pickMonth(m)}
+                  >
+                    <Text style={[styles.pickerMonthText, active && { color: accent, fontWeight: '700' }]}>
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        </PopWrap>
+      )}
     </SafeAreaView>
   );
 }
@@ -155,7 +210,30 @@ const lightStyles = StyleSheet.create({
     paddingHorizontal: 24, paddingVertical: 10,
   },
   navBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  monthTitleBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 6, paddingHorizontal: 8 },
   monthTitle: { fontSize: 17, fontWeight: '600', color: '#111827' },
+  pickerOverlay: {
+    position: 'absolute', left: 0, right: 0, top: 0, bottom: 0,
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'rgba(17,24,39,0.35)', paddingHorizontal: 32, zIndex: 10,
+  },
+  pickerCard: {
+    alignSelf: 'stretch', backgroundColor: '#ffffff', borderRadius: 20, padding: 16,
+    shadowColor: '#000', shadowOpacity: 0.15, shadowRadius: 28, shadowOffset: { width: 0, height: 10 },
+    elevation: 10,
+  },
+  pickerYearRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12,
+  },
+  pickerYearBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  pickerYearText: { fontSize: 16, fontWeight: '600', color: '#111827' },
+  pickerGrid: { flexDirection: 'row', flexWrap: 'wrap' },
+  pickerMonthCell: {
+    width: '33.33%', paddingVertical: 13, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  pickerMonthCellToday: { backgroundColor: '#f3f4f6' },
+  pickerMonthText: { fontSize: 14, color: '#374151', fontWeight: '500' },
   calendar: { paddingHorizontal: 12, paddingTop: 12 },
   weekRow: { flexDirection: 'row', marginBottom: 4 },
   weekLabel: { flex: 1, textAlign: 'center', fontSize: 12, color: '#9ca3af', paddingVertical: 4, fontWeight: '500' },
