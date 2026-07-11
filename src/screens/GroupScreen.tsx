@@ -458,18 +458,23 @@ export default function GroupScreen() {
         </ScrollView>
       ) : (
         <ScrollView contentContainerStyle={styles.gridContent}>
+          {/* 2열 독립 컬럼(마소너리) — 짧은 일기는 카드도 짧게, 줄 맞춤 없이 자연스럽게 쌓임 */}
           <View style={styles.gridLayout}>
-            {entries.map((entry, i) => (
-              <GridCard
-                key={entry.id}
-                entry={entry}
-                index={i}
-                onPhotoPress={setLightboxPhoto}
-                isShared={sharedAiComments.has(entry.id)}
-                onToggleShare={() => toggleShare(entry.id)}
-                onMore={() => setActionEntry(entry)}
-                onOpen={() => navigation.navigate('DiaryDetail', { entry })}
-              />
+            {[0, 1].map((col) => (
+              <View key={col} style={styles.gridColumn}>
+                {entries.filter((_, i) => i % 2 === col).map((entry, i) => (
+                  <GridCard
+                    key={entry.id}
+                    entry={entry}
+                    index={i * 2 + col}
+                    onPhotoPress={setLightboxPhoto}
+                    isShared={sharedAiComments.has(entry.id)}
+                    onToggleShare={() => toggleShare(entry.id)}
+                    onMore={() => setActionEntry(entry)}
+                    onOpen={() => navigation.navigate('DiaryDetail', { entry })}
+                  />
+                ))}
+              </View>
             ))}
           </View>
         </ScrollView>
@@ -808,9 +813,10 @@ const styles = StyleSheet.create({
   listCardPreview: { fontSize: 12, color: '#6b7280', lineHeight: 18 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 },
   gridContent: { padding: 12, paddingBottom: 40 },
-  gridLayout: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  gridLayout: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  gridColumn: { flex: 1, gap: 10 },
   gridCard: {
-    width: '47.5%',
+    width: '100%',
     backgroundColor: '#ffffff', borderRadius: 14,
     borderWidth: 1, borderColor: '#f3f4f6',
     shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1,
