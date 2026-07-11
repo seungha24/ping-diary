@@ -443,7 +443,8 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Tab switcher */}
+      {/* Tab switcher — 폴더 상세에서는 숨겨서 커버가 위까지 차게 */}
+      {!(tab === 'personal' && selectedFolder) && (
       <View style={styles.tabRow}>
         <View style={styles.tabPill}>
           {(['personal', 'group'] as const).map((t) => (
@@ -459,6 +460,7 @@ export default function HomeScreen() {
           ))}
         </View>
       </View>
+      )}
 
       {lightboxPhoto && (
         <PhotoLightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
@@ -1083,7 +1085,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   folderCoverEmoji: { fontSize: 32 },
-  folderCoverBanner: { width: '100%', height: 130 },
+  folderCoverBanner: { width: '100%', height: 176 },
   folderCoverOverlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.28)',
