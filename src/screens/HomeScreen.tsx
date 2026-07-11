@@ -569,9 +569,6 @@ export default function HomeScreen() {
             /* ── 폴더 목록 / 전체 보기 ── */
             <>
               <View style={styles.viewToggleRow}>
-                <Text style={[styles.folderHint, { marginBottom: 0, flex: 1 }]}>
-                  {dragId ? '원하는 위치로 끌어다 놓으세요' : '폴더를 길게 누른 채 끌면 순서를 바꿀 수 있어요'}
-                </Text>
                 <View style={styles.viewTogglePill}>
                   <TouchableOpacity
                     style={[styles.viewToggleBtn, personalView === 'folder' && { backgroundColor: accent }]}
@@ -718,11 +715,6 @@ export default function HomeScreen() {
       ) : (
         <ScrollView contentContainerStyle={styles.folderList} scrollEnabled={!gDragId}>
           <Text style={[styles.sectionLabel, { marginBottom: 10 }]}>참여 중인 그룹</Text>
-          {groups.length > 0 && (
-            <Text style={styles.folderHint}>
-              {gDragId != null ? '원하는 위치로 끌어다 놓으세요' : '그룹을 길게 누른 채 끌면 순서를 바꿀 수 있어요'}
-            </Text>
-          )}
           {groups.length === 0 && (
             <Text style={styles.groupEmptyHint}>아직 참여 중인 그룹이 없어요.{'\n'}새 그룹을 만들거나 초대 코드로 참여해보세요.</Text>
           )}
@@ -1041,7 +1033,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 5,
   },
   viewToggleRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end',
     paddingHorizontal: 20,
   },
   viewTogglePill: {
@@ -1064,7 +1056,6 @@ const styles = StyleSheet.create({
   folderBackText: { fontSize: 13, color: '#6b7280' },
   folderHeaderTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
   folderList: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 80 },
-  folderHint: { fontSize: 11, color: '#b8bcc4', marginBottom: 12, paddingHorizontal: 2 },
   folderGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
   folderCard: {
     width: '47%',
