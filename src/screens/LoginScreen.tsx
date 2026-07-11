@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 32, gap: 14 },
   logoWrap: { alignItems: 'center', marginBottom: 20 },
-  logo: { fontSize: 44, fontWeight: '700' },
+  logo: { fontSize: 44, fontWeight: '800' },
   logoSub: { fontSize: 14, color: '#9ca3af', marginTop: 2, letterSpacing: 4 },
   tabRow: { flexDirection: 'row', marginBottom: 8 },
   tab: { flex: 1, alignItems: 'center', paddingVertical: 10, borderBottomWidth: 2, borderBottomColor: 'transparent' },

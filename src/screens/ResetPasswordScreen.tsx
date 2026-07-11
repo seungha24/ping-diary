@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 32, gap: 14 },
   logoWrap: { alignItems: 'center', marginBottom: 20 },
-  logo: { fontSize: 40, fontWeight: '700' },
+  logo: { fontSize: 40, fontWeight: '800' },
   title: { fontSize: 18, fontWeight: '600', color: '#111827', marginTop: 12 },
   sub: { fontSize: 13, color: '#9ca3af', marginTop: 4 },
   input: {

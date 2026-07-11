@@ -991,10 +991,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
   },
-  logo: {
-    fontSize: 27, fontWeight: '700', color: '#111827', letterSpacing: -0.5,
-    transform: [{ scaleX: 1.15 }], transformOrigin: 'left',
-  },
+  logo: { fontSize: 27, fontWeight: '800', color: '#111827', letterSpacing: -0.5 },
   bellBtn: {
     width: 36, height: 36, borderRadius: 10,
     backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
@@ -1040,9 +1037,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   viewTogglePill: {
-    flexDirection: 'row',
+    flexDirection: 'row', gap: 4,
     backgroundColor: '#f3f4f6',
-    borderRadius: 10, padding: 2,
+    borderRadius: 11, padding: 4,
     alignSelf: 'flex-end',
   },
   viewToggleBtn: {

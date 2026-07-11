@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   logoText: {
     color: '#ffffff',
     fontSize: 24,
-    fontWeight: '600',
+    fontWeight: '700',
     letterSpacing: -0.5,
   },
   taglineContainer: { alignItems: 'center', gap: 8 },
