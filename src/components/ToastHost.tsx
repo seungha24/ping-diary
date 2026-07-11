@@ -2,6 +2,17 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated, Platform } from 'react-native';
 import { setNotifyListener } from '../notify';
 import { useThemedStyles } from '../theme/themed';
+import { useTheme, hexToRgba } from '../context/ThemeContext';
+
+/** 배경색 밝기에 따라 잘 보이는 글자색 선택 (파스텔 테마 대응) */
+function readableTextOn(hex: string): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex);
+  if (!m) return '#ffffff';
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? '#111827' : '#ffffff';
+}
 
 /**
  * 폰 프레임 안에 뜨는 전역 토스트. App 루트에 한 번 마운트하면
@@ -9,6 +20,7 @@ import { useThemedStyles } from '../theme/themed';
  */
 export default function ToastHost() {
   const styles = useThemedStyles(lightStyles);
+  const { accent } = useTheme();
   const [message, setMessage] = useState<string | null>(null);
   const opacity = useRef(new Animated.Value(0)).current;
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -35,8 +47,8 @@ export default function ToastHost() {
 
   return (
     <View pointerEvents="none" style={styles.wrap}>
-      <Animated.View style={[styles.toast, { opacity }]}>
-        <Text style={styles.text}>{message}</Text>
+      <Animated.View style={[styles.toast, { opacity, backgroundColor: hexToRgba(accent, 0.95) }]}>
+        <Text style={[styles.text, { color: readableTextOn(accent) }]}>{message}</Text>
       </Animated.View>
     </View>
   );
