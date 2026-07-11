@@ -234,21 +234,33 @@ export async function generateComment(id: number, persona?: string): Promise<Dia
 /** 이미지 업로드 → 공개 URL 반환 (웹/네이티브 모두 지원) */
 export async function uploadPhoto(uri: string): Promise<string> {
   const token = getToken();
-  const form = new FormData();
 
-  if (uri.startsWith('data:') || uri.startsWith('blob:') || uri.startsWith('http')) {
-    // 웹: uri를 blob으로 변환해 첨부
-    const blob = await (await fetch(uri)).blob();
-    form.append('file', blob, 'photo.jpg');
-  } else {
-    // 네이티브: RN FormData 파일 객체
+  // 네이티브(폰): expo fetch가 {uri} FormData를 지원하지 않아 FileSystem 멀티파트 업로드 사용
+  if (Platform.OS !== 'web' && !uri.startsWith('data:') && !uri.startsWith('blob:') && !uri.startsWith('http')) {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const FileSystem = require('expo-file-system/legacy');
     const name = uri.split('/').pop() || 'photo.jpg';
     const m = /\.(\w+)$/.exec(name);
     const ext = m ? m[1].toLowerCase() : 'jpg';
-    const type = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
-    // @ts-ignore React Native FormData 파일 형식
-    form.append('file', { uri, name, type });
+    const res = await FileSystem.uploadAsync(`${API_BASE_URL}/upload`, uri, {
+      httpMethod: 'POST',
+      uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+      fieldName: 'file',
+      mimeType: `image/${ext === 'jpg' || ext === 'jpeg' ? 'jpeg' : ext}`,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
+    let data: any = null;
+    try { data = JSON.parse(res.body); } catch {}
+    if (res.status >= 400 || !data?.url) {
+      throw new Error((data && data.error) || '이미지 업로드에 실패했습니다');
+    }
+    return data.url;
   }
+
+  // 웹: uri를 blob으로 변환해 첨부
+  const form = new FormData();
+  const blob = await (await fetch(uri)).blob();
+  form.append('file', blob, 'photo.jpg');
 
   const res = await fetch(`${API_BASE_URL}/upload`, {
     method: 'POST',
