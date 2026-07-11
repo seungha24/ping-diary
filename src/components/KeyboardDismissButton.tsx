@@ -1,6 +1,6 @@
-// iOS 네이티브가 아닌 환경(웹·안드로이드)에서 키보드가 열려 있을 때
-// 키보드 바로 위에 떠서 자판을 내려주는 원형 버튼.
-// iOS 네이티브는 InputAccessoryView 기반 키보드 바를 쓰므로 이 컴포넌트는 아무것도 그리지 않는다.
+// 키보드가 열려 있을 때 키보드 바로 위에 떠서 자판을 내려주는 원형 버튼 (전 플랫폼).
+// iOS의 InputAccessoryView는 presentation:'modal' 화면 안에서 나타나지 않는 버그가 있어
+// 키보드 이벤트/뷰포트 기반의 플로팅 버튼으로 통일했다.
 import React, { useEffect, useState } from 'react';
 import { Keyboard, Platform, TouchableOpacity, StyleSheet } from 'react-native';
 import IconChev from './icons/IconChev';
@@ -49,6 +49,14 @@ export default function KeyboardDismissButton() {
         document.removeEventListener('focusin', updateLater);
         document.removeEventListener('focusout', updateLater);
       };
+    }
+    // iOS: 키보드가 화면을 덮으므로 키보드 높이만큼 띄운다 (모달 시트 안에서도 동작)
+    if (Platform.OS === 'ios') {
+      const show = Keyboard.addListener('keyboardWillShow', (e) =>
+        setBottom(e.endCoordinates.height + 12)
+      );
+      const hide = Keyboard.addListener('keyboardWillHide', () => setBottom(null));
+      return () => { show.remove(); hide.remove(); };
     }
     // 안드로이드: 키보드가 열리면 화면이 줄어들므로(adjustResize) 하단 고정으로 충분
     if (Platform.OS === 'android') {
