@@ -224,7 +224,7 @@ export default function DiaryWriteScreen() {
   const [folderModalOpen, setFolderModalOpen] = useState(false);
   // 달력은 수정 시 원래 작성월, 새 글은 이번 달로 기본 설정
   const initDate = editEntry ? new Date(editEntry.createdAt) : today;
-  const [calYear] = useState(initDate.getFullYear());
+  const [calYear, setCalYear] = useState(initDate.getFullYear());
   const [calMonth, setCalMonth] = useState(initDate.getMonth());
   const [selectedDates, setSelectedDates] = useState<number[]>(editEntry?.dates ?? [today.getDate()]);
 
@@ -273,6 +273,7 @@ export default function DiaryWriteScreen() {
     const dq = extractQuestion(d.body);
     setSelectedPrompt(dq.question);
     setBlocks(entryToBlocks({ body: dq.rest, photo: null, photos: [] }));
+    setBlockHeights({}); // 블록 구성이 통째로 바뀌므로 높이 캐시 재측정
     setTags(d.tags);
     setPersona(d.persona);
     setFolder(d.folder);
@@ -325,6 +326,15 @@ export default function DiaryWriteScreen() {
     );
   }
 
+  // 달 이동: 12월↔1월에서 연도 롤오버 + 이전 달에서 고른 날짜는 무효화
+  // (3월에서 고른 15일이 달만 넘긴 채 저장하면 4월 15일로 기록되는 것 방지)
+  function shiftCalMonth(delta: number) {
+    const next = new Date(calYear, calMonth + delta, 1);
+    setCalYear(next.getFullYear());
+    setCalMonth(next.getMonth());
+    setSelectedDates([]);
+  }
+
   function addTag() {
     const t = tagInput.trim();
     if (t && !tags.includes(t)) setTags([...tags, t]);
@@ -362,6 +372,7 @@ export default function DiaryWriteScreen() {
         );
         return normalizeBlocks(next);
       });
+      setBlockHeights({}); // 인덱스 기반 높이 캐시는 블록이 밀리면 어긋나므로 재측정
     } catch (e: any) {
       notify(e?.message ?? '사진 업로드에 실패했어요. 다시 시도해주세요.');
     } finally {
@@ -372,6 +383,7 @@ export default function DiaryWriteScreen() {
   // 사진 블록 제거 (앞뒤 텍스트는 자동 병합)
   function removePhotoBlock(i: number) {
     setBlocks((prev) => normalizeBlocks(prev.filter((_, j) => j !== i)));
+    setBlockHeights({}); // 인덱스가 당겨지므로 높이 캐시 재측정
   }
 
   function dateLabel() {
@@ -398,10 +410,11 @@ export default function DiaryWriteScreen() {
             style={[styles.saveBtn, { backgroundColor: accent }]}
             onPress={async () => {
               // 달력에서 고른 연·월·일을 일기 날짜(createdAt)로 반영 (시각은 원래 것 유지)
+              // 날짜를 안 골랐으면 달력을 둘러보기만 한 것이므로 원래 날짜 유지
               const base = editEntry ? new Date(editEntry.createdAt) : new Date();
-              const diaryDay = selectedDates[0] ?? base.getDate();
-              const diaryDate = new Date(calYear, calMonth, diaryDay,
-                base.getHours(), base.getMinutes(), base.getSeconds());
+              const diaryDate = selectedDates.length > 0
+                ? new Date(calYear, calMonth, selectedDates[0], base.getHours(), base.getMinutes(), base.getSeconds())
+                : base;
               const createdAtISO = isNaN(diaryDate.getTime()) ? base.toISOString() : diaryDate.toISOString();
               const storedBody = (selectedPrompt ? `[q:${selectedPrompt}]\n` : '') + blocksToBody(blocks); // 질문+블록 → 마커 본문
               // 본문 첫 사진이 대표 (목록 썸네일용)
@@ -432,7 +445,7 @@ export default function DiaryWriteScreen() {
                 }
               } else {
                 addEntry({
-                  id: Date.now(),
+                  id: Date.now() + Math.random(), // 낙관적 임시 id (같은 ms 더블 저장 충돌 방지)
                   title,
                   body: storedBody,
                   tags,
@@ -768,11 +781,11 @@ export default function DiaryWriteScreen() {
           <TouchableOpacity activeOpacity={1}>
             <View style={styles.calModal}>
               <View style={styles.calHeader}>
-                <TouchableOpacity onPress={() => setCalMonth((m) => Math.max(0, m - 1))} style={styles.calNavBtn}>
+                <TouchableOpacity onPress={() => shiftCalMonth(-1)} style={styles.calNavBtn}>
                   <IconChev dir="left" size={16} color="#6b7280" />
                 </TouchableOpacity>
                 <Text style={styles.calTitle}>{calYear} 년 {MONTHS[calMonth]}</Text>
-                <TouchableOpacity onPress={() => setCalMonth((m) => Math.min(11, m + 1))} style={styles.calNavBtn}>
+                <TouchableOpacity onPress={() => shiftCalMonth(1)} style={styles.calNavBtn}>
                   <IconChev dir="right" size={16} color="#6b7280" />
                 </TouchableOpacity>
               </View>
