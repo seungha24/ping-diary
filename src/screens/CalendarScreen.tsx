@@ -24,12 +24,23 @@ export default function CalendarScreen() {
   const { accent } = useTheme();
   const today = new Date();
   const [selectedDay, setSelectedDay] = useState(today.getDate());
-  const [year] = useState(today.getFullYear());
+  const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(route.params?.month ?? today.getMonth());
 
   useEffect(() => {
-    if (route.params?.month !== undefined) setMonth(route.params.month);
+    // 홈에서 넘어온 month 칩은 '올해' 기준이므로 연도도 함께 리셋
+    if (route.params?.month !== undefined) {
+      setYear(today.getFullYear());
+      setMonth(route.params.month);
+    }
   }, [route.params?.month]);
+
+  // 12월↔1월 이동 시 연도도 함께 굴린다
+  function shiftMonth(delta: number) {
+    const next = new Date(year, month + delta, 1);
+    setYear(next.getFullYear());
+    setMonth(next.getMonth());
+  }
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
@@ -58,11 +69,11 @@ export default function CalendarScreen() {
 
       {/* Month nav */}
       <View style={styles.monthNav}>
-        <TouchableOpacity style={styles.navBtn} onPress={() => setMonth((m) => Math.max(0, m - 1))}>
+        <TouchableOpacity style={styles.navBtn} onPress={() => shiftMonth(-1)}>
           <IconChev dir="left" size={20} />
         </TouchableOpacity>
         <Text style={styles.monthTitle}>{year} 년 {MONTHS[month]}</Text>
-        <TouchableOpacity style={styles.navBtn} onPress={() => setMonth((m) => Math.min(11, m + 1))}>
+        <TouchableOpacity style={styles.navBtn} onPress={() => shiftMonth(1)}>
           <IconChev dir="right" size={20} />
         </TouchableOpacity>
       </View>
