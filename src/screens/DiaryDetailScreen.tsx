@@ -42,8 +42,11 @@ const PERSONA_EMOJI: Record<string, string> = {
   '선생님': '📖', '엄마': '🌸', '상담사': '💆', '미래의 나': '🔮',
 };
 
+// AI 코멘트가 공개되기까지의 대기 시간 (서버 scheduler.js COMMENT_DELAY_HOURS와 맞춤)
+const COMMENT_UNLOCK_HOURS = 10;
+
 function useCountdown(createdAt: string) {
-  const unlockAt = new Date(createdAt).getTime() + 24 * 60 * 60 * 1000;
+  const unlockAt = new Date(createdAt).getTime() + COMMENT_UNLOCK_HOURS * 60 * 60 * 1000;
   const [remaining, setRemaining] = useState(unlockAt - Date.now());
   useEffect(() => {
     if (unlockAt - Date.now() <= 0) return;
@@ -344,7 +347,7 @@ export default function DiaryDetailScreen() {
             <View style={styles.aiLockedBox}>
               {isUnlocked ? <IconSparkle size={26} color={accent} /> : <IconLock size={26} color="#9ca3af" />}
               <Text style={styles.aiLockedText}>
-                {isUnlocked ? '아직 코멘트가 없어요' : 'p!ng 작성 24 시간 후 공개돼요'}
+                {isUnlocked ? '아직 코멘트가 없어요' : 'p!ng 작성 10 시간 후 공개돼요'}
               </Text>
               {!isUnlocked && <Text style={styles.aiCountdown}>{formatRemaining(remaining)}</Text>}
               {isMine && (
