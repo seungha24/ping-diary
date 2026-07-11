@@ -836,7 +836,7 @@ export default function HomeScreen() {
       {fabMenuOpen && (
         <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setFabMenuOpen(false)} />
-          <View style={styles.sheet}>
+          <View style={[styles.sheet, { paddingBottom: 14 }]}>
             <View style={styles.sheetHandle} />
             <View style={styles.fabChoiceList}>
               <TouchableOpacity
