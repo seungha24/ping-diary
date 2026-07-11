@@ -1037,7 +1037,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: '#f3f4f6',
     borderRadius: 12, padding: 3,
-    alignSelf: 'flex-start',
+    alignSelf: 'flex-end',
   },
   viewToggleBtn: {
     paddingHorizontal: 18, paddingVertical: 7, borderRadius: 10,
