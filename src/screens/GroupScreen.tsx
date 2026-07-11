@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  SafeAreaView, Pressable, TextInput, ActivityIndicator, Modal,
+  SafeAreaView, Pressable, TextInput, ActivityIndicator, Modal, Image,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -19,7 +19,7 @@ import { useGroups } from '../context/GroupsContext';
 import { fetchGroupEntries, leaveGroup, deleteGroup, renameGroup, reportContent, saveBlockedUsers, getCachedMe, uploadPhoto, updateGroupPhoto } from '../api';
 import { notify } from '../notify';
 import { Platform } from 'react-native';
-import { IconUsers, IconBell as IconBellLine, IconSprout, IconSparkle, IconPencil, IconTrash, IconCamera, PersonaIcon } from '../components/icons/Line';
+import { IconUsers, IconUser, IconBell as IconBellLine, IconSprout, IconSparkle, IconPencil, IconTrash, IconCamera, PersonaIcon } from '../components/icons/Line';
 import * as ImagePicker from 'expo-image-picker';
 import { useThemedStyles } from '../theme/themed';
 
@@ -48,6 +48,7 @@ function mapGroupEntry(row: any): DiaryEntry {
     author: row.author || '멤버',
     authorId: row.user_id,
     avatar: '🙂',
+    avatarUrl: row.author_avatar || null,
     createdAt: row.created_at,
     aiComment: row.ai_comment || undefined,
   };
@@ -123,7 +124,9 @@ function ListCard({
     <View style={[styles.listCard, { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) }]}>
       <View style={styles.listCardAuthor}>
         <View style={styles.authorAvatar}>
-          <Text style={{ fontSize: 16 }}>{entry.avatar}</Text>
+          {entry.avatarUrl
+            ? <Image source={{ uri: entry.avatarUrl }} style={styles.authorAvatarImg} />
+            : <IconUser size={16} color="#9ca3af" />}
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.authorName}>{entry.author}</Text>
@@ -173,7 +176,11 @@ function GridCard({
       )}
       <View style={styles.gridCardBody}>
         <View style={styles.gridAuthorRow}>
-          <Text style={{ fontSize: 14 }}>{entry.avatar}</Text>
+          <View style={styles.gridAvatar}>
+            {entry.avatarUrl
+              ? <Image source={{ uri: entry.avatarUrl }} style={styles.gridAvatarImg} />
+              : <IconUser size={12} color="#9ca3af" />}
+          </View>
           <Text style={[styles.gridAuthorName, { flex: 1 }]}>{entry.author}</Text>
           <TouchableOpacity onPress={onMore} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Text style={styles.moreDots}>⋯</Text>
@@ -834,9 +841,15 @@ const lightStyles = StyleSheet.create({
   },
   listCardAuthor: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 8 },
   authorAvatar: {
-    width: 34, height: 34, borderRadius: 17,
+    width: 34, height: 34, borderRadius: 17, overflow: 'hidden',
     backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
   },
+  authorAvatarImg: { width: 34, height: 34, borderRadius: 17 },
+  gridAvatar: {
+    width: 22, height: 22, borderRadius: 11, overflow: 'hidden',
+    backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
+  },
+  gridAvatarImg: { width: 22, height: 22, borderRadius: 11 },
   authorName: { fontSize: 13, fontWeight: '600', color: '#1f2937' },
   entryDate: { fontSize: 11, color: '#9ca3af', marginTop: 1 },
   listCardBody: { padding: 14, paddingTop: 10, gap: 6 },

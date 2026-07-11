@@ -26,6 +26,8 @@ export interface DiaryEntry {
   author?: string;
   authorId?: string;   // 그룹 공유글 작성자 user_id (차단용)
   avatar?: string;
+  /** 작성자 프로필 사진 URL (그룹 피드) */
+  avatarUrl?: string | null;
   createdAt: string;   // ISO 8601
   aiComment?: string;
   visibility?: 'private' | 'friends';  // 'friends'면 참여 그룹 피드에 공개
