@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { StyleSheet } from 'react-native';
@@ -84,9 +84,15 @@ function MainTabs() {
 }
 
 export default function RootNavigator() {
+  const { mode } = useTheme();
+  // 전환 중 비치는 배경을 모드에 맞춰서 다크에서 흰 번쩍임이 없게
+  const navTheme = mode === 'dark'
+    ? { ...DarkTheme, colors: { ...DarkTheme.colors, background: '#0e131e', card: '#171f2e', border: '#2c384f' } }
+    : { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: '#ffffff' } };
+  const contentStyle = { backgroundColor: mode === 'dark' ? '#0e131e' : '#ffffff' };
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Main" screenOptions={{ headerShown: false }}>
+    <NavigationContainer theme={navTheme}>
+      <Stack.Navigator initialRouteName="Main" screenOptions={{ headerShown: false, contentStyle }}>
         <Stack.Screen name="Main" component={MainTabs} />
         <Stack.Screen name="DiaryWrite" component={DiaryWriteScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="DiaryDetail" component={DiaryDetailScreen} />
