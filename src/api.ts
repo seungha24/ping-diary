@@ -341,6 +341,7 @@ export interface Me {
   group_order: number[];
   display_name: string | null;
   username: string | null;
+  avatar_url: string | null;
 }
 
 // 프로필 캐시 — 화면 진입마다 재요청 대신 즉시 표시 + 백그라운드 갱신
@@ -394,6 +395,7 @@ export async function getMe(): Promise<Me> {
       group_order: Array.isArray(r?.group_order) ? r.group_order : [],
       display_name: r?.display_name ?? null,
       username: r?.username ?? null,
+      avatar_url: r?.avatar_url ?? null,
     };
     persistMe(me);
     return me;
@@ -432,9 +434,9 @@ export async function reportContent(type: string, target_id: string | number, re
 }
 
 /** 표시 이름·아이디 저장 (내 계정 user_metadata, DB) */
-export async function saveProfile(p: { display_name?: string; username?: string }): Promise<{ display_name: string | null; username: string | null }> {
+export async function saveProfile(p: { display_name?: string; username?: string; avatar_url?: string }): Promise<{ display_name: string | null; username: string | null; avatar_url: string | null }> {
   const r = await request('/auth/profile', { method: 'PATCH', body: JSON.stringify(p) });
-  const next = { display_name: r?.display_name ?? null, username: r?.username ?? null };
+  const next = { display_name: r?.display_name ?? null, username: r?.username ?? null, avatar_url: r?.avatar_url ?? null };
   patchMeCache(next);
   return next;
 }

@@ -9,7 +9,8 @@ import IconChev from '../components/icons/IconChev';
 import PingLogo from '../components/PingLogo';
 import { useTheme, THEMES } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { getMe, getCachedMe } from '../api';
+import { getMe, getCachedMe, uploadPhoto, saveProfile } from '../api';
+import { notify } from '../notify';
 import { IconUser, IconPencil } from '../components/icons/Line';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -20,7 +21,7 @@ export default function ProfileScreen() {
   const { email, token, logout } = useAuth();
   const emailPrefix = (email ?? '').split('@')[0] || '사용자';
 
-  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  const [avatarUri, setAvatarUri] = useState<string | null>(() => getCachedMe()?.avatar_url ?? null);
   // 캐시된 프로필을 초기값으로 → 즉시 표시(시간차 제거), 아래 useEffect가 백그라운드 갱신
   const [displayName, setDisplayName] = useState(() => getCachedMe()?.display_name || emailPrefix);
   const [username, setUsername] = useState(() => getCachedMe()?.username || emailPrefix);
@@ -32,6 +33,7 @@ export default function ProfileScreen() {
       .then((me) => {
         if (me.display_name) setDisplayName(me.display_name);
         if (me.username) setUsername(me.username);
+        if (me.avatar_url) setAvatarUri(me.avatar_url);
       })
       .catch(() => {});
   }, [token]);
@@ -46,7 +48,16 @@ export default function ProfileScreen() {
       quality: 0.8,
     });
     if (!result.canceled && result.assets[0]) {
-      setAvatarUri(result.assets[0].uri);
+      const prev = avatarUri;
+      setAvatarUri(result.assets[0].uri); // 즉시 미리보기
+      try {
+        const url = await uploadPhoto(result.assets[0].uri);
+        await saveProfile({ avatar_url: url });
+        setAvatarUri(url);
+      } catch (e: any) {
+        setAvatarUri(prev); // 실패 시 원복
+        notify(e?.message ?? '프로필 사진 저장에 실패했어요.');
+      }
     }
   }
 
