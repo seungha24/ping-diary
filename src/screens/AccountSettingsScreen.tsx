@@ -36,8 +36,10 @@ export default function AccountSettingsScreen() {
   const [name, setName] = useState(() => getCachedMe()?.display_name || emailPrefix);
   const [username, setUsername] = useState(() => getCachedMe()?.username || emailPrefix);
   const email = authEmail ?? '-';
-  const [editingName, setEditingName] = useState(false);
-  const [editingUsername, setEditingUsername] = useState(false);
+  // 이름/아이디 편집 모달 (비밀번호 변경 모달과 같은 형태)
+  const [editField, setEditField] = useState<null | 'name' | 'username'>(null);
+  const [draft, setDraft] = useState('');
+  const [editLoading, setEditLoading] = useState(false);
 
   // DB에 저장된 이름/아이디 불러오기
   useEffect(() => {
@@ -48,19 +50,33 @@ export default function AccountSettingsScreen() {
     }).catch(() => {});
   }, [token]);
 
-  /** 이름 저장 → DB */
-  async function commitName() {
-    const v = name.trim() || emailPrefix;
-    setName(v);
-    setEditingName(false);
-    try { await saveProfile({ display_name: v }); } catch (e: any) { notify(e?.message ?? '이름 저장에 실패했어요.'); }
+  function openEdit(field: 'name' | 'username') {
+    setDraft(field === 'name' ? name : username);
+    setEditField(field);
   }
-  /** 아이디 저장 → DB */
-  async function commitUsername() {
-    const v = username.trim() || emailPrefix;
-    setUsername(v);
-    setEditingUsername(false);
-    try { await saveProfile({ username: v }); } catch (e: any) { notify(e?.message ?? '아이디 저장에 실패했어요.'); }
+
+  /** 이름/아이디 저장 → DB (성공해야 모달 닫힘) */
+  async function commitEdit() {
+    if (!editField) return;
+    const v = draft.trim();
+    if (!v) return notify(editField === 'name' ? '이름을 입력해 주세요.' : '아이디를 입력해 주세요.');
+    setEditLoading(true);
+    try {
+      if (editField === 'name') {
+        await saveProfile({ display_name: v });
+        setName(v);
+        notify('이름이 변경됐어요.');
+      } else {
+        await saveProfile({ username: v });
+        setUsername(v);
+        notify('아이디가 변경됐어요.');
+      }
+      setEditField(null);
+    } catch (e: any) {
+      notify(e?.message ?? '저장에 실패했어요.');
+    } finally {
+      setEditLoading(false);
+    }
   }
 
   // 비밀번호 변경 모달
@@ -123,57 +139,9 @@ export default function AccountSettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionLabel}>내 정보</Text>
           <View style={styles.card}>
-            {/* 이름 */}
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>이름</Text>
-              {editingName ? (
-                <View style={styles.inlineEditRow}>
-                  <TextInput
-                    style={styles.inlineInput}
-                    value={name}
-                    onChangeText={setName}
-                    autoFocus
-                    returnKeyType="done"
-                    onSubmitEditing={commitName}
-                  />
-                  <TouchableOpacity onPress={commitName}>
-                    <Text style={styles.saveText}>저장</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <TouchableOpacity style={styles.rowRight} onPress={() => setEditingName(true)}>
-                  <Text style={styles.rowValue}>{name}</Text>
-                  <IconChev dir="right" size={16} color="#d1d5db" />
-                </TouchableOpacity>
-              )}
-            </View>
+            <Row label="이름" value={name} onPress={() => openEdit('name')} />
             <View style={styles.divider} />
-            {/* 아이디 */}
-            <View style={styles.row}>
-              <Text style={styles.rowLabel}>아이디</Text>
-              {editingUsername ? (
-                <View style={styles.inlineEditRow}>
-                  <Text style={styles.atSign}>@</Text>
-                  <TextInput
-                    style={styles.inlineInput}
-                    value={username}
-                    onChangeText={setUsername}
-                    autoFocus
-                    returnKeyType="done"
-                    autoCapitalize="none"
-                    onSubmitEditing={commitUsername}
-                  />
-                  <TouchableOpacity onPress={commitUsername}>
-                    <Text style={styles.saveText}>저장</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                <TouchableOpacity style={styles.rowRight} onPress={() => setEditingUsername(true)}>
-                  <Text style={styles.rowValue}>@{username}</Text>
-                  <IconChev dir="right" size={16} color="#d1d5db" />
-                </TouchableOpacity>
-              )}
-            </View>
+            <Row label="아이디" value={`@${username}`} onPress={() => openEdit('username')} />
             <View style={styles.divider} />
             <Row label="이메일" value={email} />
             <View style={styles.divider} />
@@ -208,6 +176,50 @@ export default function AccountSettingsScreen() {
           </View>
         </View>
       </ScrollView>
+
+      {/* 이름/아이디 변경 모달 */}
+      {editField && (
+      <SheetWrap style={styles.overlayWrap}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <Text style={styles.modalTitle}>{editField === 'name' ? '이름 변경' : '아이디 변경'}</Text>
+            <View style={styles.modalInputRow}>
+              {editField === 'username' && <Text style={styles.atSign}>@</Text>}
+              <TextInput
+                style={styles.modalInputFlex}
+                value={draft}
+                onChangeText={setDraft}
+                placeholder={editField === 'name' ? '이름' : '아이디'}
+                placeholderTextColor="#9ca3af"
+                autoFocus
+                autoCapitalize="none"
+                returnKeyType="done"
+                onSubmitEditing={commitEdit}
+                maxLength={30}
+              />
+            </View>
+            <View style={styles.modalBtns}>
+              <TouchableOpacity
+                style={styles.modalCancel}
+                onPress={() => setEditField(null)}
+                disabled={editLoading}
+              >
+                <Text style={styles.modalCancelText}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalConfirm, { backgroundColor: accent }, editLoading && { opacity: 0.6 }]}
+                onPress={commitEdit}
+                disabled={editLoading}
+              >
+                {editLoading
+                  ? <ActivityIndicator size="small" color="#fff" />
+                  : <Text style={styles.modalConfirmText}>저장</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </SheetWrap>
+      )}
 
       {/* 비밀번호 변경 모달 */}
       {pwOpen && (
@@ -319,14 +331,13 @@ const lightStyles = StyleSheet.create({
   rowDesc2: { fontSize: 12, color: '#9ca3af' },
   rowRight: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   rowValue: { fontSize: 14, color: '#9ca3af' },
-  inlineEditRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   atSign: { fontSize: 14, color: '#9ca3af' },
-  inlineInput: {
-    fontSize: 14, color: '#111827',
-    borderBottomWidth: 1.5, borderBottomColor: '#111827',
-    paddingVertical: 2, minWidth: 80, textAlign: 'right',
+  modalInputRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12,
+    paddingHorizontal: 14,
   },
-  saveText: { fontSize: 13, fontWeight: '600', color: '#111827' },
+  modalInputFlex: { flex: 1, paddingVertical: 12, fontSize: 14, color: '#111827' },
   modalBackdrop: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.4)',
     alignItems: 'center', justifyContent: 'center', padding: 28,

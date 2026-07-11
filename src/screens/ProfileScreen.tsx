@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import * as Updates from 'expo-updates';
 import { View, Text, ScrollView, StyleSheet, SafeAreaView, Image, Linking } from 'react-native';
 import TouchableOpacity from '../components/Touchable';
 import ThemeSwitch from '../components/ThemeSwitch';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import { RootStackParamList } from '../navigation/RootNavigator';
@@ -41,6 +41,14 @@ export default function ProfileScreen() {
       })
       .catch(() => {});
   }, [token]);
+
+  // 계정설정에서 이름/아이디를 바꾸고 돌아왔을 때 즉시 반영 (saveProfile이 캐시를 갱신해 둠)
+  useFocusEffect(useCallback(() => {
+    const me = getCachedMe();
+    if (me?.display_name) setDisplayName(me.display_name);
+    if (me?.username) setUsername(me.username);
+    if (me?.avatar_url) setAvatarUri(me.avatar_url);
+  }, []));
 
   async function pickAvatar() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
