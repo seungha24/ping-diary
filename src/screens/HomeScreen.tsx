@@ -41,6 +41,16 @@ export default function HomeScreen() {
   const [, forceNotif] = useState(0);
   useEffect(() => subscribeNotifs(() => forceNotif((v) => v + 1)), []);
   useEffect(() => { refreshNotifs(); }, []); // 실제 알림(AI 코멘트·그룹 새 글) 로드
+
+  // 홈 탭을 누르면 항상 첫 화면(개인 폴더 목록)으로 리셋
+  useEffect(() => {
+    const unsub = (navigation as any).addListener('tabPress', () => {
+      setSelectedFolder(null);
+      setTab('personal');
+      setPersonalView('folder');
+    });
+    return unsub;
+  }, [navigation]);
   const hasUnreadNotif = getNotifUnread() > 0;
   const [selectedFolder, setSelectedFolder] = useState<DiaryFolder | null>(null);
   const [personalView, setPersonalView] = useState<'folder' | 'all'>('folder');
