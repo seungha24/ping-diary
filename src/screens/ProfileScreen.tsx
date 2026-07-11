@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import IconChev from '../components/icons/IconChev';
+import PingLogo from '../components/PingLogo';
 import { useTheme, THEMES } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { getMe, getCachedMe } from '../api';
@@ -52,6 +53,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
+        <PingLogo />
         <Text style={styles.headerTitle}>프로필</Text>
       </View>
 

@@ -11,6 +11,7 @@ import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { getMonthlyAwards, MonthlyAward } from '../api';
 import { IconX, PersonaIcon, IconTrophy } from '../components/icons/Line';
+import PingLogo from '../components/PingLogo';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -136,6 +137,7 @@ export default function StatsScreen() {
   return (
     <SafeAreaView style={styles.container} collapsable={false}>
       <View style={styles.header}>
+        <PingLogo />
         <Text style={styles.headerTitle}>통계</Text>
       </View>
 
@@ -425,6 +427,7 @@ export default function StatsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9fafb' },
   header: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 14,
     borderBottomWidth: 1, borderBottomColor: '#f3f4f6', backgroundColor: '#ffffff',
   },

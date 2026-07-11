@@ -3,7 +3,7 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView,
   Modal, Pressable, Image, TextInput, PanResponder,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import { RootStackParamList } from '../navigation/RootNavigator';
@@ -43,15 +43,24 @@ export default function HomeScreen() {
   useEffect(() => subscribeNotifs(() => forceNotif((v) => v + 1)), []);
   useEffect(() => { refreshNotifs(); }, []); // 실제 알림(AI 코멘트·그룹 새 글) 로드
 
+  // 홈 첫 화면으로 리셋 (홈 탭·로고 클릭 공용)
+  function resetToFirstScreen() {
+    setSelectedFolder(null);
+    setTab('personal');
+    setPersonalView('folder');
+  }
+
   // 홈 탭을 누르면 항상 첫 화면(개인 폴더 목록)으로 리셋
   useEffect(() => {
-    const unsub = (navigation as any).addListener('tabPress', () => {
-      setSelectedFolder(null);
-      setTab('personal');
-      setPersonalView('folder');
-    });
+    const unsub = (navigation as any).addListener('tabPress', resetToFirstScreen);
     return unsub;
   }, [navigation]);
+
+  // 다른 탭에서 p!ng 로고를 눌러 넘어온 경우(reset 파라미터)도 첫 화면으로
+  const resetParam = (useRoute() as any).params?.reset;
+  useEffect(() => {
+    if (resetParam) resetToFirstScreen();
+  }, [resetParam]);
   const hasUnreadNotif = getNotifUnread() > 0;
   const [selectedFolder, setSelectedFolder] = useState<DiaryFolder | null>(null);
   const [personalView, setPersonalView] = useState<'folder' | 'all'>('folder');
@@ -426,7 +435,9 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.logo}>p!ng</Text>
+        <TouchableOpacity onPress={resetToFirstScreen} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <Text style={styles.logo}>p!ng</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.bellBtn} onPress={() => navigation.navigate('Notifications')}>
           <IconBell size={22} dot={hasUnreadNotif} />
         </TouchableOpacity>

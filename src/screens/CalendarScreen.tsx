@@ -4,6 +4,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList, TabParamList } from '../navigation/RootNavigator';
 import IconChev from '../components/icons/IconChev';
+import PingLogo from '../components/PingLogo';
 import { MONTHS, DAYS } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
@@ -49,6 +50,7 @@ export default function CalendarScreen() {
     <SafeAreaView style={styles.container}>
       {/* Month nav */}
       <View style={styles.header}>
+        <PingLogo />
         <TouchableOpacity style={styles.navBtn} onPress={() => setMonth((m) => Math.max(0, m - 1))}>
           <IconChev dir="left" size={20} />
         </TouchableOpacity>

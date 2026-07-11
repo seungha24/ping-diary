@@ -45,7 +45,7 @@ export type RootStackParamList = {
 };
 
 export type TabParamList = {
-  Home: undefined;
+  Home: { reset?: number } | undefined;
   Calendar: { month?: number } | undefined;
   Stats: undefined;
   Profile: undefined;
