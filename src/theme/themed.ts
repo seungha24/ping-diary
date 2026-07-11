@@ -30,10 +30,15 @@ const DARK_MAP: Record<string, string> = {
   // 위험/경고 배경 틴트
   '#fee2e2': '#3a2531',
   '#fef2f2': '#2a1c23',
+  '#3c4043': '#dce2ed', // 구글 버튼 라벨 (다크에서 밝게)
 };
 
-function mapColor(v: string): string {
+function mapColor(v: string, isTextColor = false): string {
   const k = v.trim().toLowerCase();
+  // 흰 글자는 색 버튼(accent·빨강) 위의 라벨이므로 다크에서도 흰색 유지 — 배경만 어두워진다
+  if (isTextColor && (k === '#fff' || k === '#ffffff' || k === 'white' || /^rgba\(\s*255\s*,\s*255\s*,\s*255/.test(k))) {
+    return v;
+  }
   if (DARK_MAP[k]) return DARK_MAP[k];
   // 흰색 기반 반투명 오버레이 → 다크 카드색 반투명
   const m = k.match(/^rgba\(\s*255\s*,\s*255\s*,\s*255\s*,\s*([\d.]+)\s*\)$/);
@@ -51,7 +56,7 @@ function darkifySheet<T extends Record<string, any>>(sheet: T): T {
     for (const p of Object.keys(copy)) {
       const val = copy[p];
       if (typeof val === 'string' && COLOR_PROP.test(p) && p !== 'shadowColor') {
-        copy[p] = mapColor(val);
+        copy[p] = mapColor(val, p === 'color');
       }
     }
     out[key] = copy;
