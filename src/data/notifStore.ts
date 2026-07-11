@@ -67,21 +67,21 @@ function emit() {
   listeners.forEach((fn) => fn());
 }
 
-/** 상대 시간 라벨 ("방금 전", "3 시간 전", "어제", "6 월 9 일") */
+/** 상대 시간 라벨 ("방금 전", "3 시간 전", "어제", "6 월 9 일") */
 export function timeAgo(iso: string): string {
   const t = new Date(iso).getTime();
   if (!t) return '';
   const diff = Date.now() - t;
   const min = Math.floor(diff / 60000);
   if (min < 1) return '방금 전';
-  if (min < 60) return `${min} 분 전`;
+  if (min < 60) return `${min} 분 전`;
   const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr} 시간 전`;
+  if (hr < 24) return `${hr} 시간 전`;
   const day = Math.floor(hr / 24);
   if (day === 1) return '어제';
-  if (day < 7) return `${day} 일 전`;
+  if (day < 7) return `${day} 일 전`;
   const d = new Date(iso);
-  return `${d.getMonth() + 1} 월 ${d.getDate()} 일`;
+  return `${d.getMonth() + 1} 월 ${d.getDate()} 일`;
 }
 
 /** 서버 데이터로 알림 목록 재구성 */

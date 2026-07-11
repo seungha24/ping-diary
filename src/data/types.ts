@@ -67,10 +67,10 @@ export const INITIAL_ENTRIES: DiaryEntry[] = [
   },
   {
     id: 2, title: '오랜 친구를 만난 날',
-    body: '3 년 만에 지현이를 만났다. 시간이 흘러도 변하지 않는 것들이 있다는 걸 느꼈다.',
+    body: '3 년 만에 지현이를 만났다. 시간이 흘러도 변하지 않는 것들이 있다는 걸 느꼈다.',
     dates: [8], tags: ['일상', '산책'], photo: null, persona: '엄마', folder: 'daily',
     createdAt: '2026-06-08T14:00:00',
-    aiComment: '3 년이라는 시간이 흘렀어도 변하지 않는 우정을 느꼈다니 얼마나 따뜻한 하루였을까. 그런 관계를 소중히 지켜온 네가 대견하고, 지현이도 같은 마음이었을 거야. 그 인연 앞으로도 잘 챙겨나가렴.',
+    aiComment: '3 년이라는 시간이 흘렀어도 변하지 않는 우정을 느꼈다니 얼마나 따뜻한 하루였을까. 그런 관계를 소중히 지켜온 네가 대견하고, 지현이도 같은 마음이었을 거야. 그 인연 앞으로도 잘 챙겨나가렴.',
   },
   {
     id: 3, title: '비 오는 날의 단상',
@@ -120,7 +120,7 @@ export const PERSONAS = [
 ];
 
 export const MONTH_COUNTS = [18, 12, 25, 8, 30, 10, 0, 0, 0, 0, 0, 0];
-export const MONTHS = ['1 월', '2 월', '3 월', '4 월', '5 월', '6 월', '7 월', '8 월', '9 월', '10 월', '11 월', '12 월'];
+export const MONTHS = ['1 월', '2 월', '3 월', '4 월', '5 월', '6 월', '7 월', '8 월', '9 월', '10 월', '11 월', '12 월'];
 export const DAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
 export function getPhotoPlaceholder(ph: string) {
@@ -183,5 +183,5 @@ export function parseBodySegments(body: string): BodySegment[] {
 export function entryDateLabel(entry: { createdAt: string; dates: number[] }): string {
   const month = new Date(entry.createdAt).getMonth() + 1;
   const days = entry.dates && entry.dates.length ? entry.dates.join(', ') : '';
-  return days ? `${month} 월 ${days} 일` : `${month} 월`;
+  return days ? `${month} 월 ${days} 일` : `${month} 월`;
 }
