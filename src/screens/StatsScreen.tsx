@@ -16,20 +16,21 @@ import { useThemedStyles } from '../theme/themed';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-// 개수 기준 단계형 그라데이션 (기록이 쌓일수록 진해짐)
-function getMonthTextColor(count: number): string {
-  if (count === 0) return '#9ca3af';
-  return count >= 10 ? '#ffffff' : '#374151';
-}
-
 export default function StatsScreen() {
   const styles = useThemedStyles(lightStyles);
   const navigation = useNavigation<Nav>();
-  const { accent } = useTheme();
+  const { accent, mode } = useTheme();
   const { entries } = useEntries();
 
+  // 개수 기준 단계형 그라데이션 (기록이 쌓일수록 진해짐) — 다크 모드 색 대응
+  function getMonthTextColor(count: number): string {
+    if (count === 0) return '#9ca3af';
+    if (count >= 10) return '#ffffff';
+    return mode === 'dark' ? '#e5e7eb' : '#374151';
+  }
+
   function getMonthBg(count: number): string {
-    if (count === 0) return '#f3f4f6';
+    if (count === 0) return mode === 'dark' ? '#232834' : '#f3f4f6';
     if (count >= 15) return accent;                 // 15 개 이상: 가장 진함
     if (count >= 8) return hexToRgba(accent, 0.65); // 8~14 개
     if (count >= 3) return hexToRgba(accent, 0.4);  // 3~7 개
@@ -143,7 +144,7 @@ export default function StatsScreen() {
         <View style={{ width: 36, height: 36 }} />
       </View>
 
-      <ScrollView style={{ backgroundColor: '#f9fafb' }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <ScrollView style={{ backgroundColor: mode === 'dark' ? '#191c24' : '#f9fafb' }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* Summary */}
         <View style={styles.statsGrid}>
           <TouchableOpacity style={styles.statCard} onPress={() => setListOpen(true)} activeOpacity={0.7}>

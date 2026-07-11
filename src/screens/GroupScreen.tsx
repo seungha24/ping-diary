@@ -694,7 +694,7 @@ export default function GroupScreen() {
             {FREQ_OPTIONS.map((opt) => (
               <TouchableOpacity
                 key={opt.value}
-                style={[styles.freqRow, draftFreq === opt.value && { borderColor: accent, backgroundColor: '#ffffff' }]}
+                style={[styles.freqRow, draftFreq === opt.value && { borderColor: accent, backgroundColor: hexToRgba(accent, 0.08) }]}
                 onPress={() => setDraftFreq(opt.value)}
                 activeOpacity={0.8}
               >

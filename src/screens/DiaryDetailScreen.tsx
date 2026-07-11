@@ -364,7 +364,7 @@ export default function DiaryDetailScreen() {
                 return (
                   <TouchableOpacity
                     key={g.id}
-                    style={[styles.shareGroupRow, active && { borderColor: accent, backgroundColor: '#f9fafb' }]}
+                    style={[styles.shareGroupRow, active && { borderColor: accent, backgroundColor: hexToRgba(accent, 0.08) }]}
                     onPress={() => toggleGroup(g.id)}
                   >
                     <Text style={[styles.shareGroupName, active && { color: accent, fontWeight: '600' }]} numberOfLines={1}>
@@ -409,7 +409,7 @@ export default function DiaryDetailScreen() {
               return (
                 <TouchableOpacity
                   key={p.label}
-                  style={[styles.personaRow, active && { borderColor: accent, backgroundColor: '#f9fafb' }]}
+                  style={[styles.personaRow, active && { borderColor: accent, backgroundColor: hexToRgba(accent, 0.08) }]}
                   onPress={() => handleChangePersona(p.label)}
                 >
                   <PersonaIcon persona={p.label} size={18} color={active ? accent : '#6b7280'} />
@@ -440,7 +440,7 @@ export default function DiaryDetailScreen() {
                 return (
                   <TouchableOpacity
                     key={f.id}
-                    style={[styles.personaRow, active && { borderColor: accent, backgroundColor: '#f9fafb' }]}
+                    style={[styles.personaRow, active && { borderColor: accent, backgroundColor: hexToRgba(accent, 0.08) }]}
                     onPress={() => handleChangeFolder(f.id)}
                   >
                     <Text style={styles.folderEmoji}>{f.emoji}</Text>

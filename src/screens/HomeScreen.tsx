@@ -801,7 +801,7 @@ export default function HomeScreen() {
                 return (
                   <TouchableOpacity
                     key={g.id}
-                    style={[styles.shareGroupRow, active && { borderColor: accent, backgroundColor: '#f9fafb' }]}
+                    style={[styles.shareGroupRow, active && { borderColor: accent, backgroundColor: hexToRgba(accent, 0.08) }]}
                     onPress={() => toggleShareGroup(g.id)}
                   >
                     <Text style={[styles.shareGroupName, active && { color: accent, fontWeight: '600' }]} numberOfLines={1}>

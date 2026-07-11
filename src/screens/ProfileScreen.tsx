@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import * as Updates from 'expo-updates';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image, Linking, Switch } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image, Linking } from 'react-native';
+import ThemeSwitch from '../components/ThemeSwitch';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
@@ -117,11 +118,10 @@ export default function ProfileScreen() {
         {/* 다크 모드 */}
         <View style={styles.darkModeRow}>
           <Text style={styles.sectionTitle}>다크 모드</Text>
-          <Switch
+          <ThemeSwitch
             value={mode === 'dark'}
-            onValueChange={(v) => setMode(v ? 'dark' : 'light')}
-            trackColor={{ false: '#e5e7eb', true: accent }}
-            thumbColor="#ffffff"
+            onChange={(v) => setMode(v ? 'dark' : 'light')}
+            accent={accent}
           />
         </View>
 
