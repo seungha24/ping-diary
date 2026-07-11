@@ -838,25 +838,26 @@ export default function HomeScreen() {
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setFabMenuOpen(false)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
-            <View style={{ height: 8 }} />
-            <TouchableOpacity
-              style={styles.fabChoice}
-              onPress={() => { setFabMenuOpen(false); navigation.navigate('DiaryWrite'); }}
-            >
-              <View style={styles.fabChoiceIcon}><IconPencil size={22} color={accent} /></View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.fabChoiceTitle}>p!ng</Text>
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.fabChoice}
-              onPress={() => { setFabMenuOpen(false); setFolderModalOpen(true); }}
-            >
-              <View style={styles.fabChoiceIcon}><IconFolder size={22} color={accent} /></View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.fabChoiceTitle}>폴더 만들기</Text>
-              </View>
-            </TouchableOpacity>
+            <View style={styles.fabChoiceList}>
+              <TouchableOpacity
+                style={styles.fabChoice}
+                onPress={() => { setFabMenuOpen(false); navigation.navigate('DiaryWrite'); }}
+              >
+                <View style={styles.fabChoiceIcon}><IconPencil size={22} color={accent} /></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.fabChoiceTitle}>p!ng</Text>
+                </View>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.fabChoice}
+                onPress={() => { setFabMenuOpen(false); setFolderModalOpen(true); }}
+              >
+                <View style={styles.fabChoiceIcon}><IconFolder size={22} color={accent} /></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.fabChoiceTitle}>폴더 만들기</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
         </SheetWrap>
       )}
@@ -1236,11 +1237,12 @@ const lightStyles = StyleSheet.create({
 
   // + 선택 시트
   fabSheetTitle: { fontSize: 16, fontWeight: '700', color: '#111827', marginTop: 4, marginBottom: 14 },
+  fabChoiceList: { gap: 10, paddingTop: 10 },
   fabChoice: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     paddingVertical: 14, paddingHorizontal: 14,
     borderRadius: 14, borderWidth: 1, borderColor: '#f3f4f6',
-    backgroundColor: '#f9fafb', marginBottom: 10,
+    backgroundColor: '#f9fafb',
   },
   fabChoiceEmoji: { fontSize: 26 },
   fabChoiceIcon: { width: 30, alignItems: 'center' },
