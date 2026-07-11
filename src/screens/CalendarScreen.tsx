@@ -59,7 +59,7 @@ export default function CalendarScreen() {
         <TouchableOpacity style={styles.navBtn} onPress={() => setMonth((m) => Math.max(0, m - 1))}>
           <IconChev dir="left" size={20} />
         </TouchableOpacity>
-        <Text style={styles.monthTitle}>{year}년 {MONTHS[month]}</Text>
+        <Text style={styles.monthTitle}>{year} 년 {MONTHS[month]}</Text>
         <TouchableOpacity style={styles.navBtn} onPress={() => setMonth((m) => Math.min(11, m + 1))}>
           <IconChev dir="right" size={20} />
         </TouchableOpacity>
@@ -101,7 +101,7 @@ export default function CalendarScreen() {
 
       {/* Day entries */}
       <View style={styles.preview}>
-        <Text style={styles.previewLabel}>{MONTHS[month]} {selectedDay}일의 p!ng</Text>
+        <Text style={styles.previewLabel}>{MONTHS[month]} {selectedDay} 일의 p!ng</Text>
         <ScrollView showsVerticalScrollIndicator={false}>
           {selectedEntries.length > 0 ? (
             selectedEntries.map((e) => (

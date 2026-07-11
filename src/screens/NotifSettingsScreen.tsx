@@ -106,7 +106,7 @@ export default function NotifSettingsScreen() {
             <View style={styles.divider} />
             <ToggleRow
               label="AI 코멘트 알림"
-              desc="24시간 후 코멘트가 공개되면 알림"
+              desc="24 시간 후 코멘트가 공개되면 알림"
               value={aiComment}
               onChange={setAiComment}
               disabled={!allOn}

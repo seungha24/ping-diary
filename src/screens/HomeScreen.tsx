@@ -428,7 +428,7 @@ export default function HomeScreen() {
       sharedGroups: ids.length > 0 ? ids : null,
     });
     setShareEntry(null);
-    notify(ids.length > 0 ? `${ids.length}개 그룹에 공개했어요.` : '비공개로 전환했어요.');
+    notify(ids.length > 0 ? `${ids.length} 개 그룹에 공개했어요.` : '비공개로 전환했어요.');
   }
 
   return (
@@ -645,7 +645,7 @@ export default function HomeScreen() {
                       </View>
                       <View style={styles.folderMeta}>
                         <Text style={styles.folderName} numberOfLines={1}>{folder.name}</Text>
-                        <Text style={styles.folderCount}>{count}개</Text>
+                        <Text style={styles.folderCount}>{count} 개</Text>
                       </View>
                     </TouchableOpacity>
                   );
@@ -762,7 +762,7 @@ export default function HomeScreen() {
                   </View>
                   <View style={styles.folderMeta}>
                     <Text style={styles.folderName} numberOfLines={1}>{group.name}</Text>
-                    <Text style={styles.folderCount}>{group.member_count ?? 1}명</Text>
+                    <Text style={styles.folderCount}>{group.member_count ?? 1} 명</Text>
                   </View>
                 </TouchableOpacity>
               );
@@ -814,7 +814,7 @@ export default function HomeScreen() {
             </ScrollView>
             <TouchableOpacity style={[styles.confirmBtn, { backgroundColor: accent }]} onPress={saveShare}>
               <Text style={[styles.confirmBtnText, { color: '#fff' }]}>
-                {shareGroupIds.size > 0 ? `${shareGroupIds.size}개 그룹에 공개` : '비공개로 저장'}
+                {shareGroupIds.size > 0 ? `${shareGroupIds.size} 개 그룹에 공개` : '비공개로 저장'}
               </Text>
             </TouchableOpacity>
           </View>

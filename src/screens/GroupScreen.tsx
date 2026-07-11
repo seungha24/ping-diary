@@ -384,7 +384,7 @@ export default function GroupScreen() {
 
   function freqSummary() {
     if (frequency === 'off') return '알림 꺼짐';
-    if (frequency === 'interval') return `매 ${intervalDays}일마다`;
+    if (frequency === 'interval') return `매 ${intervalDays} 일마다`;
     if (frequency === 'biweekly') return '격주';
     if (frequency === 'weekly') {
       if (selectedDays.length === 0) return '매주 (요일 미설정)';
@@ -408,7 +408,7 @@ export default function GroupScreen() {
           <View style={styles.headerText}>
             <Text style={styles.groupName}>{groupName}</Text>
             <Text style={styles.groupMembers} numberOfLines={1}>
-              멤버 {group.member_count ?? 1}명
+              멤버 {group.member_count ?? 1} 명
             </Text>
           </View>
         </View>

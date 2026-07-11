@@ -53,7 +53,7 @@ export default function NotificationScreen() {
 
       {unreadCount > 0 && (
         <View style={styles.unreadBanner}>
-          <Text style={styles.unreadBannerText}>읽지 않은 알림 {unreadCount}개</Text>
+          <Text style={styles.unreadBannerText}>읽지 않은 알림 {unreadCount} 개</Text>
         </View>
       )}
 

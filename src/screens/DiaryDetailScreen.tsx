@@ -126,10 +126,10 @@ export default function DiaryDetailScreen() {
     updateEntry({ ...entry, visibility: next, sharedGroups: ids.length > 0 ? ids : null, aiComment, persona });
     setPublishing(false);
     setShareOpen(false);
-    notify(ids.length > 0 ? `${ids.length}개 그룹에 공개했어요.` : '비공개로 전환했어요.');
+    notify(ids.length > 0 ? `${ids.length} 개 그룹에 공개했어요.` : '비공개로 전환했어요.');
   }
 
-  // AI 코멘트 즉시 생성 (24시간 기다리지 않고 미리 받아보기)
+  // AI 코멘트 즉시 생성 (24 시간 기다리지 않고 미리 받아보기)
   async function handleGenerateComment() {
     setGenLoading(true);
     try {
@@ -321,7 +321,7 @@ export default function DiaryDetailScreen() {
             <View style={styles.aiLockedBox}>
               {isUnlocked ? <IconSparkle size={26} color={accent} /> : <IconLock size={26} color="#9ca3af" />}
               <Text style={styles.aiLockedText}>
-                {isUnlocked ? '아직 코멘트가 없어요' : 'p!ng 작성 24시간 후 공개돼요'}
+                {isUnlocked ? '아직 코멘트가 없어요' : 'p!ng 작성 24 시간 후 공개돼요'}
               </Text>
               {!isUnlocked && <Text style={styles.aiCountdown}>{formatRemaining(remaining)}</Text>}
               {isMine && (
@@ -381,7 +381,7 @@ export default function DiaryDetailScreen() {
               disabled={publishing}
             >
               <Text style={[styles.confirmBtnText, { color: '#fff' }]}>
-                {selectedGroups.size > 0 ? `${selectedGroups.size}개 그룹에 공개` : '비공개로 저장'}
+                {selectedGroups.size > 0 ? `${selectedGroups.size} 개 그룹에 공개` : '비공개로 저장'}
               </Text>
             </TouchableOpacity>
           </View>
