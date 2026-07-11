@@ -100,11 +100,19 @@ export async function refreshNotifs() {
 
     const items: Notif[] = [];
 
+    // 코멘트 내용이 바뀌면(페르소나 변경 등으로 재생성) 알림 id도 바뀌어
+    // 다시 '안 읽음'으로 뜨도록 내용 해시를 id에 포함한다
+    const tinyHash = (s: string): string => {
+      let h = 0;
+      for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+      return (h >>> 0).toString(36);
+    };
+
     // 1) 내 일기에 도착한 AI 코멘트
     for (const e of entries) {
       if (e.aiComment) {
         items.push({
-          id: `ai-${e.id}`,
+          id: `ai-${e.id}-${tinyHash(e.aiComment)}`,
           type: 'ai',
           title: 'AI 코멘트가 도착했어요',
           body: `${e.persona || 'AI'} · ${e.title || '제목 없음'}`,

@@ -44,7 +44,9 @@ export default function ToastHost() {
       const dur = Math.min(6000, Math.max(2400, msg.length * 90));
       hideTimer.current = setTimeout(() => {
         Animated.timing(opacity, { toValue: 0, duration: 220, useNativeDriver: Platform.OS !== 'web' })
-          .start(() => setMessage(null));
+          // 페이드아웃 중 새 알림이 오면 이 콜백이 finished:false로 불리는데,
+          // 그때 null을 넣으면 새 메시지가 지워지므로 완료된 경우에만 지운다
+          .start(({ finished }) => { if (finished) setMessage(null); });
       }, dur);
     });
     return () => {

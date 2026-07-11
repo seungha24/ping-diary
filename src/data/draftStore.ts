@@ -81,7 +81,9 @@ async function readAll(): Promise<DiaryDraft[]> {
     const legacyRaw = await readRaw(LEGACY_KEY);
     if (legacyRaw) {
       const legacy = JSON.parse(legacyRaw);
-      list = [{ ...legacy, id: newDraftId() }, ...list];
+      // 구버전 초안엔 savedAt이 없어 정렬이 NaN이 되므로 보정
+      const savedAt = typeof legacy.savedAt === 'string' ? legacy.savedAt : new Date().toISOString();
+      list = [{ ...legacy, id: newDraftId(), savedAt }, ...list];
       const s = webStorage();
       if (s) { try { s.removeItem(LEGACY_KEY); } catch {} }
       else { try { await AsyncStorage.removeItem(LEGACY_KEY); } catch {} }
