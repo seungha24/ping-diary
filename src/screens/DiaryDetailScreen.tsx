@@ -365,7 +365,7 @@ export default function DiaryDetailScreen() {
                     style={[styles.shareGroupRow, active && { borderColor: accent, backgroundColor: '#f9fafb' }]}
                     onPress={() => toggleGroup(g.id)}
                   >
-                    <Text style={[styles.shareGroupName, active && { color: accent, fontWeight: '700' }]} numberOfLines={1}>
+                    <Text style={[styles.shareGroupName, active && { color: accent, fontWeight: '600' }]} numberOfLines={1}>
                       {g.name}
                     </Text>
                     <View style={[styles.shareCheck, active && { borderColor: accent, backgroundColor: accent }]}>
@@ -411,7 +411,7 @@ export default function DiaryDetailScreen() {
                   onPress={() => handleChangePersona(p.label)}
                 >
                   <PersonaIcon persona={p.label} size={18} color={active ? accent : '#6b7280'} />
-                  <Text style={[styles.personaLabel, active && { color: accent, fontWeight: '700' }]}>{p.label}</Text>
+                  <Text style={[styles.personaLabel, active && { color: accent, fontWeight: '600' }]}>{p.label}</Text>
                   {active && <Text style={[styles.personaCheck, { color: accent }]}>✓</Text>}
                 </TouchableOpacity>
               );
@@ -442,7 +442,7 @@ export default function DiaryDetailScreen() {
                     onPress={() => handleChangeFolder(f.id)}
                   >
                     <Text style={styles.folderEmoji}>{f.emoji}</Text>
-                    <Text style={[styles.personaLabel, active && { color: accent, fontWeight: '700' }]}>{f.name}</Text>
+                    <Text style={[styles.personaLabel, active && { color: accent, fontWeight: '600' }]}>{f.name}</Text>
                     {active && <Text style={[styles.personaCheck, { color: accent }]}>✓</Text>}
                   </TouchableOpacity>
                 );
@@ -518,7 +518,7 @@ const styles = StyleSheet.create({
   },
   content: { padding: 24, gap: 14, paddingBottom: 48 },
   date: { fontSize: 12, color: '#9ca3af' },
-  title: { fontSize: 22, fontWeight: '800', color: '#111827', lineHeight: 30, letterSpacing: -0.3 },
+  title: { fontSize: 22, fontWeight: '700', color: '#111827', lineHeight: 30, letterSpacing: -0.3 },
   photoWrapper: { borderRadius: 16, overflow: 'hidden' },
   galleryRow: { flexDirection: 'row', gap: 8 },
   galleryThumb: { width: 64, height: 64, borderRadius: 12 },
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,
     borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 11,
   },
-  questionQ: { fontSize: 15, fontWeight: '800' },
+  questionQ: { fontSize: 15, fontWeight: '700' },
   questionText: { flex: 1, fontSize: 13.5, color: '#374151', lineHeight: 20, fontWeight: '600' },
 
   aiSection: { gap: 10, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
@@ -539,8 +539,8 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   aiDotInner: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#ffffff' },
-  aiTitle: { fontSize: 13, fontWeight: '700', color: '#374151' },
-  aiToggle: { fontSize: 11.5, fontWeight: '700' },
+  aiTitle: { fontSize: 13, fontWeight: '600', color: '#374151' },
+  aiToggle: { fontSize: 11.5, fontWeight: '600' },
   aiPersona: { fontSize: 12, color: '#9ca3af' },
   aiPersonaRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   aiPersonaBtn: {
@@ -556,7 +556,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   personaLabel: { fontSize: 14, color: '#374151', flex: 1 },
-  personaCheck: { fontSize: 15, fontWeight: '800' },
+  personaCheck: { fontSize: 15, fontWeight: '700' },
   folderChip: {
     flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start',
     paddingHorizontal: 12, paddingVertical: 7, borderRadius: 999,
@@ -579,9 +579,9 @@ const styles = StyleSheet.create({
   },
   aiLockedEmoji: { fontSize: 28 },
   aiLockedText: { fontSize: 13, color: '#9ca3af' },
-  aiCountdown: { fontSize: 20, fontWeight: '800', color: '#374151', letterSpacing: 2 },
+  aiCountdown: { fontSize: 20, fontWeight: '700', color: '#374151', letterSpacing: 2 },
   genBtn: { marginTop: 8, borderRadius: 10, paddingHorizontal: 18, paddingVertical: 10, alignItems: 'center' },
-  genBtnText: { color: '#ffffff', fontSize: 13, fontWeight: '700' },
+  genBtnText: { color: '#ffffff', fontSize: 13, fontWeight: '600' },
 
   shareIconBtn: {
     width: 36, height: 36, borderRadius: 10,
@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
   },
   sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#e5e7eb', alignSelf: 'center', marginTop: 12, marginBottom: 4 },
   sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14 },
-  sheetTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
+  sheetTitle: { fontSize: 15, fontWeight: '600', color: '#111827' },
   sheetClose: { fontSize: 16, color: '#9ca3af' },
   sheetSub: { fontSize: 12.5, color: '#9ca3af', letterSpacing: -0.1, lineHeight: 19, marginBottom: 14 },
 
@@ -613,13 +613,13 @@ const styles = StyleSheet.create({
     width: 22, height: 22, borderRadius: 11, borderWidth: 1.5,
     borderColor: '#d1d5db', alignItems: 'center', justifyContent: 'center',
   },
-  checkmark: { fontSize: 12, color: '#fff', fontWeight: '700' },
+  checkmark: { fontSize: 12, color: '#fff', fontWeight: '600' },
 
   confirmBtn: {
     marginTop: 8, borderRadius: 14, paddingVertical: 14,
     alignItems: 'center',
   },
-  confirmBtnText: { fontSize: 14, fontWeight: '700' },
+  confirmBtnText: { fontSize: 14, fontWeight: '600' },
 
   // 공유 그룹 선택
   shareGroupRow: {
@@ -632,17 +632,17 @@ const styles = StyleSheet.create({
     width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: '#d1d5db',
     alignItems: 'center', justifyContent: 'center',
   },
-  shareCheckMark: { fontSize: 12, color: '#fff', fontWeight: '800' },
+  shareCheckMark: { fontSize: 12, color: '#fff', fontWeight: '700' },
 
   deleteContent: { alignItems: 'center', paddingVertical: 20, gap: 8 },
   deleteEmoji: { fontSize: 36, marginBottom: 4 },
-  deleteTitle: { fontSize: 16, fontWeight: '800', color: '#111827' },
+  deleteTitle: { fontSize: 16, fontWeight: '700', color: '#111827' },
   deleteSub: { fontSize: 13, color: '#9ca3af', marginBottom: 8 },
   deleteConfirmBtn: {
     width: '100%', backgroundColor: '#ef4444', borderRadius: 14,
     paddingVertical: 14, alignItems: 'center',
   },
-  deleteConfirmText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+  deleteConfirmText: { fontSize: 14, fontWeight: '600', color: '#fff' },
   deleteCancelBtn: {
     width: '100%', backgroundColor: '#f3f4f6', borderRadius: 14,
     paddingVertical: 14, alignItems: 'center',

@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24, paddingVertical: 10,
   },
   navBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  monthTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
+  monthTitle: { fontSize: 17, fontWeight: '600', color: '#111827' },
   calendar: { paddingHorizontal: 12, paddingTop: 12 },
   weekRow: { flexDirection: 'row', marginBottom: 4 },
   weekLabel: { flex: 1, textAlign: 'center', fontSize: 12, color: '#9ca3af', paddingVertical: 4, fontWeight: '500' },

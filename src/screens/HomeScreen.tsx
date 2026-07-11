@@ -453,7 +453,7 @@ export default function HomeScreen() {
               style={[styles.tabItem, tab === t && styles.tabItemActive]}
               onPress={() => setTab(t)}
             >
-              <Text style={[styles.tabText, tab === t && { color: accent, fontWeight: '700' }]}>
+              <Text style={[styles.tabText, tab === t && { color: accent, fontWeight: '600' }]}>
                 {t === 'personal' ? '개인' : '그룹'}
               </Text>
             </TouchableOpacity>
@@ -802,7 +802,7 @@ export default function HomeScreen() {
                     style={[styles.shareGroupRow, active && { borderColor: accent, backgroundColor: '#f9fafb' }]}
                     onPress={() => toggleShareGroup(g.id)}
                   >
-                    <Text style={[styles.shareGroupName, active && { color: accent, fontWeight: '700' }]} numberOfLines={1}>
+                    <Text style={[styles.shareGroupName, active && { color: accent, fontWeight: '600' }]} numberOfLines={1}>
                       {g.name}
                     </Text>
                     <View style={[styles.shareCheck, active && { borderColor: accent, backgroundColor: accent }]}>
@@ -991,7 +991,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
   },
-  logo: { fontSize: 27, fontWeight: '800', color: '#111827', letterSpacing: -0.5 },
+  logo: { fontSize: 27, fontWeight: '700', color: '#111827', letterSpacing: -0.5 },
   bellBtn: {
     width: 36, height: 36, borderRadius: 10,
     backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
@@ -1004,7 +1004,7 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 2,
   },
   tabText: { fontSize: 13, color: '#9ca3af', fontWeight: '500' },
-  tabTextActive: { color: '#111827', fontWeight: '700' },
+  tabTextActive: { color: '#111827', fontWeight: '600' },
   list: { paddingHorizontal: 20, paddingTop: 12, gap: 10, paddingBottom: 80 },
   emptyState: { alignItems: 'center', paddingTop: 48, gap: 6 },
   emptyText: { fontSize: 14, color: '#9ca3af' },
@@ -1016,7 +1016,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   entryHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  entryTitle: { fontSize: 14, fontWeight: '700', color: '#1f2937', flex: 1 },
+  entryTitle: { fontSize: 14, fontWeight: '600', color: '#1f2937', flex: 1 },
   entryHeaderRight: { flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 8 },
   entryDate: { fontSize: 11, color: '#9ca3af', flexShrink: 0 },
   cardShareBtn: {
@@ -1054,7 +1054,7 @@ const styles = StyleSheet.create({
   },
   folderBackBtn: { width: 60 },
   folderBackText: { fontSize: 13, color: '#6b7280' },
-  folderHeaderTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
+  folderHeaderTitle: { fontSize: 15, fontWeight: '600', color: '#111827' },
   folderList: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 80 },
   folderGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
   folderCard: {
@@ -1113,7 +1113,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 9, marginBottom: 12,
   },
   reorderBannerText: { flex: 1, fontSize: 12, color: '#374151' },
-  reorderCancel: { fontSize: 12.5, fontWeight: '700' },
+  reorderCancel: { fontSize: 12.5, fontWeight: '600' },
   folderAddCoverBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 10, paddingVertical: 5,
@@ -1123,7 +1123,7 @@ const styles = StyleSheet.create({
   folderAddCoverText: { fontSize: 11, color: '#6b7280', fontWeight: '600' },
   // 애플뮤직처럼 사진 아래에 놓이는 이름/개수 (이름 옆에 살짝 띄워서)
   folderMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4, paddingTop: 7 },
-  folderName: { flexShrink: 1, fontSize: 14, fontWeight: '700', color: '#111827', lineHeight: 18 },
+  folderName: { flexShrink: 1, fontSize: 14, fontWeight: '600', color: '#111827', lineHeight: 18 },
   folderCount: { flexShrink: 0, fontSize: 12, color: '#9ca3af', lineHeight: 18 },
   sectionLabel: { fontSize: 12, color: '#9ca3af', marginBottom: 2, paddingHorizontal: 4 },
   groupCard: {
@@ -1138,7 +1138,7 @@ const styles = StyleSheet.create({
     width: 44, height: 44, borderRadius: 12,
     backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
   },
-  groupName: { fontSize: 14, fontWeight: '700', color: '#1f2937' },
+  groupName: { fontSize: 14, fontWeight: '600', color: '#1f2937' },
   groupSub: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
   memberAvatars: { flexDirection: 'row' },
   memberDot: {
@@ -1177,7 +1177,7 @@ const styles = StyleSheet.create({
   zoomCard: { alignItems: 'center', gap: 14 },
   zoomPhoto: { width: 180, height: 180, borderRadius: 32 },
   zoomEmoji: { fontSize: 100 },
-  zoomName: { fontSize: 16, fontWeight: '700', color: '#ffffff' },
+  zoomName: { fontSize: 16, fontWeight: '600', color: '#ffffff' },
 
   overlayWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' },
   overlayBg: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.4)' },
@@ -1188,7 +1188,7 @@ const styles = StyleSheet.create({
   sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#e5e7eb', alignSelf: 'center', marginTop: 12, marginBottom: 4 },
   sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14 },
   sheetTitleWrap: { flex: 1, gap: 3 },
-  sheetTitle: { fontSize: 16, fontWeight: '700', color: '#111827', letterSpacing: -0.2 },
+  sheetTitle: { fontSize: 16, fontWeight: '600', color: '#111827', letterSpacing: -0.2 },
   sheetSub: { fontSize: 12.5, color: '#9ca3af', letterSpacing: -0.1, lineHeight: 17 },
   sheetDesc: { fontSize: 12.5, color: '#9ca3af', letterSpacing: -0.1, lineHeight: 19, marginBottom: 14 },
   sheetClose: { fontSize: 16, color: '#9ca3af', paddingLeft: 12 },
@@ -1204,9 +1204,9 @@ const styles = StyleSheet.create({
     width: 22, height: 22, borderRadius: 11, borderWidth: 1.5,
     borderColor: '#d1d5db', alignItems: 'center', justifyContent: 'center',
   },
-  checkmark: { fontSize: 12, color: '#fff', fontWeight: '700' },
+  checkmark: { fontSize: 12, color: '#fff', fontWeight: '600' },
   confirmBtn: { marginTop: 8, borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
-  confirmBtnText: { fontSize: 14, fontWeight: '700' },
+  confirmBtnText: { fontSize: 14, fontWeight: '600' },
 
   // 공유 그룹 선택
   shareGroupRow: {
@@ -1219,13 +1219,13 @@ const styles = StyleSheet.create({
     width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, borderColor: '#d1d5db',
     alignItems: 'center', justifyContent: 'center',
   },
-  shareCheckMark: { fontSize: 12, color: '#fff', fontWeight: '800' },
+  shareCheckMark: { fontSize: 12, color: '#fff', fontWeight: '700' },
   deleteFolderBtn: { marginTop: 12, alignItems: 'center', paddingVertical: 4 },
   deleteFolderText: { fontSize: 13, color: '#ef4444', fontWeight: '600' },
   deleteConfirmMsg: { fontSize: 13, color: '#6b7280', lineHeight: 20, marginBottom: 16 },
 
   // + 선택 시트
-  fabSheetTitle: { fontSize: 16, fontWeight: '800', color: '#111827', marginTop: 4, marginBottom: 14 },
+  fabSheetTitle: { fontSize: 16, fontWeight: '700', color: '#111827', marginTop: 4, marginBottom: 14 },
   fabChoice: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
     paddingVertical: 14, paddingHorizontal: 14,
@@ -1234,7 +1234,7 @@ const styles = StyleSheet.create({
   },
   fabChoiceEmoji: { fontSize: 26 },
   fabChoiceIcon: { width: 30, alignItems: 'center' },
-  fabChoiceTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
+  fabChoiceTitle: { fontSize: 15, fontWeight: '600', color: '#111827' },
   fabChoiceSub: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
 
   // 폴더 만들기 모달

@@ -209,10 +209,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
   },
   cancelText: { fontSize: 14, color: '#9ca3af', width: 40 },
-  headerTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
+  headerTitle: { fontSize: 15, fontWeight: '600', color: '#111827' },
   createBtn: { backgroundColor: '#111827', borderRadius: 9, paddingHorizontal: 14, paddingVertical: 7, minWidth: 52, alignItems: 'center' },
   createBtnDisabled: { backgroundColor: '#e5e7eb' },
-  createBtnText: { fontSize: 13, fontWeight: '700', color: '#ffffff' },
+  createBtnText: { fontSize: 13, fontWeight: '600', color: '#ffffff' },
   createBtnTextDisabled: { color: '#9ca3af' },
   content: { padding: 24, gap: 28, paddingBottom: 60 },
   topSection: { alignItems: 'center', gap: 16 },
@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
   },
   emojiPreviewText: { fontSize: 38 },
   nameInput: {
-    width: '100%', fontSize: 20, fontWeight: '700', color: '#111827',
+    width: '100%', fontSize: 20, fontWeight: '600', color: '#111827',
     borderBottomWidth: 2, borderBottomColor: '#e5e7eb',
     paddingVertical: 8, textAlign: 'center',
   },
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, justifyContent: 'center',
   },
   joinBtnDisabled: { backgroundColor: '#e5e7eb' },
-  joinBtnText: { fontSize: 13, fontWeight: '700', color: '#ffffff' },
+  joinBtnText: { fontSize: 13, fontWeight: '600', color: '#ffffff' },
 
   // 폰 프레임 안에 뜨는 결과 다이얼로그
   overlayWrap: {
@@ -256,19 +256,19 @@ const styles = StyleSheet.create({
     width: 56, height: 56, borderRadius: 18,
     alignItems: 'center', justifyContent: 'center', marginBottom: 2,
   },
-  dialogTitle: { fontSize: 17, fontWeight: '800', color: '#111827', textAlign: 'center' },
+  dialogTitle: { fontSize: 17, fontWeight: '700', color: '#111827', textAlign: 'center' },
   dialogMsg: { fontSize: 13, color: '#6b7280', textAlign: 'center', lineHeight: 20 },
   codeBox: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
     backgroundColor: '#f9fafb', borderRadius: 14, borderWidth: 1, borderColor: '#e5e7eb',
     paddingVertical: 12, paddingHorizontal: 16, marginTop: 4,
   },
-  codeText: { fontSize: 22, fontWeight: '800', letterSpacing: 3 },
+  codeText: { fontSize: 22, fontWeight: '700', letterSpacing: 3 },
   copyBtn: { borderWidth: 1.5, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6 },
-  copyBtnText: { fontSize: 12, fontWeight: '700' },
+  copyBtnText: { fontSize: 12, fontWeight: '600' },
   dialogBtn: {
     width: '100%', borderRadius: 14, paddingVertical: 14,
     alignItems: 'center', marginTop: 10,
   },
-  dialogBtnText: { fontSize: 14, fontWeight: '700', color: '#fff' },
+  dialogBtnText: { fontSize: 14, fontWeight: '600', color: '#fff' },
 });

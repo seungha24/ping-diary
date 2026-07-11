@@ -594,14 +594,14 @@ export default function DiaryWriteScreen() {
             onPress={() => setVisibility('private')}
           >
             <IconLock color={visibility === 'private' ? accent : '#6b7280'} size={15} />
-            <Text style={[styles.visLabel, visibility === 'private' && { color: accent, fontWeight: '700' }]}>나만 보기</Text>
+            <Text style={[styles.visLabel, visibility === 'private' && { color: accent, fontWeight: '600' }]}>나만 보기</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.visBtn, visibility === 'friends' && { borderColor: accent, backgroundColor: `${accent}0d` }]}
             onPress={openGroupPick}
           >
             <IconUsers color={visibility === 'friends' ? accent : '#6b7280'} size={15} />
-            <Text style={[styles.visLabel, visibility === 'friends' && { color: accent, fontWeight: '700' }]}>
+            <Text style={[styles.visLabel, visibility === 'friends' && { color: accent, fontWeight: '600' }]}>
               그룹 공개{visibility === 'friends' && shareGroupIds.size > 0 ? ` · ${shareGroupIds.size}` : ''}
             </Text>
           </TouchableOpacity>
@@ -713,7 +713,7 @@ export default function DiaryWriteScreen() {
                       onPress={() => { setFolder(f.id); setFolderModalOpen(false); }}
                     >
                       <Text style={styles.folderRowEmoji}>{f.emoji}</Text>
-                      <Text style={[styles.folderRowLabel, active && { color: accent, fontWeight: '700' }]}>{f.name}</Text>
+                      <Text style={[styles.folderRowLabel, active && { color: accent, fontWeight: '600' }]}>{f.name}</Text>
                       {active && <Text style={[styles.folderRowCheck, { color: accent }]}>✓</Text>}
                     </TouchableOpacity>
                   );
@@ -744,7 +744,7 @@ export default function DiaryWriteScreen() {
                       style={[styles.folderRow, active && { borderColor: accent, backgroundColor: hexToRgba(accent, 0.08) }]}
                       onPress={() => toggleShareGroup(g.id)}
                     >
-                      <Text style={[styles.folderRowLabel, active && { color: accent, fontWeight: '700' }]} numberOfLines={1}>
+                      <Text style={[styles.folderRowLabel, active && { color: accent, fontWeight: '600' }]} numberOfLines={1}>
                         {g.name}
                       </Text>
                       {active && <Text style={[styles.folderRowCheck, { color: accent }]}>✓</Text>}
@@ -859,7 +859,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
   },
   cancelText: { fontSize: 14, color: '#9ca3af' },
-  headerTitle: { fontSize: 14, fontWeight: '700', color: '#1f2937' },
+  headerTitle: { fontSize: 14, fontWeight: '600', color: '#1f2937' },
   headerRight: { alignItems: 'flex-end', gap: 6 },
   // 임시저장
   draftBtn: {
@@ -873,7 +873,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12, paddingVertical: 10,
   },
   draftBannerText: { flex: 1, fontSize: 12.5, color: '#374151' },
-  draftBannerAction: { fontSize: 12.5, fontWeight: '700' },
+  draftBannerAction: { fontSize: 12.5, fontWeight: '600' },
   // 임시저장함 모달
   draftEmptyText: { fontSize: 13, color: '#9ca3af', textAlign: 'center', paddingVertical: 20 },
   draftRow: {
@@ -886,7 +886,7 @@ const styles = StyleSheet.create({
   draftRowTime: { fontSize: 11.5, color: '#9ca3af' },
   draftRowDelete: { fontSize: 12.5, color: '#ef4444', fontWeight: '600' },
   saveBtn: { paddingHorizontal: 22, paddingVertical: 9, borderRadius: 999, backgroundColor: '#111827' },
-  saveBtnText: { fontSize: 14, fontWeight: '800', color: '#ffffff' },
+  saveBtnText: { fontSize: 14, fontWeight: '700', color: '#ffffff' },
   content: { padding: 20, gap: 14, paddingBottom: 48 },
   dateBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
@@ -916,12 +916,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center', gap: 8,
     borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, paddingVertical: 12,
   },
-  promptQuote: { fontSize: 16, fontWeight: '800', marginTop: -2 },
+  promptQuote: { fontSize: 16, fontWeight: '700', marginTop: -2 },
   promptText: { fontSize: 13, color: '#4b5563', flex: 1, lineHeight: 19, fontWeight: '500' },
   promptSelectHint: { fontSize: 10.5, fontWeight: '600', marginTop: 3 },
-  promptRefresh: { fontSize: 17, fontWeight: '700' },
+  promptRefresh: { fontSize: 17, fontWeight: '600' },
   titleInput: {
-    fontSize: 18, fontWeight: '700', color: '#1f2937',
+    fontSize: 18, fontWeight: '600', color: '#1f2937',
     borderBottomWidth: 1, borderBottomColor: '#e5e7eb', paddingVertical: 6,
   },
   bodyCard: {
@@ -936,24 +936,24 @@ const styles = StyleSheet.create({
     width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.55)',
     alignItems: 'center', justifyContent: 'center',
   },
-  photoRemoveText: { color: '#fff', fontSize: 13, fontWeight: '700' },
+  photoRemoveText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   mainPhotoBadge: {
     position: 'absolute', top: 8, left: 8,
     backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 8,
     paddingHorizontal: 8, paddingVertical: 3,
   },
-  mainPhotoBadgeText: { color: '#fff', fontSize: 10.5, fontWeight: '700' },
+  mainPhotoBadgeText: { color: '#fff', fontSize: 10.5, fontWeight: '600' },
   photoThumbRow: { flexDirection: 'row', gap: 8, marginTop: 8, alignItems: 'flex-start' },
   photoThumbCol: { alignItems: 'center', gap: 3 },
   photoThumbWrap: { position: 'relative' },
-  setMainText: { fontSize: 11, fontWeight: '700' },
+  setMainText: { fontSize: 11, fontWeight: '600' },
   photoThumbImg: { width: 64, height: 64, borderRadius: 12 },
   photoThumbRemove: {
     position: 'absolute', top: -6, right: -6,
     width: 20, height: 20, borderRadius: 10,
     backgroundColor: 'rgba(0,0,0,0.55)', alignItems: 'center', justifyContent: 'center',
   },
-  photoThumbRemoveText: { color: '#fff', fontSize: 10, fontWeight: '700' },
+  photoThumbRemoveText: { color: '#fff', fontSize: 10, fontWeight: '600' },
   photoThumbAdd: {
     width: 64, height: 64, borderRadius: 12,
     borderWidth: 1.5, borderColor: '#e5e7eb', borderStyle: 'dashed',
@@ -989,7 +989,7 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   aiDotInner: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#ffffff' },
-  aiTitle: { fontSize: 13, fontWeight: '700', color: '#374151', flex: 1 },
+  aiTitle: { fontSize: 13, fontWeight: '600', color: '#374151', flex: 1 },
   aiSub: { fontSize: 11, color: '#9ca3af' },
   personaRow: { flexDirection: 'row', gap: 8 },
   personaCard: {
@@ -1008,9 +1008,9 @@ const styles = StyleSheet.create({
   },
   folderRowEmoji: { fontSize: 18, width: 22, textAlign: 'center' },
   folderRowLabel: { fontSize: 14, color: '#374151', flex: 1 },
-  folderRowCheck: { fontSize: 15, fontWeight: '800' },
+  folderRowCheck: { fontSize: 15, fontWeight: '700' },
   groupPickConfirm: { borderRadius: 12, paddingVertical: 13, alignItems: 'center', marginTop: 10 },
-  groupPickConfirmText: { fontSize: 14, fontWeight: '700', color: '#ffffff' },
+  groupPickConfirmText: { fontSize: 14, fontWeight: '600', color: '#ffffff' },
   // AI 코멘트 컴팩트 카드
   aiCard: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
@@ -1021,14 +1021,14 @@ const styles = StyleSheet.create({
     width: 34, height: 34, borderRadius: 17,
     alignItems: 'center', justifyContent: 'center',
   },
-  aiCardTitle: { fontSize: 14, fontWeight: '700', color: '#1f2937' },
+  aiCardTitle: { fontSize: 14, fontWeight: '600', color: '#1f2937' },
   aiCardSub: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
   // 페르소나 모달
   personaModal: {
     backgroundColor: '#ffffff', borderRadius: 20, padding: 20, width: 300,
     shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 8,
   },
-  personaModalTitle: { fontSize: 16, fontWeight: '800', color: '#111827' },
+  personaModalTitle: { fontSize: 16, fontWeight: '700', color: '#111827' },
   personaModalSub: { fontSize: 12, color: '#9ca3af', marginTop: 3, marginBottom: 16 },
   personaGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   // Calendar modal
@@ -1043,7 +1043,7 @@ const styles = StyleSheet.create({
   },
   calHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
   calNavBtn: { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
-  calTitle: { fontSize: 15, fontWeight: '700', color: '#1f2937' },
+  calTitle: { fontSize: 15, fontWeight: '600', color: '#1f2937' },
   calDayRow: { flexDirection: 'row', marginBottom: 4 },
   calDayLabel: { flex: 1, textAlign: 'center', fontSize: 11, color: '#9ca3af', paddingVertical: 2 },
   calGrid: { flexDirection: 'row', flexWrap: 'wrap' },

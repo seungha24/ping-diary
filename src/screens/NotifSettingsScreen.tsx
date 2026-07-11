@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: '#f3f4f6', backgroundColor: '#ffffff',
   },
   backBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 16, fontWeight: '700', color: '#111827' },
+  headerTitle: { fontSize: 16, fontWeight: '600', color: '#111827' },
   content: { padding: 16, gap: 20, paddingBottom: 48 },
   section: { gap: 8 },
   sectionLabel: { fontSize: 12, fontWeight: '600', color: '#9ca3af', paddingHorizontal: 4 },
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f3f4f6', borderRadius: 12, borderWidth: 1.5, borderColor: 'transparent',
     paddingHorizontal: 22, paddingVertical: 11, minWidth: 88, alignItems: 'center',
   },
-  timeBtnText: { fontSize: 16, fontWeight: '800', color: '#111827', letterSpacing: 0.5 },
+  timeBtnText: { fontSize: 16, fontWeight: '700', color: '#111827', letterSpacing: 0.5 },
   timeSep: { fontSize: 18, color: '#d1d5db', marginTop: 18 },
   footerNote: { fontSize: 12, color: '#d1d5db', textAlign: 'center' },
 });

@@ -173,13 +173,13 @@ export default function LoginScreen() {
               style={[styles.tab, mode === 'login' && { borderBottomColor: accent }]}
               onPress={() => switchMode('login')}
             >
-              <Text style={[styles.tabText, mode === 'login' && { color: accent, fontWeight: '700' }]}>로그인</Text>
+              <Text style={[styles.tabText, mode === 'login' && { color: accent, fontWeight: '600' }]}>로그인</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.tab, mode === 'signup' && { borderBottomColor: accent }]}
               onPress={() => switchMode('signup')}
             >
-              <Text style={[styles.tabText, mode === 'signup' && { color: accent, fontWeight: '700' }]}>회원가입</Text>
+              <Text style={[styles.tabText, mode === 'signup' && { color: accent, fontWeight: '600' }]}>회원가입</Text>
             </TouchableOpacity>
           </View>
 
@@ -297,7 +297,7 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 32, gap: 14 },
   logoWrap: { alignItems: 'center', marginBottom: 20 },
-  logo: { fontSize: 44, fontWeight: '800' },
+  logo: { fontSize: 44, fontWeight: '700' },
   logoSub: { fontSize: 14, color: '#9ca3af', marginTop: 2, letterSpacing: 4 },
   tabRow: { flexDirection: 'row', marginBottom: 8 },
   tab: { flex: 1, alignItems: 'center', paddingVertical: 10, borderBottomWidth: 2, borderBottomColor: 'transparent' },
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
   linkBtn: { alignItems: 'center', paddingVertical: 6 },
   linkText: { color: '#6b7280', fontSize: 13 },
   submitBtn: { borderRadius: 12, paddingVertical: 15, alignItems: 'center', marginTop: 4 },
-  submitText: { color: '#ffffff', fontSize: 15, fontWeight: '700' },
+  submitText: { color: '#ffffff', fontSize: 15, fontWeight: '600' },
   disabled: { opacity: 0.6 },
   demoBtn: { alignItems: 'center', paddingVertical: 10 },
   demoText: { color: '#6b7280', fontSize: 13, textDecorationLine: 'underline' },
@@ -329,10 +329,10 @@ const styles = StyleSheet.create({
     position: 'relative', flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     borderRadius: 12, paddingVertical: 14, backgroundColor: '#FEE500',
   },
-  kakaoText: { fontSize: 14, fontWeight: '700', color: 'rgba(0,0,0,0.85)' },
+  kakaoText: { fontSize: 14, fontWeight: '600', color: 'rgba(0,0,0,0.85)' },
   naverBtn: {
     position: 'relative', flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     borderRadius: 12, paddingVertical: 14, backgroundColor: '#03C75A',
   },
-  naverText: { fontSize: 14, fontWeight: '700', color: '#ffffff' },
+  naverText: { fontSize: 14, fontWeight: '600', color: '#ffffff' },
 });

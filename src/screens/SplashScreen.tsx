@@ -61,13 +61,13 @@ const styles = StyleSheet.create({
   logoText: {
     color: '#ffffff',
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: '600',
     letterSpacing: -0.5,
   },
   taglineContainer: { alignItems: 'center', gap: 8 },
   tagline: {
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#1f2937',
     letterSpacing: -0.3,
   },

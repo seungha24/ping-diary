@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
   },
   backBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 16, fontWeight: '700', color: '#111827' },
+  headerTitle: { fontSize: 16, fontWeight: '600', color: '#111827' },
   markAllText: { fontSize: 13, color: '#6b7280', fontWeight: '500' },
 
   unreadBanner: {
@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
 
   notifBody: { flex: 1, gap: 3 },
   notifTitle: { fontSize: 13, color: '#6b7280', fontWeight: '500', lineHeight: 18 },
-  notifTitleUnread: { color: '#111827', fontWeight: '700' },
+  notifTitleUnread: { color: '#111827', fontWeight: '600' },
   notifSub: { fontSize: 12, color: '#9ca3af' },
   notifTime: { fontSize: 11, color: '#d1d5db', marginTop: 1 },
 

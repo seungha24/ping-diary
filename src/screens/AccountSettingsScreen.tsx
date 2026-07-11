@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: '#f3f4f6', backgroundColor: '#ffffff',
   },
   backBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { fontSize: 16, fontWeight: '700', color: '#111827' },
+  headerTitle: { fontSize: 16, fontWeight: '600', color: '#111827' },
   content: { padding: 16, gap: 20, paddingBottom: 48 },
   section: { gap: 8 },
   sectionLabel: { fontSize: 12, fontWeight: '600', color: '#9ca3af', paddingHorizontal: 4 },
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1.5, borderBottomColor: '#111827',
     paddingVertical: 2, minWidth: 80, textAlign: 'right',
   },
-  saveText: { fontSize: 13, fontWeight: '700', color: '#111827' },
+  saveText: { fontSize: 13, fontWeight: '600', color: '#111827' },
   modalBackdrop: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.4)',
     alignItems: 'center', justifyContent: 'center', padding: 28,
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
     width: '100%', maxWidth: 360, backgroundColor: '#ffffff',
     borderRadius: 18, padding: 22, gap: 12,
   },
-  modalTitle: { fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 2 },
+  modalTitle: { fontSize: 16, fontWeight: '600', color: '#111827', marginBottom: 2 },
   modalMsg: { fontSize: 13, color: '#6b7280', lineHeight: 20, marginTop: 6, marginBottom: 4 },
   modalInput: {
     borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 12,
@@ -338,5 +338,5 @@ const styles = StyleSheet.create({
   },
   modalCancelText: { fontSize: 14, fontWeight: '600', color: '#374151' },
   modalConfirm: { flex: 1, paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
-  modalConfirmText: { fontSize: 14, fontWeight: '700', color: '#ffffff' },
+  modalConfirmText: { fontSize: 14, fontWeight: '600', color: '#ffffff' },
 });

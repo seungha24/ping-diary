@@ -22,5 +22,5 @@ export default function PingLogo({ size = 27 }: { size?: number }) {
 }
 
 const styles = StyleSheet.create({
-  logo: { fontWeight: '800', letterSpacing: -0.5 },
+  logo: { fontWeight: '700', letterSpacing: -0.5 },
 });

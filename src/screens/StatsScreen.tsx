@@ -294,7 +294,7 @@ export default function StatsScreen() {
                   style={[styles.tagRow, activeTag === label && styles.tagRowActive]}
                   onPress={() => activeTag === label ? clearSearch() : selectTag(label)}
                 >
-                  <Text style={[styles.tagName, activeTag === label && { color: accent, fontWeight: '700' }]}>
+                  <Text style={[styles.tagName, activeTag === label && { color: accent, fontWeight: '600' }]}>
                     #{label}
                   </Text>
                   <View style={styles.barBg}>
@@ -304,7 +304,7 @@ export default function StatsScreen() {
                       activeTag === label && { backgroundColor: accent },
                     ]} />
                   </View>
-                  <Text style={[styles.tagCount, activeTag === label && { color: accent, fontWeight: '700' }]}>
+                  <Text style={[styles.tagCount, activeTag === label && { color: accent, fontWeight: '600' }]}>
                     {count}
                   </Text>
                 </TouchableOpacity>
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingTop: 4, paddingBottom: 12,
     borderBottomWidth: 1, borderBottomColor: '#f3f4f6', backgroundColor: '#ffffff',
   },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
+  headerTitle: { fontSize: 17, fontWeight: '600', color: '#111827' },
   content: { padding: 16, gap: 14, paddingBottom: 40 },
 
   // 검색
@@ -441,7 +441,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#e5e7eb',
     paddingHorizontal: 10, paddingVertical: 6,
   },
-  searchHash: { fontSize: 12, fontWeight: '700', color: '#6b7280' },
+  searchHash: { fontSize: 12, fontWeight: '600', color: '#6b7280' },
   searchInput: { flex: 1, fontSize: 12, color: '#111827' },
   clearBtn: { width: 20, height: 20, alignItems: 'center', justifyContent: 'center' },
   clearBtnText: { fontSize: 11, color: '#9ca3af' },
@@ -453,12 +453,12 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: '#f3f4f6', padding: 12, gap: 6,
   },
   resultTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  resultTitle: { fontSize: 13, fontWeight: '700', color: '#111827', flex: 1 },
+  resultTitle: { fontSize: 13, fontWeight: '600', color: '#111827', flex: 1 },
   resultDate: { fontSize: 11, color: '#9ca3af', marginLeft: 8 },
   resultPreview: { fontSize: 12, color: '#6b7280', lineHeight: 17 },
   resultTagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
   resultTag: { fontSize: 11, color: '#9ca3af' },
-  resultTagActive: { color: '#111827', fontWeight: '700' },
+  resultTagActive: { color: '#111827', fontWeight: '600' },
 
   // 요약
   statsGrid: { flexDirection: 'row', gap: 12 },
@@ -466,26 +466,26 @@ const styles = StyleSheet.create({
     flex: 1, backgroundColor: '#ffffff', borderRadius: 16, padding: 16,
     borderWidth: 1, borderColor: '#f3f4f6', alignItems: 'center', gap: 4,
   },
-  statVal: { fontSize: 24, fontWeight: '800', color: '#374151' },
+  statVal: { fontSize: 24, fontWeight: '700', color: '#374151' },
   statLabel: { fontSize: 12, color: '#9ca3af' },
   statCardSm: {
     flex: 1, backgroundColor: '#ffffff', borderRadius: 16, padding: 14,
     borderWidth: 1, borderColor: '#f3f4f6', alignItems: 'center', gap: 3,
   },
-  statValSm: { fontSize: 17, fontWeight: '800', color: '#374151' },
+  statValSm: { fontSize: 17, fontWeight: '700', color: '#374151' },
   statChip: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     backgroundColor: '#ffffff', borderRadius: 12, borderWidth: 1, borderColor: '#f3f4f6',
     paddingHorizontal: 12, paddingVertical: 8,
   },
   statChipLabel: { fontSize: 11.5, color: '#9ca3af' },
-  statChipVal: { fontSize: 13.5, fontWeight: '800' },
+  statChipVal: { fontSize: 13.5, fontWeight: '700' },
 
   // AI 리포트
   reportHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   reportDesc: { fontSize: 12.5, color: '#9ca3af', lineHeight: 19 },
   reportText: { fontSize: 13.5, color: '#374151', lineHeight: 22 },
-  reportToggle: { fontSize: 12, fontWeight: '700' },
+  reportToggle: { fontSize: 12, fontWeight: '600' },
 
   // 어워즈
   awardEnvelope: {
@@ -493,27 +493,27 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderStyle: 'dashed', borderRadius: 14,
     paddingHorizontal: 14, paddingVertical: 14, backgroundColor: '#fafafa',
   },
-  awardEnvelopeText: { flex: 1, fontSize: 13.5, fontWeight: '700', color: '#374151' },
-  awardEnvelopeHint: { fontSize: 12, fontWeight: '700' },
+  awardEnvelopeText: { flex: 1, fontSize: 13.5, fontWeight: '600', color: '#374151' },
+  awardEnvelopeHint: { fontSize: 12, fontWeight: '600' },
   awardCard: {
     borderWidth: 1, borderRadius: 14, padding: 14, gap: 6, backgroundColor: '#fbfbfd',
   },
   awardHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  awardName: { fontSize: 13.5, fontWeight: '800' },
+  awardName: { fontSize: 13.5, fontWeight: '700' },
   awardWinner: { fontSize: 12.5, color: '#374151', fontWeight: '600' },
   awardQuote: { fontSize: 13, color: '#4b5563', fontStyle: 'italic', lineHeight: 20 },
   awardComment: { fontSize: 13, color: '#4b5563', lineHeight: 20 },
-  awardLink: { fontSize: 12.5, fontWeight: '700', marginTop: 2 },
+  awardLink: { fontSize: 12.5, fontWeight: '600', marginTop: 2 },
   awardClosing: { fontSize: 12.5, color: '#9ca3af', textAlign: 'center', paddingVertical: 4 },
   reportError: { fontSize: 12, color: '#ef4444' },
   reportBtn: { borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
-  reportBtnText: { fontSize: 13, fontWeight: '700', color: '#ffffff' },
+  reportBtnText: { fontSize: 13, fontWeight: '600', color: '#ffffff' },
 
   card: {
     backgroundColor: '#ffffff', borderRadius: 16, padding: 16,
     borderWidth: 1, borderColor: '#f3f4f6', gap: 12,
   },
-  cardTitle: { fontSize: 13, fontWeight: '700', color: '#374151' },
+  cardTitle: { fontSize: 13, fontWeight: '600', color: '#374151' },
 
   // 월별
   monthGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 10 },
@@ -523,14 +523,14 @@ const styles = StyleSheet.create({
     alignItems: 'center', gap: 2,
   },
   monthLabel: { fontSize: 12, fontWeight: '500' },
-  monthCount: { fontSize: 13, fontWeight: '700' },
+  monthCount: { fontSize: 13, fontWeight: '600' },
 
   // 태그 차트
   tagChart: { gap: 10 },
   tagRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 2 },
   tagRowActive: {},
   tagName: { fontSize: 12, color: '#6b7280', width: 56 },
-  tagNameActive: { color: '#111827', fontWeight: '700' },
+  tagNameActive: { color: '#111827', fontWeight: '600' },
   barBg: { flex: 1, height: 8, backgroundColor: '#f3f4f6', borderRadius: 99, overflow: 'hidden' },
   barFill: { height: '100%', backgroundColor: '#9ca3af', borderRadius: 99 },
   barFillActive: { backgroundColor: '#111827' },
@@ -545,7 +545,7 @@ const styles = StyleSheet.create({
   },
   sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#e5e7eb', alignSelf: 'center', marginTop: 12, marginBottom: 4 },
   sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14 },
-  sheetTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
+  sheetTitle: { fontSize: 15, fontWeight: '600', color: '#111827' },
   sheetClose: { fontSize: 16, color: '#9ca3af', paddingHorizontal: 4 },
   entryRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
