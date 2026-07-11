@@ -1172,12 +1172,12 @@ const lightStyles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.45)',
     alignItems: 'center', justifyContent: 'center',
   },
-  // 폴더 그리드 톤에 맞춘 '새 그룹' 추가 카드
+  // 폴더 그리드 톤에 맞춘 '새 그룹' 추가 카드 (커버 카드와 같은 높이 146·둥글기 18)
   groupAddCard: {
-    minHeight: 148,
+    height: 146,
     alignItems: 'center', justifyContent: 'center', gap: 6,
     borderWidth: 2, borderColor: '#e5e7eb', borderStyle: 'dashed',
-    borderRadius: 20, backgroundColor: '#ffffff',
+    borderRadius: 18, backgroundColor: '#ffffff',
   },
   groupEmptyHint: { fontSize: 13, color: '#9ca3af', textAlign: 'center', lineHeight: 20, paddingVertical: 16 },
   zoomOverlayWrap: {
