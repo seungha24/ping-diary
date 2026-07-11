@@ -390,11 +390,10 @@ export default function HomeScreen() {
                       <View style={styles.folderHeaderActions}>
                         {/* 이름·아이콘 수정, 삭제 */}
                         <TouchableOpacity
-                          style={styles.folderEditChip}
                           onPress={() => openEditFolder(selectedFolder)}
-                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                         >
-                          <IconPencil size={13} color="#fff" />
+                          <IconPencil size={17} color="#fff" />
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -408,11 +407,10 @@ export default function HomeScreen() {
                   <Text style={styles.folderHeaderTitle}>{selectedFolder.name}</Text>
                   <View style={styles.folderHeaderActions}>
                     <TouchableOpacity
-                      style={styles.folderEditChipLight}
                       onPress={() => openEditFolder(selectedFolder)}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
-                      <IconPencil size={13} color="#6b7280" />
+                      <IconPencil size={17} color="#6b7280" />
                     </TouchableOpacity>
                   </View>
                 </View>
