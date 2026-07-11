@@ -625,7 +625,8 @@ export default function HomeScreen() {
                       </View>
                     )}
                   </View>
-                  <View style={[styles.folderCardBody, { backgroundColor: hexToRgba(accent, 0.1) }]}>
+                  {/* flexGrow로 남는 높이를 채워 이름칸 아래 흰 틈 방지 */}
+                  <View style={[styles.folderCardBody, { backgroundColor: hexToRgba(accent, 0.1), flexGrow: 1 }]}>
                     <Text style={styles.folderName} numberOfLines={1}>{group.name}</Text>
                     <Text style={styles.folderCount}>{group.member_count ?? 1}명</Text>
                   </View>
