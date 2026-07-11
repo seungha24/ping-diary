@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { EntriesProvider } from './src/context/EntriesContext';
 import { GroupsProvider } from './src/context/GroupsContext';
 import ToastHost from './src/components/ToastHost';
+import ErrorBoundary from './src/components/ErrorBoundary';
 import { notify } from './src/notify';
 import { registerPush } from './src/push';
 
@@ -68,7 +69,9 @@ export default function App() {
         <EntriesProvider>
           <GroupsProvider>
             <ThemedStatusBar />
-            <Gate />
+            <ErrorBoundary>
+              <Gate />
+            </ErrorBoundary>
             <PushRegistrar />
             <UpdateWatcher />
             <ToastHost />
