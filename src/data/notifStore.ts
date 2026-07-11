@@ -2,6 +2,8 @@
 // - 내 일기에 AI 코멘트가 달리면 → 'ai' 알림
 // - 그룹 멤버가 새 p!ng를 공유하면 → 'diary' 알림
 // 읽음 상태는 localStorage에 보관해 화면을 나가도 유지된다.
+import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fetchEntries, fetchGroups, fetchGroupEntries, getCachedMe, getMe } from '../api';
 import { DiaryEntry } from './types';
 
@@ -44,6 +46,21 @@ function persistReadSet(set: Set<string>) {
   if (s) {
     try { s.setItem(READ_KEY, JSON.stringify(arr)); } catch {}
   }
+  // 네이티브(폰)는 AsyncStorage에 영구 저장 (앱 재시작에도 읽음 유지)
+  if (Platform.OS !== 'web') {
+    AsyncStorage.setItem(READ_KEY, JSON.stringify(arr)).catch(() => {});
+  }
+}
+
+// 네이티브: 앱 시작 후 첫 갱신 전에 AsyncStorage에서 읽음 목록 복원
+let hydrated = Platform.OS === 'web';
+async function hydrateReadSet() {
+  if (hydrated) return;
+  hydrated = true;
+  try {
+    const raw = await AsyncStorage.getItem(READ_KEY);
+    if (raw) memoryRead = JSON.parse(raw);
+  } catch {}
 }
 
 function emit() {
@@ -72,6 +89,7 @@ export async function refreshNotifs() {
   if (refreshing) return;
   refreshing = true;
   try {
+    await hydrateReadSet(); // 폰: 저장된 읽음 목록 먼저 복원
     const me = getCachedMe() ?? await getMe().catch(() => null);
     const myId = me?.id ?? null;
 
