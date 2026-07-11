@@ -11,6 +11,16 @@ import { EntriesProvider } from './src/context/EntriesContext';
 import { GroupsProvider } from './src/context/GroupsContext';
 import ToastHost from './src/components/ToastHost';
 import { notify } from './src/notify';
+import { registerPush } from './src/push';
+
+/** 로그인되면 이 기기를 푸시 알림 대상으로 등록 */
+function PushRegistrar() {
+  const { authed } = useAuth();
+  useEffect(() => {
+    if (authed) registerPush();
+  }, [authed]);
+  return null;
+}
 
 /** 백그라운드에서 새 버전 다운로드가 끝나면 토스트로 알려줌 */
 function UpdateWatcher() {
@@ -53,6 +63,7 @@ export default function App() {
           <GroupsProvider>
             <StatusBar style="dark" />
             <Gate />
+            <PushRegistrar />
             <UpdateWatcher />
             <ToastHost />
           </GroupsProvider>

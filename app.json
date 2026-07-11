@@ -2,7 +2,7 @@
   "expo": {
     "name": "ping-diary",
     "slug": "ping-diary",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -47,7 +47,8 @@
         }
       ],
       "expo-audio",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-notifications"
     ],
     "extra": {
       "eas": {

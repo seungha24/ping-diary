@@ -1,0 +1,41 @@
+import { Platform } from 'react-native';
+import { savePushToken } from './api';
+
+/**
+ * 푸시 알림 등록: 권한 요청 → Expo 푸시 토큰 발급 → 서버에 저장.
+ * 웹/시뮬레이터/구버전 빌드(네이티브 모듈 없음)에서는 조용히 아무것도 안 한다.
+ */
+export async function registerPush(): Promise<void> {
+  if (Platform.OS === 'web') return;
+  try {
+    const Device = await import('expo-device');
+    if (!Device.isDevice) return; // 시뮬레이터는 푸시 불가
+
+    const Notifications = await import('expo-notifications');
+
+    // 앱이 켜져 있을 때도 배너로 표시
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+      }),
+    });
+
+    let { status } = await Notifications.getPermissionsAsync();
+    if (status !== 'granted') {
+      ({ status } = await Notifications.requestPermissionsAsync());
+    }
+    if (status !== 'granted') return;
+
+    const token = (
+      await Notifications.getExpoPushTokenAsync({
+        projectId: '849142d5-a5ce-43e8-b9af-08c41f5f226b',
+      })
+    ).data;
+    await savePushToken(token);
+  } catch {
+    // 네이티브 모듈이 없는 빌드(v1.0.1 이하)나 네트워크 오류 — 무시
+  }
+}

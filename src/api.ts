@@ -428,6 +428,11 @@ export async function saveBlockedUsers(blocked: string[]): Promise<string[]> {
   return next;
 }
 
+/** 이 기기의 Expo 푸시 토큰 등록 (그룹 새 글 배너 알림용) */
+export async function savePushToken(push_token: string): Promise<void> {
+  await request('/auth/push-token', { method: 'PATCH', body: JSON.stringify({ push_token }) });
+}
+
 /** 부적절 콘텐츠 신고 (AI 코멘트/그룹 공유글 등) */
 export async function reportContent(type: string, target_id: string | number, reason?: string): Promise<void> {
   await request('/reports', { method: 'POST', body: JSON.stringify({ type, target_id, reason }) });
