@@ -6,9 +6,11 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import IconChev from '../components/icons/IconChev';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
+import { useThemedStyles } from '../theme/themed';
 
 /** 테마색이 웹에서도 확실히 적용되는 커스텀 토글 (RN Switch가 웹에서 색 무시하는 문제 회피) */
 function ThemeSwitch({ value, onChange, disabled, accent }: { value: boolean; onChange: (v: boolean) => void; disabled?: boolean; accent: string }) {
+  const styles = useThemedStyles(lightStyles);
   return (
     <TouchableOpacity
       activeOpacity={0.85}
@@ -33,6 +35,7 @@ interface ToggleRowProps {
 }
 
 function ToggleRow({ label, desc, value, onChange, disabled }: ToggleRowProps) {
+  const styles = useThemedStyles(lightStyles);
   const { accent } = useTheme();
   return (
     <View style={[styles.row, disabled && styles.rowDisabled]}>
@@ -46,6 +49,7 @@ function ToggleRow({ label, desc, value, onChange, disabled }: ToggleRowProps) {
 }
 
 export default function NotifSettingsScreen() {
+  const styles = useThemedStyles(lightStyles);
   const navigation = useNavigation();
   const { accent } = useTheme();
 
@@ -106,7 +110,7 @@ export default function NotifSettingsScreen() {
             <View style={styles.divider} />
             <ToggleRow
               label="AI 코멘트 알림"
-              desc="24 시간 후 코멘트가 공개되면 알림"
+              desc="24 시간 후 코멘트가 공개되면 알림"
               value={aiComment}
               onChange={setAiComment}
               disabled={!allOn}
@@ -172,7 +176,7 @@ export default function NotifSettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9fafb' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

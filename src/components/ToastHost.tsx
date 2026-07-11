@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Animated, Platform } from 'react-native';
 import { setNotifyListener } from '../notify';
+import { useThemedStyles } from '../theme/themed';
 
 /**
  * 폰 프레임 안에 뜨는 전역 토스트. App 루트에 한 번 마운트하면
  * notify()가 호출될 때마다 하단에 인앱 메시지로 표시된다.
  */
 export default function ToastHost() {
+  const styles = useThemedStyles(lightStyles);
   const [message, setMessage] = useState<string | null>(null);
   const opacity = useRef(new Animated.Value(0)).current;
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -40,7 +42,7 @@ export default function ToastHost() {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   wrap: {
     position: 'absolute', left: 0, right: 0, bottom: 90,
     alignItems: 'center', paddingHorizontal: 24,

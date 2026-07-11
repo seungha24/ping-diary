@@ -9,8 +9,10 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { changePassword, deleteAccount, getMe, getCachedMe, saveProfile } from '../api';
 import { notify } from '../notify';
+import { useThemedStyles } from '../theme/themed';
 
 function Row({ label, value, onPress }: { label: string; value?: string; onPress?: () => void }) {
+  const styles = useThemedStyles(lightStyles);
   return (
     <TouchableOpacity style={styles.row} onPress={onPress} disabled={!onPress}>
       <Text style={styles.rowLabel}>{label}</Text>
@@ -23,6 +25,7 @@ function Row({ label, value, onPress }: { label: string; value?: string; onPress
 }
 
 export default function AccountSettingsScreen() {
+  const styles = useThemedStyles(lightStyles);
   const navigation = useNavigation();
   const { accent } = useTheme();
   const { logout, token, email: authEmail } = useAuth();
@@ -281,7 +284,7 @@ export default function AccountSettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f9fafb' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

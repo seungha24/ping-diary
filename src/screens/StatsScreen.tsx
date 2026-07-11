@@ -12,6 +12,7 @@ import { useEntries } from '../context/EntriesContext';
 import { getMonthlyAwards, MonthlyAward } from '../api';
 import { IconX, PersonaIcon, IconTrophy } from '../components/icons/Line';
 import PingLogo from '../components/PingLogo';
+import { useThemedStyles } from '../theme/themed';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -22,16 +23,17 @@ function getMonthTextColor(count: number): string {
 }
 
 export default function StatsScreen() {
+  const styles = useThemedStyles(lightStyles);
   const navigation = useNavigation<Nav>();
   const { accent } = useTheme();
   const { entries } = useEntries();
 
   function getMonthBg(count: number): string {
     if (count === 0) return '#f3f4f6';
-    if (count >= 15) return accent;                 // 15 개 이상: 가장 진함
-    if (count >= 8) return hexToRgba(accent, 0.65); // 8~14 개
-    if (count >= 3) return hexToRgba(accent, 0.4);  // 3~7 개
-    return hexToRgba(accent, 0.2);                  // 1~2 개: 가장 연함
+    if (count >= 15) return accent;                 // 15 개 이상: 가장 진함
+    if (count >= 8) return hexToRgba(accent, 0.65); // 8~14 개
+    if (count >= 3) return hexToRgba(accent, 0.4);  // 3~7 개
+    return hexToRgba(accent, 0.2);                  // 1~2 개: 가장 연함
   }
   const [searchTag, setSearchTag] = useState('');
   const [activeTag, setActiveTag] = useState<string | null>(null);
@@ -95,7 +97,7 @@ export default function StatsScreen() {
       if (res.awards.length > 0) {
         setAwardsByMonth((prev) => ({ ...prev, [target]: { awards: res.awards, closing: res.closing } }));
       } else {
-        setAwardsError(`${target + 1} 월 기록이 없어요. p!ng를 쓰면 시상식을 열어드릴게요.`);
+        setAwardsError(`${target + 1} 월 기록이 없어요. p!ng를 쓰면 시상식을 열어드릴게요.`);
       }
     } catch (e: any) {
       setAwardsError(e?.message ?? '시상식 준비에 실패했어요. 잠시 후 다시 시도해주세요.');
@@ -145,11 +147,11 @@ export default function StatsScreen() {
         {/* Summary */}
         <View style={styles.statsGrid}>
           <TouchableOpacity style={styles.statCard} onPress={() => setListOpen(true)} activeOpacity={0.7}>
-            <Text style={[styles.statVal, { color: accent }]}>{entries.length} 개</Text>
+            <Text style={[styles.statVal, { color: accent }]}>{entries.length} 개</Text>
             <Text style={styles.statLabel}>총 p!ng</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.statCard} onPress={() => setMonthOpen(true)} activeOpacity={0.7}>
-            <Text style={[styles.statVal, { color: accent }]}>{thisMonthCount} 개</Text>
+            <Text style={[styles.statVal, { color: accent }]}>{thisMonthCount} 개</Text>
             <Text style={styles.statLabel}>이번 달</Text>
           </TouchableOpacity>
         </View>
@@ -159,12 +161,12 @@ export default function StatsScreen() {
           <View style={styles.statChip}>
             <Text style={styles.statChipLabel}>지난달 대비</Text>
             <Text style={[styles.statChipVal, { color: accent }]}>
-              {monthDiff >= 0 ? `+${monthDiff} 개` : `${monthDiff} 개`}
+              {monthDiff >= 0 ? `+${monthDiff} 개` : `${monthDiff} 개`}
             </Text>
           </View>
           <View style={styles.statChip}>
             <Text style={styles.statChipLabel}>연속 기록</Text>
-            <Text style={[styles.statChipVal, { color: accent }]}>{streak} 일</Text>
+            <Text style={[styles.statChipVal, { color: accent }]}>{streak} 일</Text>
           </View>
         </View>
 
@@ -196,7 +198,7 @@ export default function StatsScreen() {
         <View style={[styles.card, { borderColor: hexToRgba(accent, 0.3) }]}>
           <View style={styles.reportHeader}>
             <IconTrophy size={15} color={accent} />
-            <Text style={[styles.cardTitle, { flex: 1 }]}>{reportMonth + 1} 월 p!ng 어워즈</Text>
+            <Text style={[styles.cardTitle, { flex: 1 }]}>{reportMonth + 1} 월 p!ng 어워즈</Text>
           </View>
           {monthAwards ? (
             <>
@@ -245,7 +247,7 @@ export default function StatsScreen() {
           ) : (
             <>
               <Text style={styles.reportDesc}>
-                페르소나 심사위원들이 {reportMonth + 1} 월 일기에 상을 드려요. 위 월별 기록에서 다른 달을 누르면 그 달 시상식도 열 수 있어요.
+                페르소나 심사위원들이 {reportMonth + 1} 월 일기에 상을 드려요. 위 월별 기록에서 다른 달을 누르면 그 달 시상식도 열 수 있어요.
               </Text>
               {awardsError && <Text style={styles.reportError}>{awardsError}</Text>}
               <TouchableOpacity
@@ -317,7 +319,7 @@ export default function StatsScreen() {
         {query.length > 0 && (
           <View style={styles.card}>
             <Text style={styles.cardTitle}>
-              #{query} 검색 결과 · {filteredEntries.length} 개
+              #{query} 검색 결과 · {filteredEntries.length} 개
             </Text>
             {filteredEntries.length === 0 ? (
               <Text style={styles.emptyText}>일치하는 p!ng가 없어요</Text>
@@ -359,7 +361,7 @@ export default function StatsScreen() {
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
             <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>이번 달 p!ng · {thisMonthEntries.length} 개</Text>
+              <Text style={styles.sheetTitle}>이번 달 p!ng · {thisMonthEntries.length} 개</Text>
               <TouchableOpacity onPress={() => setMonthOpen(false)}>
                 <IconX size={18} color="#9ca3af" />
               </TouchableOpacity>
@@ -393,7 +395,7 @@ export default function StatsScreen() {
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
             <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>전체 p!ng · {entries.length} 개</Text>
+              <Text style={styles.sheetTitle}>전체 p!ng · {entries.length} 개</Text>
               <TouchableOpacity onPress={() => setListOpen(false)}>
                 <IconX size={18} color="#9ca3af" />
               </TouchableOpacity>
@@ -424,7 +426,7 @@ export default function StatsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

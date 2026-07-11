@@ -1,7 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useThemedStyles } from '../theme/themed';
 
 export default function Tag({ label }: { label: string }) {
+  const styles = useThemedStyles(lightStyles);
   return (
     <View style={styles.tag}>
       <Text style={styles.hash}>#</Text>
@@ -10,7 +12,7 @@ export default function Tag({ label }: { label: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   tag: {
     flexDirection: 'row',
     alignItems: 'center',

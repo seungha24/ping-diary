@@ -21,6 +21,7 @@ import { notify } from '../notify';
 import { Platform } from 'react-native';
 import { IconUsers, IconBell as IconBellLine, IconSprout, IconSparkle, IconPencil, IconTrash, IconCamera, PersonaIcon } from '../components/icons/Line';
 import * as ImagePicker from 'expo-image-picker';
+import { useThemedStyles } from '../theme/themed';
 
 /** 그룹 나가기용 문/화살표 아이콘 (라인 스타일) */
 function IconExit({ color = '#374151', size = 16 }: { color?: string; size?: number }) {
@@ -116,6 +117,7 @@ function ListCard({
   onMore: () => void;
   onOpen: () => void;
 }) {
+  const styles = useThemedStyles(lightStyles);
   const { accent } = useTheme();
   return (
     <View style={[styles.listCard, { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) }]}>
@@ -160,6 +162,7 @@ function GridCard({
   onMore: () => void;
   onOpen: () => void;
 }) {
+  const styles = useThemedStyles(lightStyles);
   const { accent } = useTheme();
   return (
     <View style={[styles.gridCard, { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) }]}>
@@ -192,6 +195,7 @@ function GridCard({
 }
 
 export default function GroupScreen() {
+  const styles = useThemedStyles(lightStyles);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { group } = useRoute<Route>().params;
   const { accent } = useTheme();
@@ -384,7 +388,7 @@ export default function GroupScreen() {
 
   function freqSummary() {
     if (frequency === 'off') return '알림 꺼짐';
-    if (frequency === 'interval') return `매 ${intervalDays} 일마다`;
+    if (frequency === 'interval') return `매 ${intervalDays} 일마다`;
     if (frequency === 'biweekly') return '격주';
     if (frequency === 'weekly') {
       if (selectedDays.length === 0) return '매주 (요일 미설정)';
@@ -408,7 +412,7 @@ export default function GroupScreen() {
           <View style={styles.headerText}>
             <Text style={styles.groupName}>{groupName}</Text>
             <Text style={styles.groupMembers} numberOfLines={1}>
-              멤버 {group.member_count ?? 1} 명
+              멤버 {group.member_count ?? 1} 명
             </Text>
           </View>
         </View>
@@ -762,7 +766,7 @@ export default function GroupScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
 
   // Header

@@ -3,12 +3,14 @@ import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-na
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { useTheme } from '../context/ThemeContext';
+import { useThemedStyles } from '../theme/themed';
 
 type Props = {
   navigation: NativeStackNavigationProp<RootStackParamList, 'Splash'>;
 };
 
 export default function SplashScreen({ navigation }: Props) {
+  const styles = useThemedStyles(lightStyles);
   const { accent } = useTheme();
   return (
     <SafeAreaView style={styles.container}>
@@ -41,7 +43,7 @@ export default function SplashScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
   inner: {
     flex: 1,

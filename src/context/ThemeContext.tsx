@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setThemeServer } from '../api';
 
 export const THEMES = [
@@ -25,10 +26,16 @@ export const THEMES = [
 export type ThemeKey = typeof THEMES[number]['key'];
 
 const STORAGE_KEY = 'ping_theme';
+const MODE_KEY = 'ping_mode';
+
+export type ThemeMode = 'light' | 'dark';
 
 interface ThemeCtx {
   accent: string;
   themeKey: ThemeKey;
+  /** 라이트/다크 모드 */
+  mode: ThemeMode;
+  setMode: (m: ThemeMode) => void;
   /** 사용자가 테마 변경 (localStorage + DB 저장) */
   setTheme: (key: ThemeKey) => void;
   /** 서버/저장소에서 불러온 값 적용 (DB 재저장 없음) */
@@ -38,6 +45,8 @@ interface ThemeCtx {
 const ThemeContext = createContext<ThemeCtx>({
   accent: '#111827',
   themeKey: 'dark',
+  mode: 'light',
+  setMode: () => {},
   setTheme: () => {},
   hydrateTheme: () => {},
 });
@@ -63,9 +72,37 @@ function persistLocal(key: ThemeKey) {
   }
 }
 
+/** 웹: localStorage에서 초기 모드 복원 (네이티브는 useEffect에서 AsyncStorage) */
+function initialMode(): ThemeMode {
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    try {
+      if (window.localStorage.getItem(MODE_KEY) === 'dark') return 'dark';
+    } catch {}
+  }
+  return 'light';
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themeKey, setThemeKey] = useState<ThemeKey>(initialTheme);
+  const [mode, setModeState] = useState<ThemeMode>(initialMode);
   const accent = THEMES.find((t) => t.key === themeKey)?.color ?? '#111827';
+
+  // 네이티브: 저장된 모드 복원
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    AsyncStorage.getItem(MODE_KEY)
+      .then((v) => { if (v === 'dark') setModeState('dark'); })
+      .catch(() => {});
+  }, []);
+
+  function setMode(m: ThemeMode) {
+    setModeState(m);
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      try { window.localStorage.setItem(MODE_KEY, m); } catch {}
+    } else {
+      AsyncStorage.setItem(MODE_KEY, m).catch(() => {});
+    }
+  }
 
   function setTheme(key: ThemeKey) {
     setThemeKey(key);
@@ -80,7 +117,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ThemeContext.Provider value={{ accent, themeKey, setTheme, hydrateTheme }}>
+    <ThemeContext.Provider value={{ accent, themeKey, mode, setMode, setTheme, hydrateTheme }}>
       {children}
     </ThemeContext.Provider>
   );

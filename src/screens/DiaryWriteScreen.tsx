@@ -68,6 +68,7 @@ import { uploadPhoto, getCachedMe, patchEntry, generateComment } from '../api';
 import { saveDraft, listDrafts, deleteDraft, DiaryDraft } from '../data/draftStore';
 import { notify } from '../notify';
 import { RootStackParamList } from '../navigation/RootNavigator';
+import { useThemedStyles } from '../theme/themed';
 
 type WriteRoute = RouteProp<RootStackParamList, 'DiaryWrite'>;
 
@@ -163,6 +164,7 @@ function getFirstDayOfMonth(year: number, month: number) {
 }
 
 export default function DiaryWriteScreen() {
+  const styles = useThemedStyles(lightStyles);
   const navigation = useNavigation();
   const route = useRoute<WriteRoute>();
   const editEntry = route.params?.entry;
@@ -292,13 +294,13 @@ export default function DiaryWriteScreen() {
     }
   }
 
-  /** 초안 저장 시각을 "7 월 12 일 14:03" 형태로 표시한다 */
+  /** 초안 저장 시각을 "7 월 12 일 14:03" 형태로 표시한다 */
   function draftTimeLabel(iso: string): string {
     const d = new Date(iso);
     if (isNaN(d.getTime())) return '';
     const hh = String(d.getHours()).padStart(2, '0');
     const mm = String(d.getMinutes()).padStart(2, '0');
-    return `${d.getMonth() + 1} 월 ${d.getDate()} 일 ${hh}:${mm}`;
+    return `${d.getMonth() + 1} 월 ${d.getDate()} 일 ${hh}:${mm}`;
   }
 
   // 홈 화면과 동일한 순서(사용자 재정렬 반영)로 폴더 목록 구성
@@ -374,8 +376,8 @@ export default function DiaryWriteScreen() {
 
   function dateLabel() {
     if (selectedDates.length === 0) return '날짜 선택';
-    if (selectedDates.length === 1) return `${MONTHS[calMonth]} ${selectedDates[0]} 일`;
-    return `${MONTHS[calMonth]} ${selectedDates[0]} 일 ~ ${selectedDates[selectedDates.length - 1]} 일`;
+    if (selectedDates.length === 1) return `${MONTHS[calMonth]} ${selectedDates[0]} 일`;
+    return `${MONTHS[calMonth]} ${selectedDates[0]} 일 ~ ${selectedDates[selectedDates.length - 1]} 일`;
   }
 
   return (
@@ -460,7 +462,7 @@ export default function DiaryWriteScreen() {
           <View style={[styles.draftBanner, { borderColor: hexToRgba(accent, 0.3), backgroundColor: hexToRgba(accent, 0.07) }]}>
             <IconPencil size={14} color={accent} />
             <Text style={styles.draftBannerText} numberOfLines={1}>
-              임시저장함에 {drafts.length} 개의 글이 있어요
+              임시저장함에 {drafts.length} 개의 글이 있어요
             </Text>
             <TouchableOpacity onPress={() => setDraftsOpen(true)}>
               <Text style={[styles.draftBannerAction, { color: accent }]}>열기</Text>
@@ -603,7 +605,7 @@ export default function DiaryWriteScreen() {
         </View>
         {visibility === 'friends' && (
           <Text style={styles.visHint}>
-            선택한 {shareGroupIds.size} 개 그룹의 피드에 이 p!ng가 공개돼요. 버튼을 다시 누르면 바꿀 수 있어요.
+            선택한 {shareGroupIds.size} 개 그룹의 피드에 이 p!ng가 공개돼요. 버튼을 다시 누르면 바꿀 수 있어요.
           </Text>
         )}
 
@@ -626,7 +628,7 @@ export default function DiaryWriteScreen() {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.aiCardTitle}>AI 코멘트</Text>
-            <Text style={styles.aiCardSub}>{persona} · 24 시간 뒤 도착</Text>
+            <Text style={styles.aiCardSub}>{persona} · 24 시간 뒤 도착</Text>
           </View>
           <IconChev dir="right" size={16} color="#9ca3af" />
         </TouchableOpacity>
@@ -752,7 +754,7 @@ export default function DiaryWriteScreen() {
                 onPress={confirmGroupPick}
               >
                 <Text style={styles.groupPickConfirmText}>
-                  {shareGroupIds.size > 0 ? `${shareGroupIds.size} 개 그룹에 공개` : '나만 보기로 저장'}
+                  {shareGroupIds.size > 0 ? `${shareGroupIds.size} 개 그룹에 공개` : '나만 보기로 저장'}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -769,7 +771,7 @@ export default function DiaryWriteScreen() {
                 <TouchableOpacity onPress={() => setCalMonth((m) => Math.max(0, m - 1))} style={styles.calNavBtn}>
                   <IconChev dir="left" size={16} color="#6b7280" />
                 </TouchableOpacity>
-                <Text style={styles.calTitle}>{calYear} 년 {MONTHS[calMonth]}</Text>
+                <Text style={styles.calTitle}>{calYear} 년 {MONTHS[calMonth]}</Text>
                 <TouchableOpacity onPress={() => setCalMonth((m) => Math.min(11, m + 1))} style={styles.calNavBtn}>
                   <IconChev dir="right" size={16} color="#6b7280" />
                 </TouchableOpacity>
@@ -826,7 +828,7 @@ export default function DiaryWriteScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

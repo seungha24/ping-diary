@@ -9,6 +9,7 @@ import { MONTHS, DAYS } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { IconPencil } from '../components/icons/Line';
+import { useThemedStyles } from '../theme/themed';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type CalendarRoute = RouteProp<TabParamList, 'Calendar'>;
@@ -17,6 +18,7 @@ function getDaysInMonth(year: number, month: number) { return new Date(year, mon
 function getFirstDayOfMonth(year: number, month: number) { return new Date(year, month, 1).getDay(); }
 
 export default function CalendarScreen() {
+  const styles = useThemedStyles(lightStyles);
   const navigation = useNavigation<Nav>();
   const route = useRoute<CalendarRoute>();
   const { accent } = useTheme();
@@ -59,7 +61,7 @@ export default function CalendarScreen() {
         <TouchableOpacity style={styles.navBtn} onPress={() => setMonth((m) => Math.max(0, m - 1))}>
           <IconChev dir="left" size={20} />
         </TouchableOpacity>
-        <Text style={styles.monthTitle}>{year} 년 {MONTHS[month]}</Text>
+        <Text style={styles.monthTitle}>{year} 년 {MONTHS[month]}</Text>
         <TouchableOpacity style={styles.navBtn} onPress={() => setMonth((m) => Math.min(11, m + 1))}>
           <IconChev dir="right" size={20} />
         </TouchableOpacity>
@@ -101,7 +103,7 @@ export default function CalendarScreen() {
 
       {/* Day entries */}
       <View style={styles.preview}>
-        <Text style={styles.previewLabel}>{MONTHS[month]} {selectedDay} 일의 p!ng</Text>
+        <Text style={styles.previewLabel}>{MONTHS[month]} {selectedDay} 일의 p!ng</Text>
         <ScrollView showsVerticalScrollIndicator={false}>
           {selectedEntries.length > 0 ? (
             selectedEntries.map((e) => (
@@ -129,7 +131,7 @@ export default function CalendarScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

@@ -6,6 +6,7 @@ import { useNavigation } from '@react-navigation/native';
 import IconChev from '../components/icons/IconChev';
 import { IconBellOff, IconPencil, IconSparkle } from '../components/icons/Line';
 import { useTheme } from '../context/ThemeContext';
+import { useThemedStyles } from '../theme/themed';
 import {
   Notif, getNotifs, getUnreadCount, subscribeNotifs, refreshNotifs, timeAgo,
   markAllRead as storeMarkAllRead, markRead as storeMarkRead,
@@ -18,6 +19,7 @@ const TYPE_ICON: Record<Notif['type'], { bg: string; color: string; Icon: React.
 };
 
 export default function NotificationScreen() {
+  const styles = useThemedStyles(lightStyles);
   const navigation = useNavigation();
   const { accent } = useTheme();
   const [, forceUpdate] = useState(0);
@@ -53,7 +55,7 @@ export default function NotificationScreen() {
 
       {unreadCount > 0 && (
         <View style={styles.unreadBanner}>
-          <Text style={styles.unreadBannerText}>읽지 않은 알림 {unreadCount} 개</Text>
+          <Text style={styles.unreadBannerText}>읽지 않은 알림 {unreadCount} 개</Text>
         </View>
       )}
 
@@ -104,7 +106,7 @@ export default function NotificationScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
 
   header: {

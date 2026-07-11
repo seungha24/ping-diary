@@ -10,6 +10,7 @@ import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useGroups } from '../context/GroupsContext';
 import { createGroup, joinGroup } from '../api';
 import { IconUsers } from '../components/icons/Line';
+import { useThemedStyles } from '../theme/themed';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -20,6 +21,7 @@ type Result =
   | { type: 'error'; message: string };
 
 export default function GroupCreateScreen() {
+  const styles = useThemedStyles(lightStyles);
   const navigation = useNavigation<Nav>();
   const { accent } = useTheme();
   const { refresh } = useGroups();
@@ -201,7 +203,7 @@ export default function GroupCreateScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

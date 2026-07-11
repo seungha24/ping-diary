@@ -23,6 +23,7 @@ import { uploadPhoto, updateGroupPhoto, getMe, getCachedMe, setFolderCover, save
 import { notify } from '../notify';
 import Svg, { Path, Line, Circle } from 'react-native-svg';
 import { IconFolder, IconList, IconUsers, IconPencil, IconX, IconCamera } from '../components/icons/Line';
+import { useThemedStyles } from '../theme/themed';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -30,6 +31,7 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 const FOLDER_EMOJIS = ['📁', '📔', '✈️', '📚', '🍜', '🎵', '💼', '🏃', '🎨', '❤️', '🌱', '⭐', '☕', '🐾', '🎮', '🌸'];
 
 export default function HomeScreen() {
+  const styles = useThemedStyles(lightStyles);
   const navigation = useNavigation<Nav>();
   const { accent } = useTheme();
   const { entries, updateEntry } = useEntries();
@@ -428,7 +430,7 @@ export default function HomeScreen() {
       sharedGroups: ids.length > 0 ? ids : null,
     });
     setShareEntry(null);
-    notify(ids.length > 0 ? `${ids.length} 개 그룹에 공개했어요.` : '비공개로 전환했어요.');
+    notify(ids.length > 0 ? `${ids.length} 개 그룹에 공개했어요.` : '비공개로 전환했어요.');
   }
 
   return (
@@ -645,7 +647,7 @@ export default function HomeScreen() {
                       </View>
                       <View style={styles.folderMeta}>
                         <Text style={styles.folderName} numberOfLines={1}>{folder.name}</Text>
-                        <Text style={styles.folderCount}>{count} 개</Text>
+                        <Text style={styles.folderCount}>{count} 개</Text>
                       </View>
                     </TouchableOpacity>
                   );
@@ -762,7 +764,7 @@ export default function HomeScreen() {
                   </View>
                   <View style={styles.folderMeta}>
                     <Text style={styles.folderName} numberOfLines={1}>{group.name}</Text>
-                    <Text style={styles.folderCount}>{group.member_count ?? 1} 명</Text>
+                    <Text style={styles.folderCount}>{group.member_count ?? 1} 명</Text>
                   </View>
                 </TouchableOpacity>
               );
@@ -814,7 +816,7 @@ export default function HomeScreen() {
             </ScrollView>
             <TouchableOpacity style={[styles.confirmBtn, { backgroundColor: accent }]} onPress={saveShare}>
               <Text style={[styles.confirmBtnText, { color: '#fff' }]}>
-                {shareGroupIds.size > 0 ? `${shareGroupIds.size} 개 그룹에 공개` : '비공개로 저장'}
+                {shareGroupIds.size > 0 ? `${shareGroupIds.size} 개 그룹에 공개` : '비공개로 저장'}
               </Text>
             </TouchableOpacity>
           </View>
@@ -979,7 +981,7 @@ export default function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
   header: {
     flexDirection: 'row',

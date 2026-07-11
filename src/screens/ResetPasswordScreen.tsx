@@ -5,12 +5,14 @@ import {
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useThemedStyles } from '../theme/themed';
 
 /**
  * 비밀번호 재설정 화면.
  * 재설정 메일의 링크로 앱에 복귀하면(PASSWORD_RECOVERY) 노출된다.
  */
 export default function ResetPasswordScreen() {
+  const styles = useThemedStyles(lightStyles);
   const { accent } = useTheme();
   const { completeRecovery, cancelRecovery } = useAuth();
   const [password, setPassword] = useState('');
@@ -95,7 +97,7 @@ export default function ResetPasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
   flex: { flex: 1 },
   inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 32, gap: 14 },

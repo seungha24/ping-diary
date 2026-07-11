@@ -23,6 +23,7 @@ import IconPerson from '../components/icons/IconPerson';
 
 import { DiaryEntry } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
+import { useThemedStyles } from '../theme/themed';
 
 /** 네비게이션에서 넘기는 그룹 정보 (서버 그룹 기반) */
 export interface GroupNav {
@@ -56,6 +57,7 @@ const Tab = createBottomTabNavigator<TabParamList>();
 
 function MainTabs() {
   const { accent } = useTheme();
+  const styles = useThemedStyles(lightStyles);
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -97,7 +99,7 @@ export default function RootNavigator() {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   tabBar: {
     borderTopColor: '#f3f4f6',
     borderTopWidth: 1,

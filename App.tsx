@@ -5,13 +5,19 @@ import * as Updates from 'expo-updates';
 import RootNavigator from './src/navigation/RootNavigator';
 import LoginScreen from './src/screens/LoginScreen';
 import ResetPasswordScreen from './src/screens/ResetPasswordScreen';
-import { ThemeProvider } from './src/context/ThemeContext';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { EntriesProvider } from './src/context/EntriesContext';
 import { GroupsProvider } from './src/context/GroupsContext';
 import ToastHost from './src/components/ToastHost';
 import { notify } from './src/notify';
 import { registerPush } from './src/push';
+
+/** 다크 모드에 맞춰 상태바 글자색 전환 */
+function ThemedStatusBar() {
+  const { mode } = useTheme();
+  return <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />;
+}
 
 /** 로그인되면 이 기기를 푸시 알림 대상으로 등록 */
 function PushRegistrar() {
@@ -61,7 +67,7 @@ export default function App() {
       <AuthProvider>
         <EntriesProvider>
           <GroupsProvider>
-            <StatusBar style="dark" />
+            <ThemedStatusBar />
             <Gate />
             <PushRegistrar />
             <UpdateWatcher />

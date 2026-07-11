@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as Updates from 'expo-updates';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image, Linking } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image, Linking, Switch } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
@@ -12,12 +12,14 @@ import { useAuth } from '../context/AuthContext';
 import { getMe, getCachedMe, uploadPhoto, saveProfile } from '../api';
 import { notify } from '../notify';
 import { IconUser, IconPencil } from '../components/icons/Line';
+import { useThemedStyles } from '../theme/themed';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export default function ProfileScreen() {
+  const styles = useThemedStyles(lightStyles);
   const navigation = useNavigation<Nav>();
-  const { accent, themeKey, setTheme } = useTheme();
+  const { accent, themeKey, setTheme, mode, setMode } = useTheme();
   const { email, token, logout } = useAuth();
   const emailPrefix = (email ?? '').split('@')[0] || '사용자';
 
@@ -112,6 +114,19 @@ export default function ProfileScreen() {
 
         <View style={styles.divider} />
 
+        {/* 다크 모드 */}
+        <View style={styles.darkModeRow}>
+          <Text style={styles.sectionTitle}>다크 모드</Text>
+          <Switch
+            value={mode === 'dark'}
+            onValueChange={(v) => setMode(v ? 'dark' : 'light')}
+            trackColor={{ false: '#e5e7eb', true: accent }}
+            thumbColor="#ffffff"
+          />
+        </View>
+
+        <View style={styles.divider} />
+
         <View>
           <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('NotifSettings')}>
             <Text style={styles.menuText}>알림 설정</Text>
@@ -148,7 +163,7 @@ export default function ProfileScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   versionText: { fontSize: 11, color: '#d1d5db', textAlign: 'center', paddingVertical: 16 },
   container: { flex: 1, backgroundColor: '#ffffff' },
   header: {
@@ -187,6 +202,7 @@ const styles = StyleSheet.create({
   divider: { height: 1, backgroundColor: '#f3f4f6' },
   section: { gap: 10 },
   sectionTitle: { fontSize: 13, fontWeight: '600', color: '#374151' },
+  darkModeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   tagWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   addTagBtn: {
     paddingHorizontal: 10, paddingVertical: 4, borderRadius: 99,

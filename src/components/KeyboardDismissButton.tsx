@@ -4,6 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { Keyboard, Platform, TouchableOpacity, StyleSheet } from 'react-native';
 import IconChev from './icons/IconChev';
+import { useThemedStyles } from '../theme/themed';
 
 /**
  * 웹 visualViewport 수치로 키보드가 화면을 가린 높이(px)를 계산한다.
@@ -23,6 +24,7 @@ export function computeKeyboardInset(innerHeight: number, viewportHeight: number
  * @returns 키보드가 닫혀 있으면 null
  */
 export default function KeyboardDismissButton() {
+  const styles = useThemedStyles(lightStyles);
   const [bottom, setBottom] = useState<number | null>(null);
 
   useEffect(() => {
@@ -88,7 +90,7 @@ export default function KeyboardDismissButton() {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   btn: {
     position: 'absolute', right: 16, zIndex: 50,
     width: 40, height: 40, borderRadius: 20,

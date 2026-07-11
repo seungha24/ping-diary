@@ -6,6 +6,7 @@ import {
 import Svg, { Path } from 'react-native-svg';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { useThemedStyles } from '../theme/themed';
 
 /** 구글 4색 G 로고 */
 function GoogleLogo({ size = 18 }: { size?: number }) {
@@ -45,6 +46,7 @@ function NaverLogo({ size = 16 }: { size?: number }) {
  * 인증되지 않은 상태에서 앱 진입 시 노출된다.
  */
 export default function LoginScreen() {
+  const styles = useThemedStyles(lightStyles);
   const { accent } = useTheme();
   const { login, signup, loginDemo, loginOAuth, resetPassword } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup' | 'reset'>('login');
@@ -292,7 +294,7 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
   flex: { flex: 1 },
   inner: { flex: 1, justifyContent: 'center', paddingHorizontal: 32, gap: 14 },

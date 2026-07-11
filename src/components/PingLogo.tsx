@@ -2,6 +2,7 @@ import React from 'react';
 import { Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../context/ThemeContext';
+import { useThemedStyles } from '../theme/themed';
 
 /**
  * 헤더용 p!ng 로고. 누르면 홈 탭 첫 화면으로 이동한다.
@@ -9,6 +10,7 @@ import { useTheme } from '../context/ThemeContext';
  * 색은 테마 accent를 따라간다.
  */
 export default function PingLogo({ size = 27 }: { size?: number }) {
+  const styles = useThemedStyles(lightStyles);
   const navigation = useNavigation<any>();
   const { accent } = useTheme();
   return (
@@ -21,6 +23,6 @@ export default function PingLogo({ size = 27 }: { size?: number }) {
   );
 }
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   logo: { fontWeight: '800', letterSpacing: -0.5 },
 });
