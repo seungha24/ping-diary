@@ -64,6 +64,7 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
     createEntry(entry)
       .then((saved) => {
         setEntries((prev) => sortByNewest(prev.map((e) => (e.id === entry.id ? saved : e))));
+        notify('p!ng 업로드 완료!');
       })
       .catch(() => {
         // 저장 실패 시 낙관적 항목 롤백
