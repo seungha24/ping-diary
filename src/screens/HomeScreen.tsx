@@ -991,7 +991,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
   },
-  logo: { fontSize: 22, fontWeight: '800', color: '#111827', letterSpacing: -0.5 },
+  logo: { fontSize: 27, fontWeight: '800', color: '#111827', letterSpacing: -0.5 },
   bellBtn: {
     width: 36, height: 36, borderRadius: 10,
     backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',

@@ -8,7 +8,7 @@ import { useTheme } from '../context/ThemeContext';
  * (reset 파라미터로 홈 내부 상태도 초기화)
  * 색은 테마 accent를 따라간다.
  */
-export default function PingLogo({ size = 22 }: { size?: number }) {
+export default function PingLogo({ size = 27 }: { size?: number }) {
   const navigation = useNavigation<any>();
   const { accent } = useTheme();
   return (
