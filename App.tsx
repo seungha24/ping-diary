@@ -10,6 +10,18 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { EntriesProvider } from './src/context/EntriesContext';
 import { GroupsProvider } from './src/context/GroupsContext';
 import ToastHost from './src/components/ToastHost';
+import { notify } from './src/notify';
+
+/** 백그라운드에서 새 버전 다운로드가 끝나면 토스트로 알려줌 */
+function UpdateWatcher() {
+  const { isUpdatePending } = Updates.useUpdates();
+  useEffect(() => {
+    if (isUpdatePending) {
+      notify('새 버전을 받았어요! 앱을 껐다 켜면 적용돼요 ✨');
+    }
+  }, [isUpdatePending]);
+  return null;
+}
 
 /** 인증 상태에 따라 로그인 화면 또는 앱 본체를 렌더링 */
 function Gate() {
@@ -41,6 +53,7 @@ export default function App() {
           <GroupsProvider>
             <StatusBar style="dark" />
             <Gate />
+            <UpdateWatcher />
             <ToastHost />
           </GroupsProvider>
         </EntriesProvider>
