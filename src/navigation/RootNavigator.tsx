@@ -62,7 +62,8 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        animation: 'fade',
+        // 탭 전환 페이드는 애니메이션이 끊기면 화면이 투명한 채 멈춰
+        // 회색 빈 화면으로 보이는 문제가 있어 즉시 전환으로 변경
         tabBarStyle: styles.tabBar,
         tabBarActiveTintColor: accent,
         tabBarInactiveTintColor: '#9ca3af',
