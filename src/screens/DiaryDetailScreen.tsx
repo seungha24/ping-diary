@@ -21,6 +21,7 @@ import { notify } from '../notify';
 import Svg, { Path, Line } from 'react-native-svg';
 import { IconLock, IconX, IconSparkle, IconTrash as IconTrashLine, IconFolder, PersonaIcon } from '../components/icons/Line';
 import { useThemedStyles } from '../theme/themed';
+import SheetWrap from '../components/SheetWrap';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -343,7 +344,7 @@ export default function DiaryDetailScreen() {
       </ScrollView>
 
       {shareOpen && (
-        <View style={styles.overlayWrap}>
+        <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setShareOpen(false)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
@@ -387,11 +388,11 @@ export default function DiaryDetailScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </SheetWrap>
       )}
 
       {personaOpen && (
-        <View style={styles.overlayWrap}>
+        <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setPersonaOpen(false)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
@@ -419,11 +420,11 @@ export default function DiaryDetailScreen() {
               );
             })}
           </View>
-        </View>
+        </SheetWrap>
       )}
 
       {folderOpen && (
-        <View style={styles.overlayWrap}>
+        <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setFolderOpen(false)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
@@ -451,11 +452,11 @@ export default function DiaryDetailScreen() {
               })}
             </ScrollView>
           </View>
-        </View>
+        </SheetWrap>
       )}
 
       {reportConfirmOpen && (
-        <View style={styles.overlayWrap}>
+        <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setReportConfirmOpen(false)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
@@ -470,11 +471,11 @@ export default function DiaryDetailScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </SheetWrap>
       )}
 
       {deleteOpen && (
-        <View style={styles.overlayWrap}>
+        <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setDeleteOpen(false)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
@@ -493,7 +494,7 @@ export default function DiaryDetailScreen() {
               </TouchableOpacity>
             </View>
           </View>
-        </View>
+        </SheetWrap>
       )}
 
       {lightboxPhoto && (

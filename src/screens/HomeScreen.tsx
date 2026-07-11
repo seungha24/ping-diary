@@ -24,6 +24,7 @@ import { notify } from '../notify';
 import Svg, { Path, Line, Circle } from 'react-native-svg';
 import { IconFolder, IconList, IconUsers, IconPencil, IconX, IconCamera } from '../components/icons/Line';
 import { useThemedStyles } from '../theme/themed';
+import SheetWrap from '../components/SheetWrap';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -778,7 +779,7 @@ export default function HomeScreen() {
       )}
 
       {shareEntry && (
-        <View style={styles.overlayWrap}>
+        <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setShareEntry(null)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
@@ -820,12 +821,12 @@ export default function HomeScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </SheetWrap>
       )}
 
       {/* + 버튼 선택 시트: p!ng / 폴더 */}
       {fabMenuOpen && (
-        <View style={styles.overlayWrap}>
+        <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setFabMenuOpen(false)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
@@ -849,12 +850,12 @@ export default function HomeScreen() {
               </View>
             </TouchableOpacity>
           </View>
-        </View>
+        </SheetWrap>
       )}
 
       {/* 새 폴더 만들기 모달 */}
       {folderModalOpen && (
-        <View style={styles.overlayWrap}>
+        <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setFolderModalOpen(false)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
@@ -887,12 +888,12 @@ export default function HomeScreen() {
               <Text style={[styles.confirmBtnText, { color: newFolderName.trim() ? '#fff' : '#9ca3af' }]}>폴더 만들기</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </SheetWrap>
       )}
 
       {/* 폴더 수정 시트 */}
       {editFolder && (
-        <View style={styles.overlayWrap}>
+        <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setEditFolder(null)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
@@ -949,12 +950,12 @@ export default function HomeScreen() {
               <Text style={styles.deleteFolderText}>폴더 삭제</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </SheetWrap>
       )}
 
       {/* 폴더 삭제 확인 (폰 프레임 안) */}
       {deleteTarget && (
-        <View style={styles.overlayWrap}>
+        <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setDeleteTarget(null)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
@@ -973,7 +974,7 @@ export default function HomeScreen() {
               <Text style={[styles.deleteFolderText, { color: '#6b7280' }]}>취소</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </SheetWrap>
       )}
     </SafeAreaView>
   );

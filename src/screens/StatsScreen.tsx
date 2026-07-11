@@ -13,6 +13,7 @@ import { getMonthlyAwards, MonthlyAward } from '../api';
 import { IconX, PersonaIcon, IconTrophy } from '../components/icons/Line';
 import PingLogo from '../components/PingLogo';
 import { useThemedStyles } from '../theme/themed';
+import SheetWrap from '../components/SheetWrap';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -357,7 +358,7 @@ export default function StatsScreen() {
 
       {/* 전체 p!ng 목록 — 화면 안에서 올라오는 시트 */}
       {monthOpen && (
-        <View style={styles.overlay}>
+        <SheetWrap style={styles.overlay}>
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setMonthOpen(false)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
@@ -387,11 +388,11 @@ export default function StatsScreen() {
               ))}
             </ScrollView>
           </View>
-        </View>
+        </SheetWrap>
       )}
 
       {listOpen && (
-        <View style={styles.overlay}>
+        <SheetWrap style={styles.overlay}>
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setListOpen(false)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
@@ -421,7 +422,7 @@ export default function StatsScreen() {
               ))}
             </ScrollView>
           </View>
-        </View>
+        </SheetWrap>
       )}
     </SafeAreaView>
   );

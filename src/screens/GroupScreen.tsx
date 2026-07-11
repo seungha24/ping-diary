@@ -22,6 +22,7 @@ import { Platform } from 'react-native';
 import { IconUsers, IconUser, IconBell as IconBellLine, IconSprout, IconSparkle, IconPencil, IconTrash, IconCamera, PersonaIcon } from '../components/icons/Line';
 import * as ImagePicker from 'expo-image-picker';
 import { useThemedStyles } from '../theme/themed';
+import SheetWrap from '../components/SheetWrap';
 
 /** 그룹 나가기용 문/화살표 아이콘 (라인 스타일) */
 function IconExit({ color = '#374151', size = 16 }: { color?: string; size?: number }) {
@@ -526,7 +527,7 @@ export default function GroupScreen() {
 
       {/* 신고/차단 액션 시트 */}
       {actionEntry && (
-        <View style={styles.overlayWrap}>
+        <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setActionEntry(null)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
@@ -541,12 +542,12 @@ export default function GroupScreen() {
               <Text style={[styles.actionText, { color: '#9ca3af' }]}>취소</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </SheetWrap>
       )}
 
       {/* 신고 확인 */}
       {confirmReport && (
-        <View style={styles.overlayWrap}>
+        <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setConfirmReport(null)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
@@ -561,12 +562,12 @@ export default function GroupScreen() {
               <Text style={[styles.actionText, { color: '#9ca3af' }]}>취소</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </SheetWrap>
       )}
 
       {/* 초대 코드/링크 공유 */}
       {inviteOpen && (
-        <View style={styles.overlayWrap}>
+        <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setInviteOpen(false)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
@@ -588,12 +589,12 @@ export default function GroupScreen() {
               <Text style={styles.inviteCloseText}>닫기</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </SheetWrap>
       )}
 
       {/* 그룹 관리 메뉴 */}
       {menuOpen && (
-        <View style={styles.overlayWrap}>
+        <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setMenuOpen(false)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
@@ -618,12 +619,12 @@ export default function GroupScreen() {
               <Text style={[styles.actionText, { color: '#9ca3af', marginLeft: 2 }]}>취소</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </SheetWrap>
       )}
 
       {/* 나가기/삭제 확인 */}
       {confirmMode && (
-        <View style={styles.overlayWrap}>
+        <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => !actionBusy && setConfirmMode(null)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
@@ -648,12 +649,12 @@ export default function GroupScreen() {
               <Text style={[styles.actionText, { color: '#9ca3af' }]}>취소</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </SheetWrap>
       )}
 
       {/* 그룹 이름 수정 */}
       {renameOpen && (
-        <View style={styles.overlayWrap}>
+        <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => !actionBusy && setRenameOpen(false)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
@@ -682,12 +683,12 @@ export default function GroupScreen() {
               <Text style={[styles.actionText, { color: '#9ca3af' }]}>취소</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </SheetWrap>
       )}
 
       {/* 알림 설정 모달 */}
       {notifModalOpen && (
-      <View style={styles.overlayWrap}>
+      <SheetWrap style={styles.overlayWrap}>
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setNotifModalOpen(false)} />
         <View style={styles.sheet}>
           {/* 핸들 */}
@@ -767,7 +768,7 @@ export default function GroupScreen() {
             <Text style={styles.saveBtnText}>저장</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </SheetWrap>
       )}
     </SafeAreaView>
   );
