@@ -2,7 +2,12 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
   StyleSheet, SafeAreaView, Modal, Image, ActivityIndicator,
+  InputAccessoryView, Keyboard, Platform,
 } from 'react-native';
+
+// 키보드 위에 붙는 '자판 내리기' 바의 식별자 (iOS 전용)
+const KB_BAR_ID = 'diary-kb-bar';
+const kbBarID = Platform.OS === 'ios' ? KB_BAR_ID : undefined;
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { createAudioPlayer } from 'expo-audio';
 import * as ImagePicker from 'expo-image-picker';
@@ -529,6 +534,7 @@ export default function DiaryWriteScreen() {
           onChangeText={setTitle}
           placeholder="제목을 입력하세요"
           placeholderTextColor="#d1d5db"
+          inputAccessoryViewID={kbBarID}
         />
 
         {/* Body — 텍스트/사진 블록 에디터 (사진이 글 사이에 실제로 보임) */}
@@ -554,6 +560,7 @@ export default function DiaryWriteScreen() {
                 const h = Math.ceil(e.nativeEvent.contentSize.height);
                 setBlockHeights((p) => (p[i] === h ? p : { ...p, [i]: h }));
               }}
+              inputAccessoryViewID={kbBarID}
             />
           ) : (
             <View key={`p${i}`} style={styles.blockPhotoWrap}>
@@ -815,11 +822,35 @@ export default function DiaryWriteScreen() {
       {lightboxPhoto && (
         <PhotoLightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
       )}
+
+      {/* 키보드 위 '자판 내리기' 바 (iOS) */}
+      {Platform.OS === 'ios' && (
+        <InputAccessoryView nativeID={KB_BAR_ID}>
+          <View style={styles.kbBar}>
+            <TouchableOpacity
+              style={styles.kbDismissBtn}
+              onPress={() => Keyboard.dismiss()}
+              hitSlop={{ top: 6, bottom: 6, left: 10, right: 10 }}
+            >
+              <IconChev dir="down" size={18} color="#6b7280" />
+            </TouchableOpacity>
+          </View>
+        </InputAccessoryView>
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  kbBar: {
+    flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center',
+    backgroundColor: '#f9fafb', borderTopWidth: 1, borderTopColor: '#e5e7eb',
+    paddingHorizontal: 10, paddingVertical: 5,
+  },
+  kbDismissBtn: {
+    width: 38, height: 30, borderRadius: 8,
+    alignItems: 'center', justifyContent: 'center',
+  },
   container: { flex: 1, backgroundColor: '#ffffff' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
