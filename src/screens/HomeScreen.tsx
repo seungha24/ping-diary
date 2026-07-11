@@ -665,7 +665,7 @@ export default function HomeScreen() {
                 <IconX size={18} color="#9ca3af" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.sheetSub}>
+            <Text style={styles.sheetDesc}>
               {groups.length === 0
                 ? '아직 참여 중인 그룹이 없어요. 그룹을 만들거나 참여해보세요.'
                 : '공개할 그룹을 골라주세요. 아무것도 고르지 않으면 비공개예요.'}
@@ -1071,9 +1071,10 @@ const styles = StyleSheet.create({
   },
   sheetHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#e5e7eb', alignSelf: 'center', marginTop: 12, marginBottom: 4 },
   sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14 },
-  sheetTitleWrap: { flex: 1, gap: 2 },
-  sheetTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
-  sheetSub: { fontSize: 12, color: '#9ca3af' },
+  sheetTitleWrap: { flex: 1, gap: 3 },
+  sheetTitle: { fontSize: 16, fontWeight: '700', color: '#111827', letterSpacing: -0.2 },
+  sheetSub: { fontSize: 12.5, color: '#9ca3af', letterSpacing: -0.1, lineHeight: 17 },
+  sheetDesc: { fontSize: 12.5, color: '#9ca3af', letterSpacing: -0.1, lineHeight: 19, marginBottom: 14 },
   sheetClose: { fontSize: 16, color: '#9ca3af', paddingLeft: 12 },
   groupRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,

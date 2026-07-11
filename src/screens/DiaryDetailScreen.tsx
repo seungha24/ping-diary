@@ -598,7 +598,7 @@ const styles = StyleSheet.create({
   sheetHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14 },
   sheetTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
   sheetClose: { fontSize: 16, color: '#9ca3af' },
-  sheetSub: { fontSize: 12, color: '#9ca3af', marginBottom: 12 },
+  sheetSub: { fontSize: 12.5, color: '#9ca3af', letterSpacing: -0.1, lineHeight: 19, marginBottom: 14 },
 
   groupRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
