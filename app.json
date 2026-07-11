@@ -2,7 +2,7 @@
   "expo": {
     "name": "ping-diary",
     "slug": "ping-diary",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -46,7 +46,8 @@
           "cameraPermission": "일기에 사진을 촬영해 첨부하기 위해 카메라 접근이 필요합니다."
         }
       ],
-      "expo-audio"
+      "expo-audio",
+      "expo-web-browser"
     ],
     "extra": {
       "eas": {
@@ -59,6 +60,7 @@
     },
     "updates": {
       "url": "https://u.expo.dev/849142d5-a5ce-43e8-b9af-08c41f5f226b"
-    }
+    },
+    "scheme": "pingdiary"
   }
 }

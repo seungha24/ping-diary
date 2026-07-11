@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import {
   getToken, getUserEmail, setToken as apiSetToken, setUserEmail as apiSetUserEmail,
   clearToken, hydrateToken, login as apiLogin, signup as apiSignup, getMe,
@@ -155,17 +156,72 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /** 소셜 계정으로 로그인 (구글: Supabase OAuth / 카카오·네이버: 서버 커스텀 OAuth) */
   async function loginOAuth(provider: OAuthProvider) {
-    // 카카오·네이버는 이메일 scope 문제로 서버 커스텀 OAuth 사용 (닉네임만). 웹 리디렉트.
+    // ── 웹: 카카오·네이버는 서버 커스텀 OAuth로 페이지 리디렉트 ──
     if ((provider === 'kakao' || provider === 'naver') && Platform.OS === 'web' && typeof window !== 'undefined') {
       const ret = encodeURIComponent(window.location.origin);
       window.location.href = `${API_BASE_URL}/auth/${provider}/start?return=${ret}`;
       return;
     }
-    // 네이버는 서버 커스텀 OAuth 전용(위 웹 리디렉트) — Supabase provider 아님
-    if (provider === 'naver') throw new Error('네이버 로그인은 웹에서 이용해주세요.');
+
+    // ── 네이티브(폰): 인앱 브라우저로 열고 pingdiary:// 딥링크로 복귀 ──
+    if (Platform.OS !== 'web') {
+      const NATIVE_REDIRECT = 'pingdiary://auth';
+
+      if (provider === 'kakao' || provider === 'naver') {
+        const startUrl = `${API_BASE_URL}/auth/${provider}/start?return=${encodeURIComponent(NATIVE_REDIRECT)}`;
+        const res = await WebBrowser.openAuthSessionAsync(startUrl, NATIVE_REDIRECT);
+        if (res.type !== 'success' || !('url' in res) || !res.url) {
+          throw new Error('로그인이 취소됐어요.');
+        }
+        const hp = new URLSearchParams(res.url.split('#')[1] || '');
+        const at = hp.get(`${provider}_at`);
+        const rt = hp.get(`${provider}_rt`);
+        if (!at || !rt) {
+          const em = res.url.match(/[?&](?:kakao|naver)_error=([^&#]+)/);
+          throw new Error(em ? decodeURIComponent(em[1]) : '로그인에 실패했어요. 다시 시도해주세요.');
+        }
+        const { data, error } = await supabase.auth.setSession({ access_token: at, refresh_token: rt });
+        if (error) throw error;
+        if (data.session) adoptSession(data.session);
+        return;
+      }
+
+      // 구글: Supabase OAuth URL을 받아 인앱 브라우저로 진행
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: NATIVE_REDIRECT, skipBrowserRedirect: true },
+      });
+      if (error) throw error;
+      if (!data.url) throw new Error('로그인 준비에 실패했어요.');
+      const res = await WebBrowser.openAuthSessionAsync(data.url, NATIVE_REDIRECT);
+      if (res.type !== 'success' || !('url' in res) || !res.url) {
+        throw new Error('로그인이 취소됐어요.');
+      }
+      const hp = new URLSearchParams(res.url.split('#')[1] || '');
+      const at = hp.get('access_token');
+      const rt = hp.get('refresh_token');
+      if (at && rt) {
+        const { data: d2, error: e2 } = await supabase.auth.setSession({ access_token: at, refresh_token: rt });
+        if (e2) throw e2;
+        if (d2.session) adoptSession(d2.session);
+        return;
+      }
+      // PKCE 플로우면 ?code= 로 복귀
+      const codeMatch = res.url.match(/[?&]code=([^&#]+)/);
+      if (codeMatch) {
+        const { data: d3, error: e3 } = await supabase.auth.exchangeCodeForSession(decodeURIComponent(codeMatch[1]));
+        if (e3) throw e3;
+        if (d3.session) adoptSession(d3.session);
+        return;
+      }
+      throw new Error('로그인에 실패했어요. 다시 시도해주세요.');
+    }
+
+    // ── 웹: 구글은 Supabase OAuth 리디렉트 ──
     const redirectTo =
       Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.origin : undefined;
-    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo } });
+    // 여기 도달하는 건 웹의 구글뿐 (카카오·네이버는 위에서 처리)
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo } });
     if (error) throw error;
   }
 
