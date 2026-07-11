@@ -63,6 +63,7 @@ function blocksToBody(blocks: EditorBlock[]): string {
     .trim();
 }
 import { PersonaIcon, IconFolder, IconPencil } from '../components/icons/Line';
+import KeyboardDismissButton from '../components/KeyboardDismissButton';
 import { AspectPhoto } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
@@ -839,6 +840,9 @@ export default function DiaryWriteScreen() {
           </View>
         </InputAccessoryView>
       )}
+
+      {/* 웹·안드로이드: 키보드 위에 뜨는 자판 내리기 버튼 */}
+      {Platform.OS !== 'ios' && <KeyboardDismissButton />}
     </SafeAreaView>
   );
 }
