@@ -536,7 +536,14 @@ export default function HomeScreen() {
                           </View>
                         )}
                       </View>
-                      <View style={[styles.folderCardBody, { backgroundColor: hexToRgba(accent, 0.1) }]}>
+                      {/* [비교용 임시] 폴더마다 다른 이름칸 스타일: 0=흰색+구분선, 1=흰색, 2=연회색, 3=기존 틴트 */}
+                      <View style={[
+                        styles.folderCardBody,
+                        index % 4 === 0 && { backgroundColor: '#ffffff', borderTopWidth: 1, borderTopColor: '#f3f4f6' },
+                        index % 4 === 1 && { backgroundColor: '#ffffff' },
+                        index % 4 === 2 && { backgroundColor: '#f9fafb' },
+                        index % 4 === 3 && { backgroundColor: hexToRgba(accent, 0.1) },
+                      ]}>
                         <Text style={styles.folderName} numberOfLines={1}>{folder.name}</Text>
                         <Text style={styles.folderCount}>{count}개</Text>
                       </View>
