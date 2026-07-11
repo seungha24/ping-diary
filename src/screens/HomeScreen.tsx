@@ -837,7 +837,6 @@ export default function HomeScreen() {
               <View style={styles.fabChoiceIcon}><IconPencil size={22} color={accent} /></View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.fabChoiceTitle}>p!ng</Text>
-                <Text style={styles.fabChoiceSub}>새 p!ng를 작성해요</Text>
               </View>
             </TouchableOpacity>
             <TouchableOpacity
@@ -847,7 +846,6 @@ export default function HomeScreen() {
               <View style={styles.fabChoiceIcon}><IconFolder size={22} color={accent} /></View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.fabChoiceTitle}>폴더 만들기</Text>
-                <Text style={styles.fabChoiceSub}>p!ng를 정리할 폴더를 추가해요</Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -995,7 +993,7 @@ const lightStyles = StyleSheet.create({
   },
   logo: { fontSize: 27, fontWeight: '800', color: '#111827', letterSpacing: -0.5 },
   bellBtn: {
-    width: 36, height: 36, borderRadius: 10,
+    width: 36, height: 36, borderRadius: 18,
     backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
   },
   tabRow: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 12 },

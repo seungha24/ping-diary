@@ -119,6 +119,11 @@ const css = `
     user-select: none;
   }
 
+  /* ── 다크 모드: 앱(localStorage ping_mode)과 동기화 ── */
+  body.ping-dark .phone-screen,
+  body.ping-dark .phone-status-bar { background: #171f2e; }
+  body.ping-dark .phone-home-bar { background: rgba(255,255,255,0.28); }
+
   /* ── 실제 모바일: 프레임 제거 ── */
   @media (max-width: 480px) {
     html { background: #fff !important; }
@@ -155,7 +160,19 @@ html = html.replace(
     <div class="phone-home-bar"></div>
   </div>
 </div>
-<span class="phone-label">p!ng · preview</span>`
+<span class="phone-label">p!ng · preview</span>
+<script>
+  // 앱의 다크 모드 설정(localStorage)과 프레임 배경 동기화
+  (function () {
+    function sync() {
+      try {
+        document.body.classList.toggle('ping-dark', localStorage.getItem('ping_mode') === 'dark');
+      } catch (e) {}
+    }
+    sync();
+    setInterval(sync, 400);
+  })();
+</script>`
 );
 
 fs.writeFileSync(distIndex, html);
