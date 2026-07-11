@@ -11,6 +11,7 @@ import { useGroups } from '../context/GroupsContext';
 import { createGroup, joinGroup } from '../api';
 import { IconUsers } from '../components/icons/Line';
 import { useThemedStyles } from '../theme/themed';
+import SheetWrap from '../components/SheetWrap';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -156,7 +157,7 @@ export default function GroupCreateScreen() {
       </KeyboardAvoidingView>
 
       {result && (
-        <View style={styles.overlayWrap}>
+        <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={closeResult} />
           <View style={styles.dialog}>
             {result.type === 'error' ? (
@@ -197,7 +198,7 @@ export default function GroupCreateScreen() {
               </>
             )}
           </View>
-        </View>
+        </SheetWrap>
       )}
     </SafeAreaView>
   );
