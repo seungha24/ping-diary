@@ -62,7 +62,7 @@ function blocksToBody(blocks: EditorBlock[]): string {
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }
-import { PersonaIcon, IconFolder } from '../components/icons/Line';
+import { PersonaIcon, IconFolder, IconPencil } from '../components/icons/Line';
 import { AspectPhoto } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
@@ -462,8 +462,9 @@ export default function DiaryWriteScreen() {
         {/* 임시저장함 배너 (새 글에서만) */}
         {!editEntry && drafts.length > 0 && (
           <View style={[styles.draftBanner, { borderColor: hexToRgba(accent, 0.3), backgroundColor: hexToRgba(accent, 0.07) }]}>
+            <IconPencil size={14} color={accent} />
             <Text style={styles.draftBannerText} numberOfLines={1}>
-              📝 임시저장함에 {drafts.length}개의 글이 있어요
+              임시저장함에 {drafts.length}개의 글이 있어요
             </Text>
             <TouchableOpacity onPress={() => setDraftsOpen(true)}>
               <Text style={[styles.draftBannerAction, { color: accent }]}>열기</Text>
@@ -859,12 +860,12 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
   },
   cancelText: { fontSize: 14, color: '#9ca3af' },
-  headerTitle: { fontSize: 14, fontWeight: '600', color: '#1f2937' },
-  headerRight: { alignItems: 'flex-end', gap: 6 },
+  headerTitle: { fontSize: 16, fontWeight: '700', color: '#111827' },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   // 임시저장
   draftBtn: {
-    borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 9,
-    paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#f9fafb',
+    borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 999,
+    paddingHorizontal: 12, paddingVertical: 8, backgroundColor: '#f9fafb',
   },
   draftBtnText: { fontSize: 12, color: '#6b7280', fontWeight: '600' },
   draftBanner: {
@@ -895,9 +896,9 @@ const styles = StyleSheet.create({
   },
   dateDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#1f2937' },
   dateBtnText: { fontSize: 13, color: '#374151', fontWeight: '500' },
-  dateTagRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  dateTagRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, alignItems: 'center' },
-  tagRowInline: { flex: 1, paddingTop: 2 },
+  tagRowInline: { flex: 1 },
   tagRemovable: {
     flexDirection: 'row', alignItems: 'center', gap: 2,
     paddingHorizontal: 10, paddingVertical: 4,
@@ -909,7 +910,7 @@ const styles = StyleSheet.create({
   tagInput: {
     fontSize: 12, color: '#374151',
     borderWidth: 1, borderColor: '#d1d5db', borderStyle: 'dashed',
-    borderRadius: 99, paddingHorizontal: 10, paddingVertical: 4,
+    borderRadius: 99, paddingHorizontal: 10, paddingVertical: 7,
     minWidth: 80,
   },
   promptCard: {
