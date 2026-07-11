@@ -659,17 +659,16 @@ export default function HomeScreen() {
             <View style={styles.sheetHeader}>
               <View style={styles.sheetTitleWrap}>
                 <Text style={styles.sheetTitle}>그룹에 공유</Text>
-                <Text style={styles.sheetSub} numberOfLines={1}>{shareEntry.title}</Text>
+                <Text style={styles.sheetSub}>
+                  {groups.length === 0
+                    ? '아직 참여 중인 그룹이 없어요. 그룹을 만들거나 참여해보세요.'
+                    : '공개할 그룹을 골라주세요. 아무것도 고르지 않으면 비공개예요.'}
+                </Text>
               </View>
               <TouchableOpacity onPress={() => setShareEntry(null)}>
                 <IconX size={18} color="#9ca3af" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.sheetDesc}>
-              {groups.length === 0
-                ? '아직 참여 중인 그룹이 없어요. 그룹을 만들거나 참여해보세요.'
-                : '공개할 그룹을 골라주세요. 아무것도 고르지 않으면 비공개예요.'}
-            </Text>
             <ScrollView style={{ maxHeight: 260 }} showsVerticalScrollIndicator={false}>
               {groups.map((g) => {
                 const active = shareGroupIds.has(g.id);
