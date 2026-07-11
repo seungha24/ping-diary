@@ -1,5 +1,7 @@
 import 'react-native-gesture-handler';
+import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
+import * as Updates from 'expo-updates';
 import RootNavigator from './src/navigation/RootNavigator';
 import LoginScreen from './src/screens/LoginScreen';
 import ResetPasswordScreen from './src/screens/ResetPasswordScreen';
@@ -18,6 +20,20 @@ function Gate() {
 }
 
 export default function App() {
+  // 앱 시작 시 OTA 업데이트가 있으면 즉시 받아서 적용 (한 번만 열어도 최신)
+  useEffect(() => {
+    if (!Updates.isEnabled) return; // 웹/개발 모드에선 동작 안 함
+    (async () => {
+      try {
+        const res = await Updates.checkForUpdateAsync();
+        if (res.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync();
+        }
+      } catch {}
+    })();
+  }, []);
+
   return (
     <ThemeProvider>
       <AuthProvider>
