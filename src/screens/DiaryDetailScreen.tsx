@@ -44,8 +44,12 @@ function useCountdown(createdAt: string) {
   const unlockAt = new Date(createdAt).getTime() + 24 * 60 * 60 * 1000;
   const [remaining, setRemaining] = useState(unlockAt - Date.now());
   useEffect(() => {
-    if (remaining <= 0) return;
-    const id = setInterval(() => setRemaining(unlockAt - Date.now()), 1000);
+    if (unlockAt - Date.now() <= 0) return;
+    const id = setInterval(() => {
+      const left = unlockAt - Date.now();
+      setRemaining(left);
+      if (left <= 0) clearInterval(id); // 0 도달 후에도 1초마다 리렌더되는 것 방지
+    }, 1000);
     return () => clearInterval(id);
   }, [unlockAt]);
   return remaining;
@@ -109,6 +113,20 @@ export default function DiaryDetailScreen() {
 
   function handleEdit() {
     navigation.navigate('DiaryWrite', { entry });
+  }
+
+  // 시트를 열 때 현재 entry·groups 기준으로 선택을 다시 시드
+  // (useState 초기화 시점엔 groups가 아직 로드 전이라 '전체 공개' 글이 빈 선택으로 시작해
+  //  그대로 저장하면 비공개로 바뀌는 사고가 났었다)
+  function openShare() {
+    if (entry.visibility === 'friends') {
+      setSelectedGroups(new Set(
+        entry.sharedGroups && entry.sharedGroups.length ? entry.sharedGroups : groups.map((g) => g.id)
+      ));
+    } else {
+      setSelectedGroups(new Set());
+    }
+    setShareOpen(true);
   }
 
   // 공유 대상 그룹 토글
@@ -198,7 +216,7 @@ export default function DiaryDetailScreen() {
         </TouchableOpacity>
         {isMine ? (
           <View style={styles.actions}>
-            <TouchableOpacity style={[styles.shareIconBtn, { backgroundColor: accent }]} onPress={() => setShareOpen(true)}>
+            <TouchableOpacity style={[styles.shareIconBtn, { backgroundColor: accent }]} onPress={openShare}>
               <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
                 <Path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
                 <Path d="M16 6l-4-4-4 4" />
