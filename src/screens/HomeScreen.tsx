@@ -1079,10 +1079,10 @@ const lightStyles = StyleSheet.create({
   glowCard: {
     backgroundColor: '#ffffff',
     borderRadius: 18,
-    borderWidth: 1,
     overflow: 'hidden',
-    shadowOpacity: 0.3, shadowRadius: 16, shadowOffset: { width: 0, height: 3 },
-    elevation: 5,
+    // 선 대신 은은하게 퍼지는 글로우 (shadowColor는 인라인으로 accent 주입)
+    shadowOpacity: 0.32, shadowRadius: 22, shadowOffset: { width: 0, height: 0 },
+    elevation: 6,
   },
   folderCoverWrap: {
     width: '100%', height: 112,
