@@ -1132,9 +1132,9 @@ const styles = StyleSheet.create({
   },
   folderAddCoverText: { fontSize: 11, color: '#6b7280', fontWeight: '600' },
   // 애플뮤직처럼 사진 아래에 놓이는 이름/개수 (이름 옆에 살짝 띄워서)
-  folderMeta: { flexDirection: 'row', alignItems: 'baseline', gap: 8, paddingHorizontal: 4, paddingTop: 7 },
-  folderName: { flexShrink: 1, fontSize: 14, fontWeight: '700', color: '#111827' },
-  folderCount: { flexShrink: 0, fontSize: 12, color: '#9ca3af' },
+  folderMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 4, paddingTop: 7 },
+  folderName: { flexShrink: 1, fontSize: 14, fontWeight: '700', color: '#111827', lineHeight: 18 },
+  folderCount: { flexShrink: 0, fontSize: 12, color: '#9ca3af', lineHeight: 18 },
   sectionLabel: { fontSize: 12, color: '#9ca3af', marginBottom: 2, paddingHorizontal: 4 },
   groupCard: {
     backgroundColor: '#ffffff', borderRadius: 16, padding: 16,
