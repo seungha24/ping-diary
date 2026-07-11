@@ -527,8 +527,8 @@ export default function HomeScreen() {
                       delayLongPress={300}
                       onLayout={index === 0 ? (e) => { cellHRef.current = e.nativeEvent.layout.height; } : undefined}
                     >
-                      {/* [비교용 임시] 0=흰색+구분선, 1=반투명 오버레이(커버가 비침), 2=연회색, 3=기존 틴트 */}
-                      <View style={[styles.folderCoverWrap, index % 4 === 1 && { height: 146 }]}>
+                      {/* 커버가 카드 전체를 채우고, 이름칸은 반투명 오버레이로 */}
+                      <View style={[styles.folderCoverWrap, { height: 146 }]}>
                         {cover ? (
                           <Image source={{ uri: cover }} style={styles.folderCoverImg} />
                         ) : (
@@ -536,24 +536,11 @@ export default function HomeScreen() {
                             <Text style={styles.folderCoverEmoji}>{folder.emoji}</Text>
                           </View>
                         )}
-                        {index % 4 === 1 && (
-                          <View style={[styles.folderCardBody, styles.folderBodyOverlay]}>
-                            <Text style={styles.folderName} numberOfLines={1}>{folder.name}</Text>
-                            <Text style={styles.folderCount}>{count}개</Text>
-                          </View>
-                        )}
-                      </View>
-                      {index % 4 !== 1 && (
-                        <View style={[
-                          styles.folderCardBody,
-                          index % 4 === 0 && { backgroundColor: '#ffffff', borderTopWidth: 1, borderTopColor: '#f3f4f6' },
-                          index % 4 === 2 && { backgroundColor: '#f9fafb' },
-                          index % 4 === 3 && { backgroundColor: hexToRgba(accent, 0.1) },
-                        ]}>
+                        <View style={[styles.folderCardBody, styles.folderBodyOverlay]}>
                           <Text style={styles.folderName} numberOfLines={1}>{folder.name}</Text>
                           <Text style={styles.folderCount}>{count}개</Text>
                         </View>
-                      )}
+                      </View>
                     </TouchableOpacity>
                   );
                 })}
@@ -640,7 +627,8 @@ export default function HomeScreen() {
                   onLongPress={() => pickGroupCover(group.id)}
                   delayLongPress={300}
                 >
-                  <View style={styles.folderCoverWrap}>
+                  {/* 폴더 카드와 동일: 커버 전체 + 반투명 이름칸 오버레이 */}
+                  <View style={[styles.folderCoverWrap, { height: 146 }]}>
                     {cover ? (
                       <Image source={{ uri: cover }} style={styles.folderCoverImg} />
                     ) : (
@@ -648,11 +636,10 @@ export default function HomeScreen() {
                         <IconUsers size={30} color="#9ca3af" />
                       </View>
                     )}
-                  </View>
-                  {/* flexGrow로 남는 높이를 채워 이름칸 아래 흰 틈 방지 */}
-                  <View style={[styles.folderCardBody, { backgroundColor: hexToRgba(accent, 0.1), flexGrow: 1 }]}>
-                    <Text style={styles.folderName} numberOfLines={1}>{group.name}</Text>
-                    <Text style={styles.folderCount}>{group.member_count ?? 1}명</Text>
+                    <View style={[styles.folderCardBody, styles.folderBodyOverlay]}>
+                      <Text style={styles.folderName} numberOfLines={1}>{group.name}</Text>
+                      <Text style={styles.folderCount}>{group.member_count ?? 1}명</Text>
+                    </View>
                   </View>
                 </TouchableOpacity>
               );
