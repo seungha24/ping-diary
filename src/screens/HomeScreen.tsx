@@ -575,7 +575,7 @@ export default function HomeScreen() {
                     onPress={() => setPersonalView('folder')}
                   >
                     <View style={styles.viewToggleInner}>
-                      <IconFolder size={14} color={personalView === 'folder' ? '#fff' : '#9ca3af'} />
+                      <IconFolder size={12} color={personalView === 'folder' ? '#fff' : '#9ca3af'} />
                       <Text style={[styles.viewToggleText, personalView === 'folder' && { color: '#fff' }]}>폴더</Text>
                     </View>
                   </TouchableOpacity>
@@ -584,7 +584,7 @@ export default function HomeScreen() {
                     onPress={() => setPersonalView('all')}
                   >
                     <View style={styles.viewToggleInner}>
-                      <IconList size={14} color={personalView === 'all' ? '#fff' : '#9ca3af'} />
+                      <IconList size={12} color={personalView === 'all' ? '#fff' : '#9ca3af'} />
                       <Text style={[styles.viewToggleText, personalView === 'all' && { color: '#fff' }]}>전체</Text>
                     </View>
                   </TouchableOpacity>
@@ -1004,7 +1004,7 @@ const styles = StyleSheet.create({
     width: 36, height: 36, borderRadius: 10,
     backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
   },
-  tabRow: { paddingHorizontal: 20, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+  tabRow: { paddingHorizontal: 20, paddingVertical: 10 },
   tabPill: { flexDirection: 'row', backgroundColor: '#f3f4f6', borderRadius: 12, padding: 4 },
   tabItem: { flex: 1, paddingVertical: 7, borderRadius: 9, alignItems: 'center' },
   tabItemActive: {
@@ -1041,21 +1041,20 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 5,
   },
   viewToggleRow: {
-    paddingHorizontal: 20, paddingVertical: 10,
-    borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
+    paddingHorizontal: 20, paddingTop: 2, paddingBottom: 8,
     alignItems: 'flex-end',
   },
   viewTogglePill: {
     flexDirection: 'row',
     backgroundColor: '#f3f4f6',
-    borderRadius: 12, padding: 3,
+    borderRadius: 10, padding: 2,
     alignSelf: 'flex-end',
   },
   viewToggleBtn: {
-    paddingHorizontal: 18, paddingVertical: 7, borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8,
   },
-  viewToggleInner: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  viewToggleText: { fontSize: 13, fontWeight: '600', color: '#9ca3af' },
+  viewToggleInner: { flexDirection: 'row', alignItems: 'center', gap: 5 },
+  viewToggleText: { fontSize: 12, fontWeight: '600', color: '#9ca3af' },
   folderHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 12,
