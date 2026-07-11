@@ -92,6 +92,9 @@ export function IconAward({ color, size }: IconProps) {
 export function IconVerse({ color, size }: IconProps) {
   return <Base size={size} color={color}><Line x1="4" y1="7" x2="17" y2="7" /><Line x1="4" y1="12" x2="14" y2="12" /><Line x1="4" y1="17" x2="10" y2="17" /></Base>;
 }
+export function IconShield({ color, size }: IconProps) {
+  return <Base size={size} color={color}><Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></Base>;
+}
 /** 페르소나별 라인 아이콘 */
 export function PersonaIcon({ persona, color, size }: { persona: string; color?: string; size?: number }) {
   switch (persona) {
@@ -102,6 +105,7 @@ export function PersonaIcon({ persona, color, size }: { persona: string; color?:
     case '소설가': return <IconFeather color={color} size={size} />;
     case '전기 작가': return <IconAward color={color} size={size} />;
     case '시인': return <IconVerse color={color} size={size} />;
+    case '언제나 내 편': return <IconShield color={color} size={size} />;
     default: return <IconMessage color={color} size={size} />;
   }
 }

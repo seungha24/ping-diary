@@ -119,6 +119,7 @@ export const PERSONAS = [
   { emoji: '🖋️', label: '소설가' },
   { emoji: '📜', label: '전기 작가' },
   { emoji: '✒️', label: '시인' },
+  { emoji: '🫂', label: '언제나 내 편' },
 ];
 
 export const MONTH_COUNTS = [18, 12, 25, 8, 30, 10, 0, 0, 0, 0, 0, 0];
