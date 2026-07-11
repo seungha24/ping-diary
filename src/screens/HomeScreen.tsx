@@ -436,7 +436,7 @@ export default function HomeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={resetToFirstScreen} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Text style={styles.logo}>p!ng</Text>
+          <Text style={[styles.logo, { color: accent }]}>p!ng</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.bellBtn} onPress={() => navigation.navigate('Notifications')}>
           <IconBell size={22} dot={hasUnreadNotif} />
