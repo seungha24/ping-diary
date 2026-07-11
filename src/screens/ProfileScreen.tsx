@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import * as Updates from 'expo-updates';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -122,12 +123,20 @@ export default function ProfileScreen() {
             <IconChev dir="right" size={18} color="#d1d5db" />
           </TouchableOpacity>
         </View>
+
+        {/* 현재 실행 중인 버전/업데이트 확인용 */}
+        <Text style={styles.versionText}>
+          v1.0.0{Updates.isEnabled && Updates.createdAt
+            ? ` · 업데이트 ${new Date(Updates.createdAt).getMonth() + 1}/${new Date(Updates.createdAt).getDate()} ${String(new Date(Updates.createdAt).getHours()).padStart(2, '0')}:${String(new Date(Updates.createdAt).getMinutes()).padStart(2, '0')}`
+            : ' · 기본 번들'}
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  versionText: { fontSize: 11, color: '#d1d5db', textAlign: 'center', paddingVertical: 16 },
   container: { flex: 1, backgroundColor: '#ffffff' },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
