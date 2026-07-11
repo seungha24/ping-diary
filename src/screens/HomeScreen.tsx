@@ -641,7 +641,7 @@ export default function HomeScreen() {
                       <View
                         style={[
                           styles.folderCoverWrap, styles.glowCard, { height: 146 },
-                          { boxShadow: `0 2px 13px 1px ${hexToRgba(accent, 0.3)}` },
+                          { boxShadow: `0 2px 12px 0 ${hexToRgba(accent, 0.27)}` },
                           isDragging && { borderColor: accent, borderWidth: 2 },
                         ]}
                       >
@@ -758,7 +758,7 @@ export default function HomeScreen() {
                   <View
                     style={[
                       styles.folderCoverWrap, styles.glowCard, { height: 146 },
-                      { boxShadow: `0 2px 13px 1px ${hexToRgba(accent, 0.3)}` },
+                      { boxShadow: `0 2px 12px 0 ${hexToRgba(accent, 0.27)}` },
                       isDragging && { borderColor: accent, borderWidth: 2 },
                     ]}
                   >
