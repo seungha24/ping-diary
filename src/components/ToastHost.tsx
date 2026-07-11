@@ -47,7 +47,7 @@ export default function ToastHost() {
 
   return (
     <View pointerEvents="none" style={styles.wrap}>
-      <Animated.View style={[styles.toast, { opacity, backgroundColor: hexToRgba(accent, 0.95) }]}>
+      <Animated.View style={[styles.toast, { opacity, backgroundColor: hexToRgba(accent, 0.72) }]}>
         <Text style={[styles.text, { color: readableTextOn(accent) }]}>{message}</Text>
       </Animated.View>
     </View>
@@ -56,8 +56,8 @@ export default function ToastHost() {
 
 const lightStyles = StyleSheet.create({
   wrap: {
-    position: 'absolute', left: 0, right: 0, bottom: 90,
-    alignItems: 'center', paddingHorizontal: 24,
+    position: 'absolute', left: 0, right: 0, top: 0, bottom: 0,
+    alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24,
   },
   toast: {
     maxWidth: '100%',
