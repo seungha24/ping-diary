@@ -1235,7 +1235,6 @@ const lightStyles = StyleSheet.create({
   fabChoiceEmoji: { fontSize: 26 },
   fabChoiceIcon: { width: 30, alignItems: 'center' },
   fabChoiceTitle: { fontSize: 15, fontWeight: '600', color: '#111827' },
-  fabChoiceSub: { fontSize: 12, color: '#9ca3af', marginTop: 2 },
 
   // 폴더 만들기 모달
   folderInput: {

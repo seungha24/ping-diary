@@ -513,7 +513,7 @@ export default function GroupScreen() {
       )}
 
       {/* FAB */}
-      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('DiaryWrite')}>
+      <TouchableOpacity style={[styles.fab, { backgroundColor: accent }]} onPress={() => navigation.navigate('DiaryWrite')}>
         <IconPlus color="#ffffff" size={22} />
       </TouchableOpacity>
 
@@ -785,7 +785,7 @@ const lightStyles = StyleSheet.create({
   fab: {
     position: 'absolute', bottom: 24, right: 20,
     width: 52, height: 52, borderRadius: 26,
-    backgroundColor: '#111827', alignItems: 'center', justifyContent: 'center',
+    alignItems: 'center', justifyContent: 'center',
     shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 5,
   },
   bellBtn: {
