@@ -615,14 +615,13 @@ export default function HomeScreen() {
                     <TouchableOpacity
                       key={folder.id}
                       style={[
-                        styles.gridCell, styles.glowCard,
-                        { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) },
+                        styles.gridCell,
                         (shift.x !== 0 || shift.y !== 0) && {
                           transform: [{ translateX: shift.x }, { translateY: shift.y }],
                         },
                         isDragging && {
                           transform: [{ translateX: dragPos.dx }, { translateY: dragPos.dy }, { scale: 1.05 }],
-                          zIndex: 20, elevation: 10, opacity: 0.92, borderColor: accent, borderWidth: 2,
+                          zIndex: 20, elevation: 10, opacity: 0.92,
                         },
                       ]}
                       activeOpacity={0.85}
@@ -631,8 +630,14 @@ export default function HomeScreen() {
                       delayLongPress={300}
                       onLayout={index === 0 ? (e) => { cellHRef.current = e.nativeEvent.layout.height; } : undefined}
                     >
-                      {/* 커버가 카드 전체를 채우고, 이름칸은 반투명 오버레이로 */}
-                      <View style={[styles.folderCoverWrap, { height: 146 }]}>
+                      {/* 애플뮤직처럼: 커버만 둥근 카드, 이름은 사진 아래 */}
+                      <View
+                        style={[
+                          styles.folderCoverWrap, styles.glowCard, { height: 146 },
+                          { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) },
+                          isDragging && { borderColor: accent, borderWidth: 2 },
+                        ]}
+                      >
                         {cover ? (
                           <Image source={{ uri: cover }} style={styles.folderCoverImg} />
                         ) : (
@@ -640,10 +645,10 @@ export default function HomeScreen() {
                             <Text style={styles.folderCoverEmoji}>{folder.emoji}</Text>
                           </View>
                         )}
-                        <View style={[styles.folderCardBody, styles.folderBodyOverlay]}>
-                          <Text style={styles.folderName} numberOfLines={1}>{folder.name}</Text>
-                          <Text style={styles.folderCount}>{count}개</Text>
-                        </View>
+                      </View>
+                      <View style={styles.folderMeta}>
+                        <Text style={styles.folderName} numberOfLines={1}>{folder.name}</Text>
+                        <Text style={styles.folderCount}>{count}개</Text>
                       </View>
                     </TouchableOpacity>
                   );
@@ -734,12 +739,11 @@ export default function HomeScreen() {
                 <TouchableOpacity
                   key={group.id}
                   style={[
-                    styles.gridCell, styles.glowCard,
-                    { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) },
+                    styles.gridCell,
                     (shift.x !== 0 || shift.y !== 0) && { transform: [{ translateX: shift.x }, { translateY: shift.y }] },
                     isDragging && {
                       transform: [{ translateX: gDragPos.dx }, { translateY: gDragPos.dy }, { scale: 1.05 }],
-                      zIndex: 20, elevation: 10, opacity: 0.92, borderColor: accent, borderWidth: 2,
+                      zIndex: 20, elevation: 10, opacity: 0.92,
                     },
                   ]}
                   activeOpacity={0.85}
@@ -748,8 +752,14 @@ export default function HomeScreen() {
                   delayLongPress={300}
                   onLayout={index === 0 ? (e) => { gCellHRef.current = e.nativeEvent.layout.height; } : undefined}
                 >
-                  {/* 폴더 카드와 동일: 커버 전체 + 반투명 이름칸 오버레이 */}
-                  <View style={[styles.folderCoverWrap, { height: 146 }]}>
+                  {/* 폴더 카드와 동일: 커버만 둥근 카드, 이름은 사진 아래 */}
+                  <View
+                    style={[
+                      styles.folderCoverWrap, styles.glowCard, { height: 146 },
+                      { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) },
+                      isDragging && { borderColor: accent, borderWidth: 2 },
+                    ]}
+                  >
                     {cover ? (
                       <Image source={{ uri: cover }} style={styles.folderCoverImg} />
                     ) : (
@@ -757,10 +767,10 @@ export default function HomeScreen() {
                         <IconUsers size={30} color="#9ca3af" />
                       </View>
                     )}
-                    <View style={[styles.folderCardBody, styles.folderBodyOverlay]}>
-                      <Text style={styles.folderName} numberOfLines={1}>{group.name}</Text>
-                      <Text style={styles.folderCount}>{group.member_count ?? 1}명</Text>
-                    </View>
+                  </View>
+                  <View style={styles.folderMeta}>
+                    <Text style={styles.folderName} numberOfLines={1}>{group.name}</Text>
+                    <Text style={styles.folderCount}>{group.member_count ?? 1}명</Text>
                   </View>
                 </TouchableOpacity>
               );
@@ -1121,16 +1131,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#f9fafb',
   },
   folderAddCoverText: { fontSize: 11, color: '#6b7280', fontWeight: '600' },
-  folderCardBody: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    gap: 6, paddingHorizontal: 11, paddingVertical: 8,
-  },
-  folderName: { flex: 1, fontSize: 14, fontWeight: '700', color: '#111827' },
-  folderBodyOverlay: {
-    position: 'absolute', left: 0, right: 0, bottom: 0,
-    backgroundColor: 'rgba(255,255,255,0.78)',
-  },
-  folderCount: { flexShrink: 0, fontSize: 12, color: '#9ca3af' },
+  // 애플뮤직처럼 사진 아래에 놓이는 이름/개수
+  folderMeta: { paddingHorizontal: 4, paddingTop: 7 },
+  folderName: { fontSize: 14, fontWeight: '700', color: '#111827' },
+  folderCount: { fontSize: 12, color: '#9ca3af', marginTop: 1 },
   sectionLabel: { fontSize: 12, color: '#9ca3af', marginBottom: 2, paddingHorizontal: 4 },
   groupCard: {
     backgroundColor: '#ffffff', borderRadius: 16, padding: 16,
