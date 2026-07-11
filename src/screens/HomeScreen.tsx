@@ -569,6 +569,9 @@ export default function HomeScreen() {
             /* ── 폴더 목록 / 전체 보기 ── */
             <>
               <View style={styles.viewToggleRow}>
+                <Text style={[styles.folderHint, { marginBottom: 0, flex: 1 }]}>
+                  {dragId ? '원하는 위치로 끌어다 놓으세요' : '폴더를 길게 누른 채 끌면 순서를 바꿀 수 있어요'}
+                </Text>
                 <View style={styles.viewTogglePill}>
                   <TouchableOpacity
                     style={[styles.viewToggleBtn, personalView === 'folder' && { backgroundColor: accent }]}
@@ -593,9 +596,6 @@ export default function HomeScreen() {
 
               {personalView === 'folder' ? (
             <ScrollView contentContainerStyle={styles.folderList} scrollEnabled={!dragId}>
-              <Text style={styles.folderHint}>
-                {dragId ? '원하는 위치로 끌어다 놓으세요' : '폴더를 길게 누른 채 끌면 순서를 바꿀 수 있어요'}
-              </Text>
               <View
                 style={styles.folderGrid}
                 {...dragPan.panHandlers}
@@ -1004,7 +1004,7 @@ const styles = StyleSheet.create({
     width: 36, height: 36, borderRadius: 10,
     backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
   },
-  tabRow: { paddingHorizontal: 20, paddingVertical: 10 },
+  tabRow: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 12 },
   tabPill: { flexDirection: 'row', backgroundColor: '#f3f4f6', borderRadius: 12, padding: 4 },
   tabItem: { flex: 1, paddingVertical: 7, borderRadius: 9, alignItems: 'center' },
   tabItemActive: {
@@ -1013,7 +1013,7 @@ const styles = StyleSheet.create({
   },
   tabText: { fontSize: 13, color: '#9ca3af', fontWeight: '500' },
   tabTextActive: { color: '#111827', fontWeight: '700' },
-  list: { padding: 16, gap: 10, paddingBottom: 80 },
+  list: { paddingHorizontal: 20, paddingTop: 12, gap: 10, paddingBottom: 80 },
   emptyState: { alignItems: 'center', paddingTop: 48, gap: 6 },
   emptyText: { fontSize: 14, color: '#9ca3af' },
   emptySubText: { fontSize: 12, color: '#d1d5db' },
@@ -1041,8 +1041,8 @@ const styles = StyleSheet.create({
     shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 8, shadowOffset: { width: 0, height: 3 }, elevation: 5,
   },
   viewToggleRow: {
-    paddingHorizontal: 20, paddingTop: 2, paddingBottom: 8,
-    alignItems: 'flex-end',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+    paddingHorizontal: 20,
   },
   viewTogglePill: {
     flexDirection: 'row',
@@ -1063,7 +1063,7 @@ const styles = StyleSheet.create({
   folderBackBtn: { width: 60 },
   folderBackText: { fontSize: 13, color: '#6b7280' },
   folderHeaderTitle: { fontSize: 15, fontWeight: '700', color: '#111827' },
-  folderList: { padding: 16, paddingBottom: 80 },
+  folderList: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 80 },
   folderHint: { fontSize: 11, color: '#b8bcc4', marginBottom: 12, paddingHorizontal: 2 },
   folderGrid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
   folderCard: {
