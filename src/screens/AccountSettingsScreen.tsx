@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
+  View, Text, ScrollView, StyleSheet,
   SafeAreaView, TextInput, Alert, Modal, ActivityIndicator, Platform,
 } from 'react-native';
+import TouchableOpacity from '../components/Touchable';
 import { useNavigation } from '@react-navigation/native';
 import IconChev from '../components/icons/IconChev';
 import { useTheme } from '../context/ThemeContext';

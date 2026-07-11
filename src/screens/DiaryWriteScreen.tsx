@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, TextInput,
+  View, Text, ScrollView, TextInput,
   StyleSheet, SafeAreaView, Modal, Image, ActivityIndicator,
 } from 'react-native';
+import TouchableOpacity from '../components/Touchable';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { createAudioPlayer } from 'expo-audio';
 import * as ImagePicker from 'expo-image-picker';

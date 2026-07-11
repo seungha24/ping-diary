@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet,
+  View, Text, TextInput, StyleSheet,
   SafeAreaView, ActivityIndicator, KeyboardAvoidingView, Platform,
 } from 'react-native';
+import TouchableOpacity from '../components/Touchable';
 import Svg, { Path } from 'react-native-svg';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';

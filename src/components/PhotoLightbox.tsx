@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Modal, View, Text, Animated, Pressable,
-  Dimensions, StyleSheet, TouchableOpacity, Image,
+  Dimensions, StyleSheet, Image,
 } from 'react-native';
+import TouchableOpacity from './Touchable';
 import { getPhotoPlaceholder } from '../data/types';
 import PHOTO_ASSETS from '../data/photoAssets';
 import { IconX } from './icons/Line';

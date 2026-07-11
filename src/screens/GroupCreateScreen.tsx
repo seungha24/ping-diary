@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, ScrollView,
+  View, Text, TextInput, ScrollView,
   StyleSheet, SafeAreaView, KeyboardAvoidingView, Platform, ActivityIndicator,
 } from 'react-native';
+import TouchableOpacity from '../components/Touchable';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';

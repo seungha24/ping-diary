@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
+  View, Text, ScrollView, StyleSheet,
   SafeAreaView,
 } from 'react-native';
+import TouchableOpacity from '../components/Touchable';
 import { useNavigation } from '@react-navigation/native';
 import IconChev from '../components/icons/IconChev';
 import { useTheme, hexToRgba } from '../context/ThemeContext';

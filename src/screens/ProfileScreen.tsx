@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import * as Updates from 'expo-updates';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, SafeAreaView, Image, Linking } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, SafeAreaView, Image, Linking } from 'react-native';
+import TouchableOpacity from '../components/Touchable';
 import ThemeSwitch from '../components/ThemeSwitch';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';

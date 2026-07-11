@@ -2,7 +2,8 @@
 // iOS의 InputAccessoryView는 presentation:'modal' 화면 안에서 나타나지 않는 버그가 있어
 // 키보드 이벤트/뷰포트 기반의 플로팅 버튼으로 통일했다.
 import React, { useEffect, useState } from 'react';
-import { Keyboard, Platform, TouchableOpacity, StyleSheet } from 'react-native';
+import { Keyboard, Platform, StyleSheet } from 'react-native';
+import TouchableOpacity from './Touchable';
 import IconChev from './icons/IconChev';
 import { useThemedStyles } from '../theme/themed';
 
