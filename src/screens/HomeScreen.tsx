@@ -527,7 +527,8 @@ export default function HomeScreen() {
                       delayLongPress={300}
                       onLayout={index === 0 ? (e) => { cellHRef.current = e.nativeEvent.layout.height; } : undefined}
                     >
-                      <View style={styles.folderCoverWrap}>
+                      {/* [비교용 임시] 0=흰색+구분선, 1=반투명 오버레이(커버가 비침), 2=연회색, 3=기존 틴트 */}
+                      <View style={[styles.folderCoverWrap, index % 4 === 1 && { height: 146 }]}>
                         {cover ? (
                           <Image source={{ uri: cover }} style={styles.folderCoverImg} />
                         ) : (
@@ -535,18 +536,24 @@ export default function HomeScreen() {
                             <Text style={styles.folderCoverEmoji}>{folder.emoji}</Text>
                           </View>
                         )}
+                        {index % 4 === 1 && (
+                          <View style={[styles.folderCardBody, styles.folderBodyOverlay]}>
+                            <Text style={styles.folderName} numberOfLines={1}>{folder.name}</Text>
+                            <Text style={styles.folderCount}>{count}개</Text>
+                          </View>
+                        )}
                       </View>
-                      {/* [비교용 임시] 폴더마다 다른 이름칸 스타일: 0=흰색+구분선, 1=흰색, 2=연회색, 3=기존 틴트 */}
-                      <View style={[
-                        styles.folderCardBody,
-                        index % 4 === 0 && { backgroundColor: '#ffffff', borderTopWidth: 1, borderTopColor: '#f3f4f6' },
-                        index % 4 === 1 && { backgroundColor: '#ffffff' },
-                        index % 4 === 2 && { backgroundColor: '#f9fafb' },
-                        index % 4 === 3 && { backgroundColor: hexToRgba(accent, 0.1) },
-                      ]}>
-                        <Text style={styles.folderName} numberOfLines={1}>{folder.name}</Text>
-                        <Text style={styles.folderCount}>{count}개</Text>
-                      </View>
+                      {index % 4 !== 1 && (
+                        <View style={[
+                          styles.folderCardBody,
+                          index % 4 === 0 && { backgroundColor: '#ffffff', borderTopWidth: 1, borderTopColor: '#f3f4f6' },
+                          index % 4 === 2 && { backgroundColor: '#f9fafb' },
+                          index % 4 === 3 && { backgroundColor: hexToRgba(accent, 0.1) },
+                        ]}>
+                          <Text style={styles.folderName} numberOfLines={1}>{folder.name}</Text>
+                          <Text style={styles.folderCount}>{count}개</Text>
+                        </View>
+                      )}
                     </TouchableOpacity>
                   );
                 })}
@@ -1011,6 +1018,10 @@ const styles = StyleSheet.create({
     gap: 6, paddingHorizontal: 11, paddingVertical: 8,
   },
   folderName: { flex: 1, fontSize: 14, fontWeight: '700', color: '#111827' },
+  folderBodyOverlay: {
+    position: 'absolute', left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(255,255,255,0.78)',
+  },
   folderCount: { flexShrink: 0, fontSize: 12, color: '#9ca3af' },
   sectionLabel: { fontSize: 12, color: '#9ca3af', marginBottom: 2, paddingHorizontal: 4 },
   groupCard: {
