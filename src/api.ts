@@ -338,6 +338,7 @@ export interface Me {
   folders: UserFolder[];
   hidden_folders: string[];
   blocked_users: string[];
+  group_order: number[];
   display_name: string | null;
   username: string | null;
 }
@@ -390,6 +391,7 @@ export async function getMe(): Promise<Me> {
       folders: Array.isArray(r?.folders) ? r.folders : [],
       hidden_folders: Array.isArray(r?.hidden_folders) ? r.hidden_folders : [],
       blocked_users: Array.isArray(r?.blocked_users) ? r.blocked_users : [],
+      group_order: Array.isArray(r?.group_order) ? r.group_order : [],
       display_name: r?.display_name ?? null,
       username: r?.username ?? null,
     };
@@ -409,6 +411,14 @@ export async function saveHiddenFolders(hidden: string[]): Promise<string[]> {
 }
 
 /** 차단한 사용자 id 목록 저장 (user_metadata, DB) */
+/** 그룹 표시 순서 저장 (내 화면 전용) */
+export async function saveGroupOrder(order: number[]): Promise<number[]> {
+  const r = await request('/auth/group-order', { method: 'PATCH', body: JSON.stringify({ order }) });
+  const next = Array.isArray(r?.group_order) ? r.group_order : [];
+  patchMeCache({ group_order: next });
+  return next;
+}
+
 export async function saveBlockedUsers(blocked: string[]): Promise<string[]> {
   const r = await request('/auth/blocked-users', { method: 'PATCH', body: JSON.stringify({ blocked }) });
   const next = Array.isArray(r?.blocked_users) ? r.blocked_users : [];

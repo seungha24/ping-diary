@@ -15,10 +15,11 @@ import IconPlus from '../components/icons/IconPlus';
 import { DiaryEntry, entryDateLabel, stripPhotoMarkers } from '../data/types';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useGroups } from '../context/GroupsContext';
-import { fetchGroupEntries, leaveGroup, deleteGroup, renameGroup, reportContent, saveBlockedUsers, getCachedMe } from '../api';
+import { fetchGroupEntries, leaveGroup, deleteGroup, renameGroup, reportContent, saveBlockedUsers, getCachedMe, uploadPhoto, updateGroupPhoto } from '../api';
 import { notify } from '../notify';
 import { Platform } from 'react-native';
-import { IconUsers, IconBell as IconBellLine, IconSprout, IconSparkle, IconPencil, IconTrash, PersonaIcon } from '../components/icons/Line';
+import { IconUsers, IconBell as IconBellLine, IconSprout, IconSparkle, IconPencil, IconTrash, IconCamera, PersonaIcon } from '../components/icons/Line';
+import * as ImagePicker from 'expo-image-picker';
 
 /** 그룹 나가기용 문/화살표 아이콘 (라인 스타일) */
 function IconExit({ color = '#374151', size = 16 }: { color?: string; size?: number }) {
@@ -231,6 +232,28 @@ export default function GroupScreen() {
   const [groupName, setGroupName] = useState(group.name);
   const [renameOpen, setRenameOpen] = useState(false);
   const [renameValue, setRenameValue] = useState(group.name);
+
+  // 그룹 대표 사진 변경 (멤버 전원에게 보임)
+  async function changeGroupPhoto() {
+    setMenuOpen(false);
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [3, 2],
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets[0]) return;
+    try {
+      const url = await uploadPhoto(result.assets[0].uri);
+      await updateGroupPhoto(group.id, url);
+      await refreshGroups();
+      notify('그룹 대표 사진을 바꿨어요. 멤버 모두에게 보여요.');
+    } catch (e: any) {
+      notify(e?.message ?? '사진 변경에 실패했어요.');
+    }
+  }
 
   async function doRename() {
     const next = renameValue.trim();
@@ -563,6 +586,10 @@ export default function GroupScreen() {
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
             <Text style={styles.actionSheetTitle}>{groupName}</Text>
+            <TouchableOpacity style={styles.menuRow} onPress={changeGroupPhoto}>
+              <IconCamera size={17} color="#374151" />
+              <Text style={styles.actionText}>대표 사진 변경</Text>
+            </TouchableOpacity>
             <TouchableOpacity style={styles.menuRow} onPress={() => { setMenuOpen(false); setRenameValue(groupName); setRenameOpen(true); }}>
               <IconPencil size={17} color="#374151" />
               <Text style={styles.actionText}>그룹 이름 수정</Text>

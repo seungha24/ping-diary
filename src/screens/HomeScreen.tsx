@@ -19,7 +19,7 @@ import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { useGroups } from '../context/GroupsContext';
 import { useAuth } from '../context/AuthContext';
-import { uploadPhoto, updateGroupPhoto, getMe, getCachedMe, setFolderCover, saveFolders, saveHiddenFolders } from '../api';
+import { uploadPhoto, updateGroupPhoto, getMe, getCachedMe, setFolderCover, saveFolders, saveHiddenFolders, saveGroupOrder } from '../api';
 import { notify } from '../notify';
 import Svg, { Path, Line, Circle } from 'react-native-svg';
 import { IconFolder, IconList, IconUsers, IconPencil, IconX, IconCamera } from '../components/icons/Line';
@@ -165,11 +165,96 @@ export default function HomeScreen() {
     };
   }
 
+  // ── 그룹 드래그 재정렬 (폴더와 동일, 순서는 내 계정에 저장) ──
+  const [groupOrder, setGroupOrder] = useState<number[]>(() => getCachedMe()?.group_order ?? []);
+  const orderedGroups = [
+    ...groupOrder.map((id) => groups.find((g) => g.id === id)).filter(Boolean) as typeof groups,
+    ...groups.filter((g) => !groupOrder.includes(g.id)),
+  ];
+
+  const [gDragId, setGDragId] = useState<number | null>(null);
+  const [gDragPos, setGDragPos] = useState({ dx: 0, dy: 0 });
+  const [gHoverIdx, setGHoverIdx] = useState<number | null>(null);
+  const gDragIdRef = useRef<number | null>(null);
+  const gDragIndexRef = useRef(0);
+  const gCellHRef = useRef(148);
+  const gHandlersRef = useRef({ move: (_x: number, _y: number) => {}, release: (_x: number, _y: number) => {} });
+
+  function computeGroupTarget(dx: number, dy: number): number {
+    const i = gDragIndexRef.current;
+    const slotW = gridWRef.current * 0.52;
+    const rowH = gCellHRef.current + 12;
+    const nc = Math.min(1, Math.max(0, (i % 2) + Math.round(dx / slotW)));
+    const nr = Math.max(0, Math.floor(i / 2) + Math.round(dy / rowH));
+    return Math.min(orderedGroups.length - 1, nr * 2 + nc);
+  }
+
+  gHandlersRef.current = {
+    move(dx, dy) {
+      setGDragPos({ dx, dy });
+      setGHoverIdx(computeGroupTarget(dx, dy));
+    },
+    release(dx, dy) {
+      const from = gDragIndexRef.current;
+      const target = computeGroupTarget(dx, dy);
+      gDragIdRef.current = null;
+      setGDragId(null);
+      setGHoverIdx(null);
+      setGDragPos({ dx: 0, dy: 0 });
+      if (target !== from) {
+        const list = [...orderedGroups];
+        const [moved] = list.splice(from, 1);
+        list.splice(target, 0, moved);
+        const ids = list.map((g) => g.id);
+        setGroupOrder(ids);
+        saveGroupOrder(ids).catch(() => notify('순서 저장에 실패했어요.'));
+      }
+    },
+  };
+
+  const gDragPan = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponderCapture: () => gDragIdRef.current != null,
+      onPanResponderMove: (_e, g) => gHandlersRef.current.move(g.dx, g.dy),
+      onPanResponderRelease: (_e, g) => gHandlersRef.current.release(g.dx, g.dy),
+      onPanResponderTerminate: (_e, g) => gHandlersRef.current.release(g.dx, g.dy),
+    })
+  ).current;
+
+  function startGroupDrag(groupId: number, index: number) {
+    gDragIdRef.current = groupId;
+    gDragIndexRef.current = index;
+    setGDragId(groupId);
+    setGDragPos({ dx: 0, dy: 0 });
+    setGHoverIdx(index);
+  }
+
+  // 그룹 드래그 중 미리보기(비켜나기) 순서
+  const gPreviewOrder = (gDragId != null && gHoverIdx != null)
+    ? (() => {
+        const list = [...orderedGroups];
+        const from = list.findIndex((g) => g.id === gDragId);
+        if (from < 0) return null;
+        const [m] = list.splice(from, 1);
+        list.splice(gHoverIdx, 0, m);
+        return list;
+      })()
+    : null;
+
+  function gSlotOffset(fromIdx: number, toIdx: number) {
+    const pitchX = gridWRef.current * 0.52;
+    const rowH = gCellHRef.current + 12;
+    return {
+      x: ((toIdx % 2) - (fromIdx % 2)) * pitchX,
+      y: (Math.floor(toIdx / 2) - Math.floor(fromIdx / 2)) * rowH,
+    };
+  }
+
   // 폴더 커버·사용자 폴더(서버 저장분)를 로그인(토큰 준비) 후 불러오기 — 토큰 늦게 붙어도 재실행
   useEffect(() => {
     if (!token) return;
     getMe()
-      .then((me) => { setFolderCovers(me.folder_covers); setCustomFolders(me.folders); setHiddenFolders(me.hidden_folders); })
+      .then((me) => { setFolderCovers(me.folder_covers); setCustomFolders(me.folders); setHiddenFolders(me.hidden_folders); setGroupOrder(me.group_order); })
       .catch(() => {});
   }, [token]);
 
@@ -613,25 +698,42 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </>
       ) : (
-        <ScrollView contentContainerStyle={styles.folderList}>
+        <ScrollView contentContainerStyle={styles.folderList} scrollEnabled={!gDragId}>
           <Text style={[styles.sectionLabel, { marginBottom: 10 }]}>참여 중인 그룹</Text>
           {groups.length > 0 && (
-            <Text style={styles.folderHint}>그룹을 길게 누르면 대표 사진을 바꿀 수 있어요</Text>
+            <Text style={styles.folderHint}>
+              {gDragId != null ? '원하는 위치로 끌어다 놓으세요' : '그룹을 길게 누른 채 끌면 순서를 바꿀 수 있어요'}
+            </Text>
           )}
           {groups.length === 0 && (
             <Text style={styles.groupEmptyHint}>아직 참여 중인 그룹이 없어요.{'\n'}새 그룹을 만들거나 초대 코드로 참여해보세요.</Text>
           )}
-          <View style={styles.folderGrid}>
-            {groups.map((group) => {
+          <View style={styles.folderGrid} {...gDragPan.panHandlers}>
+            {orderedGroups.map((group, index) => {
               const cover = group.photo_url ?? groupCovers[group.id];
+              const isDragging = gDragId === group.id;
+              let shift = { x: 0, y: 0 };
+              if (gPreviewOrder && !isDragging) {
+                const p = gPreviewOrder.findIndex((g) => g.id === group.id);
+                if (p >= 0 && p !== index) shift = gSlotOffset(index, p);
+              }
               return (
                 <TouchableOpacity
                   key={group.id}
-                  style={[styles.gridCell, styles.glowCard, { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) }]}
+                  style={[
+                    styles.gridCell, styles.glowCard,
+                    { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) },
+                    (shift.x !== 0 || shift.y !== 0) && { transform: [{ translateX: shift.x }, { translateY: shift.y }] },
+                    isDragging && {
+                      transform: [{ translateX: gDragPos.dx }, { translateY: gDragPos.dy }, { scale: 1.05 }],
+                      zIndex: 20, elevation: 10, opacity: 0.92, borderColor: accent, borderWidth: 2,
+                    },
+                  ]}
                   activeOpacity={0.85}
-                  onPress={() => navigation.navigate('Group', { group })}
-                  onLongPress={() => pickGroupCover(group.id)}
+                  onPress={() => !gDragId && navigation.navigate('Group', { group })}
+                  onLongPress={() => startGroupDrag(group.id, index)}
                   delayLongPress={300}
+                  onLayout={index === 0 ? (e) => { gCellHRef.current = e.nativeEvent.layout.height; } : undefined}
                 >
                   {/* 폴더 카드와 동일: 커버 전체 + 반투명 이름칸 오버레이 */}
                   <View style={[styles.folderCoverWrap, { height: 146 }]}>
