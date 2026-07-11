@@ -33,7 +33,7 @@ const FOLDER_EMOJIS = ['📁', '📔', '✈️', '📚', '🍜', '🎵', '💼',
 export default function HomeScreen() {
   const styles = useThemedStyles(lightStyles);
   const navigation = useNavigation<Nav>();
-  const { accent } = useTheme();
+  const { accent, mode } = useTheme();
   const { entries, updateEntry } = useEntries();
   const { groups, refresh: refreshGroups } = useGroups();
   const { token } = useAuth();
@@ -441,7 +441,7 @@ export default function HomeScreen() {
           <Text style={[styles.logo, { color: accent }]}>p!ng</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.bellBtn} onPress={() => navigation.navigate('Notifications')}>
-          <IconBell size={22} dot={hasUnreadNotif} />
+          <IconBell size={22} dot={hasUnreadNotif} color={mode === 'dark' ? '#eef1f7' : '#111827'} />
         </TouchableOpacity>
       </View>
 
@@ -993,7 +993,7 @@ const lightStyles = StyleSheet.create({
   },
   logo: { fontSize: 27, fontWeight: '800', color: '#111827', letterSpacing: -0.5 },
   bellBtn: {
-    width: 36, height: 36, borderRadius: 18,
+    width: 36, height: 36, borderRadius: 10,
     backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
   },
   tabRow: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 12 },
