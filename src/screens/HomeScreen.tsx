@@ -265,13 +265,20 @@ export default function HomeScreen() {
     });
     if (result.canceled || !result.assets[0]) return;
     const localUri = result.assets[0].uri;
+    const prevCover = folderCovers[folderId]; // 실패 시 되돌리기용
     setFolderCovers((prev) => ({ ...prev, [folderId]: localUri })); // 낙관적 표시
     try {
       const url = await uploadPhoto(localUri);
       const covers = await setFolderCover(folderId, url);
       setFolderCovers(covers);
     } catch (e: any) {
-      notify(e?.message ?? '커버 저장에 실패했어요.');
+      // 실패하면 원래 커버로 복구 (바뀐 것처럼 보이는 착시 방지)
+      setFolderCovers((prev) => {
+        const next = { ...prev };
+        if (prevCover) next[folderId] = prevCover; else delete next[folderId];
+        return next;
+      });
+      notify(e?.message ?? '커버 저장에 실패했어요. 다시 시도해주세요.');
     }
   }
 
