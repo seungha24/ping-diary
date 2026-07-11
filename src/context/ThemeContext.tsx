@@ -85,7 +85,9 @@ function initialMode(): ThemeMode {
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [themeKey, setThemeKey] = useState<ThemeKey>(initialTheme);
   const [mode, setModeState] = useState<ThemeMode>(initialMode);
-  const accent = THEMES.find((t) => t.key === themeKey)?.color ?? '#111827';
+  const baseAccent = THEMES.find((t) => t.key === themeKey)?.color ?? '#111827';
+  // '다크' 테마색(#111827)은 다크 모드 배경과 겹쳐 안 보이므로 슬레이트 톤으로 대체
+  const accent = mode === 'dark' && baseAccent === '#111827' ? '#64748b' : baseAccent;
 
   // 네이티브: 저장된 모드 복원
   useEffect(() => {

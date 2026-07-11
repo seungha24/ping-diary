@@ -11,6 +11,8 @@ import { useThemedStyles } from '../theme/themed';
 /** 테마색이 웹에서도 확실히 적용되는 커스텀 토글 (RN Switch가 웹에서 색 무시하는 문제 회피) */
 function ThemeSwitch({ value, onChange, disabled, accent }: { value: boolean; onChange: (v: boolean) => void; disabled?: boolean; accent: string }) {
   const styles = useThemedStyles(lightStyles);
+  const { mode } = useTheme();
+  const offColor = mode === 'dark' ? '#3a465e' : '#e5e7eb';
   return (
     <TouchableOpacity
       activeOpacity={0.85}
@@ -18,7 +20,7 @@ function ThemeSwitch({ value, onChange, disabled, accent }: { value: boolean; on
       onPress={() => onChange(!value)}
       style={[
         styles.switchTrack,
-        { backgroundColor: value ? accent : '#e5e7eb', justifyContent: value ? 'flex-end' : 'flex-start' },
+        { backgroundColor: value ? accent : offColor, justifyContent: value ? 'flex-end' : 'flex-start' },
       ]}
     >
       <View style={styles.switchThumb} />

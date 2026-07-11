@@ -30,7 +30,7 @@ export default function StatsScreen() {
   }
 
   function getMonthBg(count: number): string {
-    if (count === 0) return mode === 'dark' ? '#232834' : '#f3f4f6';
+    if (count === 0) return mode === 'dark' ? '#222c40' : '#f3f4f6';
     if (count >= 15) return accent;                 // 15 개 이상: 가장 진함
     if (count >= 8) return hexToRgba(accent, 0.65); // 8~14 개
     if (count >= 3) return hexToRgba(accent, 0.4);  // 3~7 개
@@ -144,7 +144,7 @@ export default function StatsScreen() {
         <View style={{ width: 36, height: 36 }} />
       </View>
 
-      <ScrollView style={{ backgroundColor: mode === 'dark' ? '#191c24' : '#f9fafb' }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <ScrollView style={{ backgroundColor: mode === 'dark' ? '#0e131e' : '#f9fafb' }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* Summary */}
         <View style={styles.statsGrid}>
           <TouchableOpacity style={styles.statCard} onPress={() => setListOpen(true)} activeOpacity={0.7}>
