@@ -535,16 +535,16 @@ export default function HomeScreen() {
                   <View style={styles.folderCoverOverlay}>
                     <View style={styles.folderHeader}>
                       <TouchableOpacity style={styles.folderBackBtn} onPress={() => setSelectedFolder(null)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                        <IconChev dir="left" size={20} color="#fff" />
+                        <IconChev dir="left" size={24} color="#fff" />
                       </TouchableOpacity>
-                      <Text style={[styles.folderHeaderTitle, { color: '#fff' }]}>{selectedFolder.name}</Text>
+                      <Text style={[styles.folderHeaderTitle, { color: '#fff', fontSize: 18, fontWeight: '700' }]}>{selectedFolder.name}</Text>
                       <View style={styles.folderHeaderActions}>
                         {/* 이름·아이콘 수정, 삭제 */}
                         <TouchableOpacity
                           onPress={() => openEditFolder(selectedFolder)}
                           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                         >
-                          <IconPencil size={17} color="#fff" />
+                          <IconPencil size={20} color="#fff" />
                         </TouchableOpacity>
                       </View>
                     </View>
@@ -1136,7 +1136,7 @@ const lightStyles = StyleSheet.create({
   folderCoverOverlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.28)',
-    justifyContent: 'flex-end',
+    justifyContent: 'center',
   },
   folderCameraChip: {
     width: 28, height: 28, borderRadius: 14,
