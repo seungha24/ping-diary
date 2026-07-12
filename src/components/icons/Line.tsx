@@ -95,6 +95,17 @@ export function IconVerse({ color, size }: IconProps) {
 export function IconShield({ color, size }: IconProps) {
   return <Base size={size} color={color}><Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></Base>;
 }
+export function IconGrump({ color, size }: IconProps) {
+  return (
+    <Base size={size} color={color}>
+      <Circle cx="12" cy="12" r="10" />
+      <Path d="M16 16.5s-1.5-2-4-2-4 2-4 2" />
+      <Line x1="9" y1="9" x2="9.01" y2="9" />
+      <Line x1="15" y1="9" x2="15.01" y2="9" />
+    </Base>
+  );
+}
+
 /** 페르소나별 라인 아이콘 */
 export function PersonaIcon({ persona, color, size }: { persona: string; color?: string; size?: number }) {
   switch (persona) {
@@ -106,6 +117,7 @@ export function PersonaIcon({ persona, color, size }: { persona: string; color?:
     case '전기 작가': return <IconAward color={color} size={size} />;
     case '시인': return <IconVerse color={color} size={size} />;
     case '언제나 내 편': return <IconShield color={color} size={size} />;
+    case '투덜이': return <IconGrump color={color} size={size} />;
     default: return <IconMessage color={color} size={size} />;
   }
 }
