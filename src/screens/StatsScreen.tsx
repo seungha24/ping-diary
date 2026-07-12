@@ -42,6 +42,7 @@ export default function StatsScreen() {
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [listOpen, setListOpen] = useState(false);
   const [monthOpen, setMonthOpen] = useState(false);
+  const [awardsHelpOpen, setAwardsHelpOpen] = useState(false);
 
   // ── 실제 기록 기반 집계 ──
   const now = new Date();
@@ -160,7 +161,7 @@ export default function StatsScreen() {
         <View style={styles.statsGrid}>
           <TouchableOpacity style={styles.statCard} onPress={() => setListOpen(true)} activeOpacity={0.7}>
             <Text style={[styles.statVal, { color: accent }]}>{entries.length} 개</Text>
-            <Text style={styles.statLabel}>총 p!ng</Text>
+            <Text style={styles.statLabel}>전체 p!ng</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.statCard} onPress={() => setMonthOpen(true)} activeOpacity={0.7}>
             <Text style={[styles.statVal, { color: accent }]}>{thisMonthCount} 개</Text>
@@ -211,7 +212,19 @@ export default function StatsScreen() {
           <View style={styles.reportHeader}>
             <IconTrophy size={15} color={accent} />
             <Text style={[styles.cardTitle, { flex: 1 }]}>{reportMonth + 1} 월 p!ng 어워즈</Text>
+            <TouchableOpacity
+              style={[styles.helpBtn, { borderColor: hexToRgba(accent, 0.4) }]}
+              onPress={() => setAwardsHelpOpen((v) => !v)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Text style={[styles.helpBtnText, { color: accent }]}>?</Text>
+            </TouchableOpacity>
           </View>
+          {awardsHelpOpen && (
+            <Text style={styles.reportDesc}>
+              페르소나 심사위원들이 {reportMonth + 1} 월 일기에 상을 드려요. 위 월별 기록에서 다른 달을 누르면 그 달 시상식도 열 수 있어요.
+            </Text>
+          )}
           {monthAwards ? (
             <>
               {monthAwards.awards.map((a, i) => {
@@ -258,9 +271,6 @@ export default function StatsScreen() {
             </>
           ) : (
             <>
-              <Text style={styles.reportDesc}>
-                페르소나 심사위원들이 {reportMonth + 1} 월 일기에 상을 드려요. 위 월별 기록에서 다른 달을 누르면 그 달 시상식도 열 수 있어요.
-              </Text>
               {awardsError && <Text style={styles.reportError}>{awardsError}</Text>}
               <TouchableOpacity
                 style={[styles.reportBtn, { backgroundColor: accent }, awardsLoading && { opacity: 0.6 }]}
@@ -498,6 +508,11 @@ const lightStyles = StyleSheet.create({
   // AI 리포트
   reportHeader: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   reportDesc: { fontSize: 12.5, color: '#9ca3af', lineHeight: 19 },
+  helpBtn: {
+    width: 20, height: 20, borderRadius: 10, borderWidth: 1.2,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  helpBtnText: { fontSize: 12, fontWeight: '700', lineHeight: 14 },
   reportText: { fontSize: 13.5, color: '#374151', lineHeight: 22 },
   reportToggle: { fontSize: 12, fontWeight: '600' },
 
