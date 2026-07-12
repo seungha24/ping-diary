@@ -171,7 +171,7 @@ function GridCard({
   const styles = useThemedStyles(lightStyles);
   const { accent } = useTheme();
   return (
-    <View style={[styles.gridCard, { shadowColor: accent, borderColor: hexToRgba(accent, 0.45) }]}>
+    <View style={[styles.gridCard, { boxShadow: `0 2px 12px 0 ${hexToRgba(accent, 0.27)}` }]}>
       {entry.photo && (
         <Pressable style={{ width: '100%' }} onPress={() => onPhotoPress(entry.photo!)}>
           <PhotoBlock photo={entry.photo} height={90} />
@@ -868,8 +868,7 @@ const lightStyles = StyleSheet.create({
   gridCard: {
     width: '100%',
     backgroundColor: '#ffffff', borderRadius: 14,
-    borderWidth: 1, borderColor: '#f3f4f6',
-    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 3, shadowOffset: { width: 0, height: 1 }, elevation: 1,
+    // 테마색 글로우 (폴더 카드와 동일, boxShadow는 인라인 주입)
     overflow: 'hidden',
   },
   gridBand: { height: 6, width: '100%' },

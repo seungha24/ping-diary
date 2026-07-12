@@ -310,7 +310,12 @@ export default function DiaryDetailScreen() {
             >
               <Text style={styles.aiTitle}>AI 코멘트</Text>
               {aiComment && (
-                <Text style={[styles.aiToggle, { color: accent }]}>{aiOpen ? '접기 ∧' : '펼치기 ∨'}</Text>
+                <>
+                  <Text style={[styles.aiToggle, { color: accent }]}>{aiOpen ? '접기' : '펼치기'}</Text>
+                  <View style={{ transform: [{ rotate: aiOpen ? '180deg' : '0deg' }] }}>
+                    <IconChev dir="down" size={13} color={accent} />
+                  </View>
+                </>
               )}
             </TouchableOpacity>
             {isMine ? (
