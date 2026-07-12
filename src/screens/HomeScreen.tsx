@@ -539,18 +539,15 @@ export default function HomeScreen() {
                     style={styles.folderCoverScrim}
                     pointerEvents="none"
                   />
-                  <View style={styles.folderCoverAlbum}>
-                    {/* 상단: 뒤로가기 / 수정 */}
-                    <View style={styles.folderCoverTopBar}>
-                      <TouchableOpacity onPress={() => setSelectedFolder(null)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                        <IconChev dir="left" size={24} color="#fff" />
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={() => openEditFolder(selectedFolder)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                        <IconPencil size={19} color="#fff" />
-                      </TouchableOpacity>
-                    </View>
-                    {/* 하단 왼쪽: 폴더명 크게 */}
+                  <View style={styles.folderCoverBar}>
+                    <TouchableOpacity onPress={() => setSelectedFolder(null)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                      <IconChev dir="left" size={24} color="#fff" />
+                    </TouchableOpacity>
+                    <View style={{ flex: 1 }} />
                     <Text style={styles.folderCoverName} numberOfLines={1}>{selectedFolder.name}</Text>
+                    <TouchableOpacity onPress={() => openEditFolder(selectedFolder)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                      <IconPencil size={19} color="#fff" />
+                    </TouchableOpacity>
                   </View>
                 </View>
               ) : (
@@ -1141,17 +1138,14 @@ const lightStyles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   folderCoverScrim: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-  // 앨범 스타일 커버: 상단에 컨트롤, 하단 왼쪽에 큰 제목
-  folderCoverAlbum: {
-    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
-    justifyContent: 'space-between',
-    paddingHorizontal: 18, paddingTop: 14, paddingBottom: 14,
-  },
-  folderCoverTopBar: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+  // 커버 하단 한 줄: 왼쪽 뒤로가기 · 오른쪽 폴더명+수정
+  folderCoverBar: {
+    position: 'absolute', left: 0, right: 0, bottom: 0,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingHorizontal: 18, paddingVertical: 14,
   },
   folderCoverName: {
-    fontSize: 24, fontWeight: '800', color: '#fff', letterSpacing: -0.3,
+    fontSize: 19, fontWeight: '800', color: '#fff', letterSpacing: -0.3,
     textShadowColor: 'rgba(0,0,0,0.35)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
   },
   folderCameraChip: {
