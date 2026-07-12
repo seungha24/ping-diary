@@ -261,10 +261,6 @@ export default function DiaryDetailScreen() {
           </>
         )}
 
-        <View style={styles.meta}>
-          {entry.tags.map((t) => <Tag key={t} label={t} />)}
-        </View>
-
         {isMine && (
           <TouchableOpacity style={styles.folderChip} onPress={() => setFolderOpen(true)}>
             <IconFolder size={13} color={accent} />
@@ -294,6 +290,13 @@ export default function DiaryDetailScreen() {
               <AspectPhoto photo={seg.url} minRatio={1} />
             </TouchableOpacity>
           )
+        )}
+
+        {/* 태그 — 블로그처럼 본문 끝에 */}
+        {entry.tags.length > 0 && (
+          <View style={styles.meta}>
+            {entry.tags.map((t) => <Tag key={t} label={t} />)}
+          </View>
         )}
 
         {/* AI 코멘트 */}
