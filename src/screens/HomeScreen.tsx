@@ -3,6 +3,7 @@ import {
   View, Text, ScrollView, StyleSheet, SafeAreaView,
   Modal, Pressable, Image, TextInput, PanResponder, InteractionManager, Animated,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import TouchableOpacity from '../components/Touchable';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -532,22 +533,24 @@ export default function HomeScreen() {
               {folderCovers[selectedFolder.id] ? (
                 <View>
                   <Animated.Image source={{ uri: folderCovers[selectedFolder.id] }} style={[styles.folderCoverBanner, { height: coverHeight }]} />
-                  <View style={styles.folderCoverOverlay}>
-                    <View style={styles.folderHeader}>
-                      <TouchableOpacity style={styles.folderBackBtn} onPress={() => setSelectedFolder(null)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                  <LinearGradient
+                    colors={['rgba(0,0,0,0.35)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.55)']}
+                    locations={[0, 0.45, 1]}
+                    style={styles.folderCoverScrim}
+                    pointerEvents="none"
+                  />
+                  <View style={styles.folderCoverAlbum}>
+                    {/* 상단: 뒤로가기 / 수정 */}
+                    <View style={styles.folderCoverTopBar}>
+                      <TouchableOpacity onPress={() => setSelectedFolder(null)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                         <IconChev dir="left" size={24} color="#fff" />
                       </TouchableOpacity>
-                      <Text style={[styles.folderHeaderTitle, { color: '#fff', fontSize: 18, fontWeight: '700' }]}>{selectedFolder.name}</Text>
-                      <View style={styles.folderHeaderActions}>
-                        {/* 이름·아이콘 수정, 삭제 */}
-                        <TouchableOpacity
-                          onPress={() => openEditFolder(selectedFolder)}
-                          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                        >
-                          <IconPencil size={20} color="#fff" />
-                        </TouchableOpacity>
-                      </View>
+                      <TouchableOpacity onPress={() => openEditFolder(selectedFolder)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                        <IconPencil size={19} color="#fff" />
+                      </TouchableOpacity>
                     </View>
+                    {/* 하단 왼쪽: 폴더명 크게 */}
+                    <Text style={styles.folderCoverName} numberOfLines={1}>{selectedFolder.name}</Text>
                   </View>
                 </View>
               ) : (
@@ -1136,6 +1139,20 @@ const lightStyles = StyleSheet.create({
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.28)',
     justifyContent: 'flex-end',
+  },
+  folderCoverScrim: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
+  // 앨범 스타일 커버: 상단에 컨트롤, 하단 왼쪽에 큰 제목
+  folderCoverAlbum: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    justifyContent: 'space-between',
+    paddingHorizontal: 18, paddingTop: 14, paddingBottom: 14,
+  },
+  folderCoverTopBar: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+  },
+  folderCoverName: {
+    fontSize: 24, fontWeight: '800', color: '#fff', letterSpacing: -0.3,
+    textShadowColor: 'rgba(0,0,0,0.35)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
   },
   folderCameraChip: {
     width: 28, height: 28, borderRadius: 14,
