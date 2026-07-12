@@ -222,9 +222,9 @@ export default function StatsScreen() {
           </View>
           {awardsHelpOpen && (
             <Text style={styles.reportDesc}>
-              한 달 동안 쓴 일기를 페르소나들이 쭉 읽어보고, 마음에 남은 글에 상을 줘요.
+              페르소나 심사위원들이 {reportMonth + 1} 월 일기에 상을 드려요.
               {'\n'}{'\n'}
-              다른 달이 궁금하면 위 월별 기록에서 그 달을 눌러보세요.
+              위 월별 기록에서 다른 달을 누르면 그 달 시상식도 열 수 있어요.
             </Text>
           )}
           {monthAwards ? (
