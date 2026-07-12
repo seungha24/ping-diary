@@ -1098,7 +1098,7 @@ const lightStyles = StyleSheet.create({
   viewToggleText: { fontSize: 12, fontWeight: '600', color: '#9ca3af' },
   folderHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 18, paddingTop: 14, paddingBottom: 12,
+    paddingHorizontal: 18, paddingVertical: 14,
   },
   folderBackBtn: { width: 60 },
   folderBackText: { fontSize: 13, color: '#6b7280' },
@@ -1135,7 +1135,7 @@ const lightStyles = StyleSheet.create({
   folderCoverOverlay: {
     position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.28)',
-    justifyContent: 'flex-start',
+    justifyContent: 'flex-end',
   },
   folderCameraChip: {
     width: 28, height: 28, borderRadius: 14,
