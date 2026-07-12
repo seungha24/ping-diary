@@ -83,14 +83,17 @@ export default function HomeScreen() {
   });
   useEffect(() => { coverScroll.setValue(0); }, [selectedFolder]); // 폴더 바꿀 때 커버 높이 초기화
 
-  // 좌우 스와이프로 개인 ↔ 그룹 전환 (폴더 상세에서는 비활성)
+  // 좌우 스와이프: 폴더 목록에선 개인↔그룹 전환, 폴더 상세에선 왼쪽으로 밀면 나가기
   const swipeStateRef = useRef({ selectedFolder: false });
   const swipePan = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) =>
-        !swipeStateRef.current.selectedFolder &&
         Math.abs(g.dx) > 28 && Math.abs(g.dx) > Math.abs(g.dy) * 2,
       onPanResponderRelease: (_, g) => {
+        if (swipeStateRef.current.selectedFolder) {
+          if (g.dx <= -40) setSelectedFolder(null); // 폴더 상세에서 왼쪽 스와이프 → 폴더 목록으로 나가기
+          return;
+        }
         if (g.dx <= -40) setTab('group');
         else if (g.dx >= 40) setTab('personal');
       },
