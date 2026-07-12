@@ -22,6 +22,7 @@ import IconChart from '../components/icons/IconChart';
 import IconPerson from '../components/icons/IconPerson';
 
 import { DiaryEntry } from '../data/types';
+import { calmFadeSpec, forSafeFade } from './tabTransition';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedStyles } from '../theme/themed';
 
@@ -62,8 +63,10 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        // 탭 전환 페이드는 애니메이션이 끊기면 화면이 투명한 채 멈춰
-        // 회색 빈 화면으로 보이는 문제가 있어 즉시 전환으로 변경
+        // 차분한 페이드 + opacity 하한선: 전환이 끊겨도 회색 빈 화면이 안 됨 (tabTransition.ts)
+        animation: 'fade',
+        transitionSpec: calmFadeSpec,
+        sceneStyleInterpolator: forSafeFade,
         tabBarStyle: styles.tabBar,
         tabBarActiveTintColor: accent,
         tabBarInactiveTintColor: '#9ca3af',
