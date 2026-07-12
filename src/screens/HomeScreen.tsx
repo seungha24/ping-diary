@@ -91,7 +91,7 @@ export default function HomeScreen() {
         Math.abs(g.dx) > 28 && Math.abs(g.dx) > Math.abs(g.dy) * 2,
       onPanResponderRelease: (_, g) => {
         if (swipeStateRef.current.selectedFolder) {
-          if (g.dx <= -40) setSelectedFolder(null); // 폴더 상세에서 왼쪽 스와이프 → 폴더 목록으로 나가기
+          if (g.dx >= 40) setSelectedFolder(null); // 폴더 상세에서 오른쪽으로 밀면 폴더 목록으로 나가기 (iOS 뒤로가기 제스처)
           return;
         }
         if (g.dx <= -40) setTab('group');
