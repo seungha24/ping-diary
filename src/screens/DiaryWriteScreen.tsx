@@ -179,6 +179,7 @@ export default function DiaryWriteScreen() {
   // 본문 맨 앞의 [q:질문] 마커는 분리해서 '오늘의 질문' 선택 상태로
   const initQ = extractQuestion(editEntry?.body ?? '');
   const [selectedPrompt, setSelectedPrompt] = useState<string | null>(initQ.question);
+  const [movingPhotoUrl, setMovingPhotoUrl] = useState<string | null>(null); // 사진 위치 이동 모드
   const [blocks, setBlocks] = useState<EditorBlock[]>(
     () => entryToBlocks(editEntry ? { ...editEntry, body: initQ.rest } : undefined)
   );
@@ -383,7 +384,20 @@ export default function DiaryWriteScreen() {
 
   // 사진 블록 제거 (앞뒤 텍스트는 자동 병합)
   function removePhotoBlock(i: number) {
+    setMovingPhotoUrl((cur) => (cur === (blocks[i] as any)?.url ? null : cur));
     setBlocks((prev) => normalizeBlocks(prev.filter((_, j) => j !== i)));
+  }
+
+  // 사진 위치 이동: 꾹 눌러 이동 모드 진입 → 위/아래로 원하는 자리까지 (url로 추적, 재정렬해도 유지)
+  function movePhotoByUrl(url: string, dir: 1 | -1) {
+    setBlocks((prev) => {
+      const i = prev.findIndex((b) => b.type === 'photo' && b.url === url);
+      const j = i + dir;
+      if (i < 0 || j < 0 || j >= prev.length) return prev;
+      const next = [...prev];
+      [next[i], next[j]] = [next[j], next[i]];
+      return normalizeBlocks(next);
+    });
   }
 
   function dateLabel() {
@@ -572,13 +586,32 @@ export default function DiaryWriteScreen() {
               onSelectionChange={(e) => { focusRef.current = { block: i, sel: e.nativeEvent.selection }; }}
             />
           ) : (
-            <View key={`p${i}`} style={styles.blockPhotoWrap}>
-              <TouchableOpacity activeOpacity={0.9} onPress={() => setLightboxPhoto(b.url)}>
+            <View key={`p${i}`} style={[styles.blockPhotoWrap, movingPhotoUrl === b.url && { borderWidth: 2, borderColor: accent }]}>
+              <TouchableOpacity
+                activeOpacity={0.9}
+                onPress={() => (movingPhotoUrl ? setMovingPhotoUrl(null) : setLightboxPhoto(b.url))}
+                onLongPress={() => setMovingPhotoUrl(b.url)}
+                delayLongPress={280}
+              >
                 <AspectPhoto photo={b.url} minRatio={1} />
               </TouchableOpacity>
-              <TouchableOpacity style={styles.photoRemove} onPress={() => removePhotoBlock(i)}>
-                <Text style={styles.photoRemoveText}>✕</Text>
-              </TouchableOpacity>
+              {movingPhotoUrl === b.url ? (
+                <View style={styles.moveBar}>
+                  <TouchableOpacity style={styles.moveBtn} onPress={() => movePhotoByUrl(b.url, -1)}>
+                    <Text style={styles.moveArrow}>↑</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.moveDone, { backgroundColor: accent }]} onPress={() => setMovingPhotoUrl(null)}>
+                    <Text style={styles.moveDoneText}>완료</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.moveBtn} onPress={() => movePhotoByUrl(b.url, 1)}>
+                    <Text style={styles.moveArrow}>↓</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity style={styles.photoRemove} onPress={() => removePhotoBlock(i)}>
+                  <Text style={styles.photoRemoveText}>✕</Text>
+                </TouchableOpacity>
+              )}
             </View>
           )
         )}
@@ -935,6 +968,21 @@ const lightStyles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   photoRemoveText: { color: '#fff', fontSize: 13, fontWeight: '600' },
+  // 사진 위치 이동 바 (꾹 누르면 나타남)
+  moveBar: {
+    position: 'absolute', bottom: 10, alignSelf: 'center',
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 999,
+    paddingHorizontal: 8, paddingVertical: 6,
+  },
+  moveBtn: {
+    width: 34, height: 34, borderRadius: 17,
+    backgroundColor: 'rgba(255,255,255,0.22)',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  moveArrow: { color: '#fff', fontSize: 18, fontWeight: '700', lineHeight: 20 },
+  moveDone: { paddingHorizontal: 14, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
+  moveDoneText: { color: '#fff', fontSize: 13, fontWeight: '700' },
   mainPhotoBadge: {
     position: 'absolute', top: 8, left: 8,
     backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 8,
