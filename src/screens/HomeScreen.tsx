@@ -48,7 +48,6 @@ export default function HomeScreen() {
   const [, forceNotif] = useState(0);
   useEffect(() => subscribeNotifs(() => forceNotif((v) => v + 1)), []);
   useEffect(() => { refreshNotifs(); }, []); // 실제 알림(AI 코멘트·그룹 새 글) 로드
-  useEffect(() => { coverScroll.setValue(0); }, [selectedFolder]); // 폴더 바꿀 때 커버 높이 초기화
 
   // 홈 첫 화면으로 리셋 (홈 탭·로고 클릭 공용)
   function resetToFirstScreen() {
@@ -81,6 +80,7 @@ export default function HomeScreen() {
     outputRange: [COVER_MAX, COVER_MIN],
     extrapolate: 'clamp',
   });
+  useEffect(() => { coverScroll.setValue(0); }, [selectedFolder]); // 폴더 바꿀 때 커버 높이 초기화
 
   // 좌우 스와이프로 개인 ↔ 그룹 전환 (폴더 상세에서는 비활성)
   const swipeStateRef = useRef({ selectedFolder: false });
