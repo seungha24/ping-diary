@@ -68,6 +68,7 @@ import { useGroups } from '../context/GroupsContext';
 import { uploadPhoto, getCachedMe, patchEntry, generateComment } from '../api';
 import { saveDraft, listDrafts, deleteDraft, DiaryDraft } from '../data/draftStore';
 import { notify } from '../notify';
+import { lightHaptic } from '../haptics';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { useThemedStyles } from '../theme/themed';
 import FadeIn from '../components/FadeIn';
@@ -150,6 +151,7 @@ const PROMPTS = [
 ];
 
 async function playPing() {
+  lightHaptic(); // 효과음과 함께 약한 진동
   try {
     const player = createAudioPlayer(require('../../assets/ping.wav'));
     player.addListener('playbackStatusUpdate', (status) => {
