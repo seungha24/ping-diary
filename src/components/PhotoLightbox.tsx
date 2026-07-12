@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import TouchableOpacity from './Touchable';
 import { getPhotoPlaceholder } from '../data/types';
-import PHOTO_ASSETS from '../data/photoAssets';
 import { IconX } from './icons/Line';
 
 const { width: SW } = Dimensions.get('window');
@@ -30,14 +29,6 @@ export default function PhotoLightbox({ photo, onClose }: Props) {
   // 원본 비율을 재서 레터박스(위아래 검은 띠) 없이 꼭 맞는 박스로 표시
   useEffect(() => {
     if (!photo || photo.startsWith('ph:')) return;
-    if (photo.startsWith('asset:')) {
-      try {
-        const resolved = (Image as any).resolveAssetSource?.(PHOTO_ASSETS[photo.slice(6)]);
-        if (resolved?.width && resolved?.height) setRatio(resolved.width / resolved.height);
-        else setRatio(4 / 3);
-      } catch { setRatio(4 / 3); }
-      return;
-    }
     Image.getSize(photo, (w, h) => { if (w && h) setRatio(w / h); }, () => setRatio(4 / 3));
   }, [photo]);
 
@@ -51,7 +42,6 @@ export default function PhotoLightbox({ photo, onClose }: Props) {
   if (!photo) return null;
 
   const placeholder = photo.startsWith('ph:') ? getPhotoPlaceholder(photo) : null;
-  const assetSource = photo.startsWith('asset:') ? PHOTO_ASSETS[photo.slice(6)] : null;
   // 폰 프레임(393pt) 안에서 원본 비율 그대로 최대한 크게 (레터박스 없음)
   const MAX_W = 345;
   const MAX_H = 640;
@@ -72,7 +62,7 @@ export default function PhotoLightbox({ photo, onClose }: Props) {
               <Text style={{ fontSize: boxW * 0.38 }}>{placeholder.emoji}</Text>
             </View>
           ) : (
-            <Image source={assetSource ?? { uri: photo }} style={styles.image} resizeMode="contain" />
+            <Image source={{ uri: photo }} style={styles.image} resizeMode="contain" />
           )}
 
           <TouchableOpacity style={styles.closeBtn} onPress={close}>

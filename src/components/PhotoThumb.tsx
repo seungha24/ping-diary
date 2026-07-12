@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import { getPhotoPlaceholder } from '../data/types';
-import PHOTO_ASSETS from '../data/photoAssets';
 import { useThemedStyles } from '../theme/themed';
 
 interface Props {
@@ -11,7 +10,6 @@ interface Props {
 }
 
 function resolveSource(photo: string) {
-  if (photo.startsWith('asset:')) return PHOTO_ASSETS[photo.slice(6)];
   return { uri: photo };
 }
 
@@ -51,19 +49,7 @@ export function AspectPhoto({ photo, radius = 0, minRatio = 0.6 }: { photo: stri
 
   useEffect(() => {
     if (!photo || photo.startsWith('ph:')) return;
-    const src = resolveSource(photo);
-    if (src && typeof src === 'object' && 'uri' in src && src.uri) {
-      Image.getSize(src.uri, (w, h) => { if (w && h) setRatio(w / h); }, () => setRatio(4 / 3));
-    } else {
-      // 번들 에셋: 해상도 조회 (실패 시 4:3)
-      try {
-        const resolved = (Image as any).resolveAssetSource?.(src);
-        if (resolved?.width && resolved?.height) setRatio(resolved.width / resolved.height);
-        else setRatio(4 / 3);
-      } catch {
-        setRatio(4 / 3);
-      }
-    }
+    Image.getSize(photo, (w, h) => { if (w && h) setRatio(w / h); }, () => setRatio(4 / 3));
   }, [photo]);
 
   if (!photo) return null;
