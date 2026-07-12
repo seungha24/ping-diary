@@ -284,7 +284,7 @@ export default function DiaryDetailScreen() {
         {/* 본문 — [photo:URL] 마커 자리에 사진이 글 중간에 렌더됨 */}
         {parseBodySegments(bodyText).map((seg, i) =>
           seg.type === 'text' ? (
-            <Text key={i} style={styles.body}>{seg.text}</Text>
+            <Text key={i} style={styles.body} selectable>{seg.text}</Text>
           ) : (
             <TouchableOpacity key={i} style={styles.photoWrapper} activeOpacity={0.9} onPress={() => setLightboxPhoto(seg.url)}>
               <AspectPhoto photo={seg.url} minRatio={1} />
@@ -345,7 +345,7 @@ export default function DiaryDetailScreen() {
                   <Text style={styles.aiRegenText}>{persona} 말투로 코멘트를 다시 쓰고 있어요…</Text>
                 </View>
               ) : (
-                <Text style={styles.aiCommentText}>{aiComment}</Text>
+                <Text style={styles.aiCommentText} selectable>{aiComment}</Text>
               )}
               <TouchableOpacity style={styles.aiReportBtn} onPress={() => setReportConfirmOpen(true)}>
                 <Text style={styles.aiReportText}>부적절한 코멘트인가요? 신고하기</Text>
