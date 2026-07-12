@@ -1099,7 +1099,6 @@ const lightStyles = StyleSheet.create({
   folderHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 20, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
   },
   folderBackBtn: { width: 60 },
   folderBackText: { fontSize: 13, color: '#6b7280' },
