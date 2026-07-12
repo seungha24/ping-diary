@@ -543,8 +543,7 @@ export default function HomeScreen() {
                     <TouchableOpacity onPress={() => setSelectedFolder(null)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                       <IconChev dir="left" size={24} color="#fff" />
                     </TouchableOpacity>
-                    <View style={{ flex: 1 }} />
-                    <Text style={styles.folderCoverName} numberOfLines={1}>{selectedFolder.name}</Text>
+                    <Text style={[styles.folderCoverName, { flex: 1, textAlign: 'center' }]} numberOfLines={1}>{selectedFolder.name}</Text>
                     <TouchableOpacity onPress={() => openEditFolder(selectedFolder)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                       <IconPencil size={19} color="#fff" />
                     </TouchableOpacity>
