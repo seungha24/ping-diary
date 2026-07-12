@@ -171,6 +171,7 @@ function GridCard({
   const styles = useThemedStyles(lightStyles);
   const { accent } = useTheme();
   return (
+    <View style={styles.gridCardShadow}>
     <View style={styles.gridCard}>
       {entry.photo && (
         <Pressable style={{ width: '100%' }} onPress={() => onPhotoPress(entry.photo!)}>
@@ -200,6 +201,7 @@ function GridCard({
           <Text style={styles.gridDate}>{entryDateLabel(entry)}</Text>
         </Pressable>
       </View>
+    </View>
     </View>
   );
 }
@@ -842,7 +844,6 @@ const lightStyles = StyleSheet.create({
     backgroundColor: '#ffffff', borderRadius: 16,
     borderWidth: 1, borderColor: '#f3f4f6',
     shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1,
-    overflow: 'hidden',
   },
   listCardAuthor: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 8 },
   authorAvatar: {
@@ -865,11 +866,14 @@ const lightStyles = StyleSheet.create({
   gridContent: { padding: 12, paddingBottom: 40 },
   gridLayout: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   gridColumn: { flex: 1, gap: 10 },
+  gridCardShadow: {
+    width: '100%', borderRadius: 14, backgroundColor: '#ffffff',
+    shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5, shadowOffset: { width: 0, height: 2 }, elevation: 2,
+  },
   gridCard: {
     width: '100%',
     backgroundColor: '#ffffff', borderRadius: 14,
     borderWidth: 1, borderColor: '#f3f4f6',
-    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1,
     overflow: 'hidden',
   },
   gridBand: { height: 6, width: '100%' },
