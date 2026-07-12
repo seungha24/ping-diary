@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, SafeAreaView, TextInput, ActivityIndicator,
 } from 'react-native';
@@ -48,32 +48,38 @@ export default function StatsScreen() {
   const thisYear = now.getFullYear();
   const thisMonth = now.getMonth(); // 0~11
 
-  // 월별 기록 수 (올해, createdAt 기준)
-  const monthCounts = Array(12).fill(0) as number[];
-  entries.forEach((e) => {
-    const d = new Date(e.createdAt);
-    if (d.getFullYear() === thisYear) monthCounts[d.getMonth()]++;
-  });
+  // 월별 기록 수 (올해, createdAt 기준) — 렌더마다 재계산하지 않게 메모
+  const monthCounts = useMemo(() => {
+    const counts = Array(12).fill(0) as number[];
+    entries.forEach((e) => {
+      const d = new Date(e.createdAt);
+      if (d.getFullYear() === thisYear) counts[d.getMonth()]++;
+    });
+    return counts;
+  }, [entries, thisYear]);
   const thisMonthCount = monthCounts[thisMonth];
   const lastMonthCount = thisMonth === 0 ? 0 : monthCounts[thisMonth - 1];
   const monthDiff = thisMonthCount - lastMonthCount;
 
   // 이번 달에 쓴 p!ng 목록 (시트용)
-  const thisMonthEntries = entries.filter((e) => {
+  const thisMonthEntries = useMemo(() => entries.filter((e) => {
     const d = new Date(e.createdAt);
     return d.getFullYear() === thisYear && d.getMonth() === thisMonth;
-  });
+  }), [entries, thisYear, thisMonth]);
 
   // 연속 기록일: 오늘(또는 어제)부터 거꾸로 하루도 빠짐없이 쓴 날 수
-  const dayKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-  const writtenDays = new Set(entries.map((e) => dayKey(new Date(e.createdAt))));
-  let streak = 0;
-  const cursor = new Date();
-  if (!writtenDays.has(dayKey(cursor))) cursor.setDate(cursor.getDate() - 1); // 오늘 아직 안 썼으면 어제부터
-  while (writtenDays.has(dayKey(cursor))) {
-    streak++;
-    cursor.setDate(cursor.getDate() - 1);
-  }
+  const streak = useMemo(() => {
+    const dayKey = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    const writtenDays = new Set(entries.map((e) => dayKey(new Date(e.createdAt))));
+    let n = 0;
+    const cursor = new Date();
+    if (!writtenDays.has(dayKey(cursor))) cursor.setDate(cursor.getDate() - 1); // 오늘 아직 안 썼으면 어제부터
+    while (writtenDays.has(dayKey(cursor))) {
+      n++;
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    return n;
+  }, [entries]);
 
   // ── 월말 p!ng 어워즈 (페르소나 심사위원 시상식) ──
   const [reportMonth, setReportMonth] = useState(thisMonth); // 시상식을 볼 달 (월별 기록에서 선택)
@@ -114,9 +120,11 @@ export default function StatsScreen() {
     setRevealed((prev) => new Set(prev).add(key));
   }
 
-  const tagCounts: Record<string, number> = {};
-  entries.forEach((e) => e.tags.forEach((t) => { tagCounts[t] = (tagCounts[t] || 0) + 1; }));
-  const topTags = Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const topTags = useMemo(() => {
+    const tagCounts: Record<string, number> = {};
+    entries.forEach((e) => e.tags.forEach((t) => { tagCounts[t] = (tagCounts[t] || 0) + 1; }));
+    return Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  }, [entries]);
   const maxTag = topTags[0]?.[1] || 1;
 
   // 검색어 또는 선택된 태그로 필터링

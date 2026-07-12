@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, SafeAreaView,
-  Modal, Pressable, Image, TextInput, PanResponder,
+  Modal, Pressable, Image, TextInput, PanResponder, InteractionManager,
 } from 'react-native';
 import TouchableOpacity from '../components/Touchable';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -51,9 +51,11 @@ export default function HomeScreen() {
 
   // 홈 첫 화면으로 리셋 (홈 탭·로고 클릭 공용)
   function resetToFirstScreen() {
-    setSelectedFolder(null);
-    setTab('personal');
-    setPersonalView('folder');
+    InteractionManager.runAfterInteractions(() => {
+      setSelectedFolder(null);
+      setTab('personal');
+      setPersonalView('folder');
+    });
   }
 
   // 홈 탭을 누르면 항상 첫 화면(개인 폴더 목록)으로 리셋
@@ -104,7 +106,14 @@ export default function HomeScreen() {
   const [deleteTarget, setDeleteTarget] = useState<DiaryFolder | null>(null);
 
   // 저장된 순서(사용자 재정렬 포함)대로 폴더 목록 구성
-  const allFolders: DiaryFolder[] = mergeFolders(customFolders, hiddenFolders);
+  const allFolders: DiaryFolder[] = useMemo(() => mergeFolders(customFolders, hiddenFolders), [customFolders, hiddenFolders]);
+
+  // 폴더별 p!ng 개수 (셀마다 filter 돌리지 않게 한 번만 집계)
+  const countByFolder = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const e of entries) { const k = e.folder ?? ''; m.set(k, (m.get(k) ?? 0) + 1); }
+    return m;
+  }, [entries]);
 
   // ── 폴더 드래그 재정렬: 길게 눌러 집어서 원하는 위치로 끌어다 놓기 ──
   const [dragId, setDragId] = useState<string | null>(null);
@@ -198,10 +207,10 @@ export default function HomeScreen() {
 
   // ── 그룹 드래그 재정렬 (폴더와 동일, 순서는 내 계정에 저장) ──
   const [groupOrder, setGroupOrder] = useState<number[]>(() => getCachedMe()?.group_order ?? []);
-  const orderedGroups = [
+  const orderedGroups = useMemo(() => [
     ...groupOrder.map((id) => groups.find((g) => g.id === id)).filter(Boolean) as typeof groups,
     ...groups.filter((g) => !groupOrder.includes(g.id)),
-  ];
+  ], [groupOrder, groups]);
 
   const [gDragId, setGDragId] = useState<number | null>(null);
   const [gDragPos, setGDragPos] = useState({ dx: 0, dy: 0 });
@@ -620,7 +629,7 @@ export default function HomeScreen() {
                 onLayout={(e) => { gridWRef.current = e.nativeEvent.layout.width; }}
               >
                 {allFolders.map((folder, index) => {
-                  const count = entries.filter((e) => e.folder === folder.id).length;
+                  const count = countByFolder.get(folder.id) ?? 0;
                   const cover = folderCovers[folder.id];
                   const isDragging = dragId === folder.id;
                   // 드래그 중이면 다른 카드들은 미리보기 위치로 비켜난다

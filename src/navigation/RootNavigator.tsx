@@ -22,7 +22,6 @@ import IconChart from '../components/icons/IconChart';
 import IconPerson from '../components/icons/IconPerson';
 
 import { DiaryEntry } from '../data/types';
-import { calmFadeSpec, forSafeFade } from './tabTransition';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedStyles } from '../theme/themed';
 
@@ -63,10 +62,10 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        // 차분한 페이드 + opacity 하한선: 전환이 끊겨도 회색 빈 화면이 안 됨 (tabTransition.ts)
-        animation: 'fade',
-        transitionSpec: calmFadeSpec,
-        sceneStyleInterpolator: forSafeFade,
+        // 내장 'shift' 전환: 양방향 대칭 (커스텀 페이드는 역방향에서 나가는 화면이 비쳐 보였음)
+        animation: 'shift',
+        // 블러된 탭은 렌더 동결 → 전환 중 무거운 화면 이중 렌더로 인한 버벅임 제거
+        freezeOnBlur: true,
         tabBarStyle: styles.tabBar,
         tabBarActiveTintColor: accent,
         tabBarInactiveTintColor: '#9ca3af',

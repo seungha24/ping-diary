@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, ScrollView } from 'react-native';
 import TouchableOpacity from '../components/Touchable';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -57,21 +57,24 @@ export default function CalendarScreen() {
     setMonth(next.getMonth());
   }
 
-  const daysInMonth = getDaysInMonth(year, month);
-  const firstDay = getFirstDayOfMonth(year, month);
-  const calGrid: (number | null)[] = [
-    ...Array(firstDay).fill(null),
-    ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
-  ];
-  while (calGrid.length % 7 !== 0) calGrid.push(null);
+  const calGrid = useMemo(() => {
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDay = getFirstDayOfMonth(year, month);
+    const grid: (number | null)[] = [
+      ...Array(firstDay).fill(null),
+      ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+    ];
+    while (grid.length % 7 !== 0) grid.push(null);
+    return grid;
+  }, [year, month]);
 
   const { entries } = useEntries();
   const todayDate = today.getDate();
   // 보고 있는 연·월에 작성된 글만 (일 숫자만 비교하면 다른 달에도 중복 표시됨)
-  const monthEntries = entries.filter((e) => {
+  const monthEntries = useMemo(() => entries.filter((e) => {
     const d = new Date(e.createdAt);
     return d.getFullYear() === year && d.getMonth() === month;
-  });
+  }), [entries, year, month]);
   const selectedEntries = monthEntries.filter((e) => e.dates.includes(selectedDay));
 
   return (
