@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createBottomTabNavigator, BottomTabBar } from '@react-navigation/bottom-tabs';
 import { StyleSheet } from 'react-native';
 
 import HomeScreen from '../screens/HomeScreen';
@@ -21,6 +21,7 @@ import IconCal from '../components/icons/IconCal';
 import IconChart from '../components/icons/IconChart';
 import IconPerson from '../components/icons/IconPerson';
 
+import AdBanner from '../components/AdBanner';
 import { DiaryEntry } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedStyles } from '../theme/themed';
@@ -55,11 +56,20 @@ export type TabParamList = {
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
 
+// 배너 광고를 노출할 탭 (감성 화면인 작성·상세는 탭바가 없어 자동 제외)
+const AD_ROUTES = new Set(['Home', 'Stats']);
+
 function MainTabs() {
   const { accent } = useTheme();
   const styles = useThemedStyles(lightStyles);
   return (
     <Tab.Navigator
+      tabBar={(props) => (
+        <>
+          {AD_ROUTES.has(props.state.routes[props.state.index].name) && <AdBanner />}
+          <BottomTabBar {...props} />
+        </>
+      )}
       screenOptions={({ route }) => ({
         headerShown: false,
         // 내장 'shift' 전환: 양방향 대칭 (커스텀 페이드는 역방향에서 나가는 화면이 비쳐 보였음)
