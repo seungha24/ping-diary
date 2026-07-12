@@ -124,7 +124,7 @@ function ListCard({
   const styles = useThemedStyles(lightStyles);
   const { accent } = useTheme();
   return (
-    <View style={[styles.listCard, { boxShadow: `0 2px 12px 0 ${hexToRgba(accent, 0.16)}` }]}>
+    <View style={styles.listCard}>
       <View style={styles.listCardAuthor}>
         <View style={styles.authorAvatar}>
           {entry.avatarUrl
@@ -171,7 +171,7 @@ function GridCard({
   const styles = useThemedStyles(lightStyles);
   const { accent } = useTheme();
   return (
-    <View style={[styles.gridCard, { boxShadow: `0 2px 12px 0 ${hexToRgba(accent, 0.16)}` }]}>
+    <View style={styles.gridCard}>
       {entry.photo && (
         <Pressable style={{ width: '100%' }} onPress={() => onPhotoPress(entry.photo!)}>
           <AspectPhoto photo={entry.photo} minRatio={0.85} />
@@ -840,7 +840,8 @@ const lightStyles = StyleSheet.create({
   listContent: { padding: 16, gap: 14, paddingBottom: 40 },
   listCard: {
     backgroundColor: '#ffffff', borderRadius: 16,
-    // 테마색 글로우 (그리드와 동일, boxShadow 인라인 주입)
+    borderWidth: 1, borderColor: '#f3f4f6',
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1,
     overflow: 'hidden',
   },
   listCardAuthor: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 16, paddingTop: 14, paddingBottom: 8 },
@@ -867,7 +868,8 @@ const lightStyles = StyleSheet.create({
   gridCard: {
     width: '100%',
     backgroundColor: '#ffffff', borderRadius: 14,
-    // 테마색 글로우 (폴더 카드와 동일, boxShadow는 인라인 주입)
+    borderWidth: 1, borderColor: '#f3f4f6',
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 1,
     overflow: 'hidden',
   },
   gridBand: { height: 6, width: '100%' },
