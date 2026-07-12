@@ -588,7 +588,7 @@ export default function DiaryWriteScreen() {
               onSelectionChange={(e) => { focusRef.current = { block: i, sel: e.nativeEvent.selection }; }}
             />
           ) : (
-            <View key={`p${i}`} style={[styles.blockPhotoWrap, movingPhotoUrl === b.url && { borderWidth: 2, borderColor: accent }]}>
+            <View key={`p-${b.url}`} style={[styles.blockPhotoWrap, movingPhotoUrl === b.url && { borderWidth: 2, borderColor: accent }]}>
               <TouchableOpacity
                 activeOpacity={0.9}
                 onPress={() => (movingPhotoUrl ? setMovingPhotoUrl(null) : setLightboxPhoto(b.url))}
