@@ -8,7 +8,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Line, Rect, Circle, Path } from 'react-native-svg';
 import { RootStackParamList } from '../navigation/RootNavigator';
-import { PhotoBlock, PhotoThumb } from '../components/PhotoThumb';
+import { PhotoBlock, PhotoThumb, AspectPhoto } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
 import Tag from '../components/Tag';
 import IconChev from '../components/icons/IconChev';
@@ -174,7 +174,7 @@ function GridCard({
     <View style={[styles.gridCard, { boxShadow: `0 2px 12px 0 ${hexToRgba(accent, 0.27)}` }]}>
       {entry.photo && (
         <Pressable style={{ width: '100%' }} onPress={() => onPhotoPress(entry.photo!)}>
-          <PhotoBlock photo={entry.photo} height={90} />
+          <AspectPhoto photo={entry.photo} minRatio={0.85} />
         </Pressable>
       )}
       <View style={styles.gridCardBody}>
@@ -872,14 +872,14 @@ const lightStyles = StyleSheet.create({
     overflow: 'hidden',
   },
   gridBand: { height: 6, width: '100%' },
-  gridCardBody: { padding: 10, gap: 5 },
-  gridAuthorRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  gridCardBody: { padding: 12, gap: 6 },
+  gridAuthorRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 1 },
   gridAuthorName: { fontSize: 12, fontWeight: '600', color: '#374151' },
-  gridTitle: { fontSize: 12, fontWeight: '600', color: '#111827', lineHeight: 16 },
-  gridPreview: { fontSize: 11, color: '#9ca3af', lineHeight: 15 },
-  gridTagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
+  gridTitle: { fontSize: 13, fontWeight: '700', color: '#111827', lineHeight: 18 },
+  gridPreview: { fontSize: 11.5, color: '#9ca3af', lineHeight: 16 },
+  gridTagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 1 },
   gridTag: { fontSize: 10, color: '#9ca3af', backgroundColor: '#f3f4f6', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 99 },
-  gridDate: { fontSize: 10, color: '#d1d5db', marginTop: 2 },
+  gridDate: { fontSize: 10.5, color: '#d1d5db', marginTop: 3 },
 
   // Modal bottom sheet
   overlayWrap: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'flex-end' },
