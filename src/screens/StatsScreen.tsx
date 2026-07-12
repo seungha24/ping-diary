@@ -222,8 +222,7 @@ export default function StatsScreen() {
           </View>
           {awardsHelpOpen && (
             <Text style={styles.reportDesc}>
-              페르소나 심사위원들이 {reportMonth + 1} 월 일기에 상을 드려요.
-              {'\n'}{'\n'}
+              페르소나 심사위원들이 {reportMonth + 1} 월 일기에 상을 드려요.{'\n'}
               위 월별 기록에서 다른 달을 누르면 그 달 시상식도 열 수 있어요.
             </Text>
           )}
