@@ -116,6 +116,18 @@ export function IconCat({ color, size }: IconProps) {
   );
 }
 
+export function IconDumbbell({ color, size }: IconProps) {
+  return (
+    <Base size={size} color={color}>
+      <Path d="M6.5 6.5v11" />
+      <Path d="M17.5 6.5v11" />
+      <Path d="M3 9.5v5" />
+      <Path d="M21 9.5v5" />
+      <Path d="M6.5 12h11" />
+    </Base>
+  );
+}
+
 /** 페르소나별 라인 아이콘 */
 export function PersonaIcon({ persona, color, size }: { persona: string; color?: string; size?: number }) {
   switch (persona) {
@@ -129,6 +141,7 @@ export function PersonaIcon({ persona, color, size }: { persona: string; color?:
     case '언제나 내 편': return <IconShield color={color} size={size} />;
     case '투덜이': return <IconGrump color={color} size={size} />;
     case '고양이': return <IconCat color={color} size={size} />;
+    case '트레이너': return <IconDumbbell color={color} size={size} />;
     default: return <IconMessage color={color} size={size} />;
   }
 }
