@@ -584,19 +584,13 @@ export default function HomeScreen() {
                     style={[styles.viewToggleBtn, personalView === 'folder' && { backgroundColor: accent }]}
                     onPress={() => setPersonalView('folder')}
                   >
-                    <View style={styles.viewToggleInner}>
-                      <IconFolder size={12} color={personalView === 'folder' ? '#fff' : '#9ca3af'} />
-                      <Text style={[styles.viewToggleText, personalView === 'folder' && { color: '#fff' }]}>폴더</Text>
-                    </View>
+                    <IconFolder size={15} color={personalView === 'folder' ? '#fff' : '#9ca3af'} />
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.viewToggleBtn, personalView === 'all' && { backgroundColor: accent }]}
                     onPress={() => setPersonalView('all')}
                   >
-                    <View style={styles.viewToggleInner}>
-                      <IconList size={12} color={personalView === 'all' ? '#fff' : '#9ca3af'} />
-                      <Text style={[styles.viewToggleText, personalView === 'all' && { color: '#fff' }]}>전체</Text>
-                    </View>
+                    <IconList size={15} color={personalView === 'all' ? '#fff' : '#9ca3af'} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -1053,7 +1047,8 @@ const lightStyles = StyleSheet.create({
     alignSelf: 'flex-end',
   },
   viewToggleBtn: {
-    paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8,
+    paddingHorizontal: 13, paddingVertical: 7, borderRadius: 8,
+    alignItems: 'center', justifyContent: 'center',
   },
   viewToggleInner: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   viewToggleText: { fontSize: 12, fontWeight: '600', color: '#9ca3af' },
