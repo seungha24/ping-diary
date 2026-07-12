@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, SafeAreaView,
-  Modal, Pressable, Image, TextInput, PanResponder, InteractionManager,
+  Modal, Pressable, Image, TextInput, PanResponder, InteractionManager, Animated,
 } from 'react-native';
 import TouchableOpacity from '../components/Touchable';
 import { useNavigation, useRoute } from '@react-navigation/native';
@@ -48,6 +48,7 @@ export default function HomeScreen() {
   const [, forceNotif] = useState(0);
   useEffect(() => subscribeNotifs(() => forceNotif((v) => v + 1)), []);
   useEffect(() => { refreshNotifs(); }, []); // 실제 알림(AI 코멘트·그룹 새 글) 로드
+  useEffect(() => { coverScroll.setValue(0); }, [selectedFolder]); // 폴더 바꿀 때 커버 높이 초기화
 
   // 홈 첫 화면으로 리셋 (홈 탭·로고 클릭 공용)
   function resetToFirstScreen() {
@@ -71,6 +72,15 @@ export default function HomeScreen() {
   }, [resetParam]);
   const hasUnreadNotif = getNotifUnread() > 0;
   const [selectedFolder, setSelectedFolder] = useState<DiaryFolder | null>(null);
+
+  // 폴더 커버: 스크롤 내리면 높이가 줄어드는 컬랩싱 헤더
+  const COVER_MAX = 176, COVER_MIN = 84;
+  const coverScroll = useRef(new Animated.Value(0)).current;
+  const coverHeight = coverScroll.interpolate({
+    inputRange: [0, COVER_MAX - COVER_MIN],
+    outputRange: [COVER_MAX, COVER_MIN],
+    extrapolate: 'clamp',
+  });
 
   // 좌우 스와이프로 개인 ↔ 그룹 전환 (폴더 상세에서는 비활성)
   const swipeStateRef = useRef({ selectedFolder: false });
@@ -521,7 +531,7 @@ export default function HomeScreen() {
             <>
               {folderCovers[selectedFolder.id] ? (
                 <View>
-                  <Image source={{ uri: folderCovers[selectedFolder.id] }} style={styles.folderCoverBanner} />
+                  <Animated.Image source={{ uri: folderCovers[selectedFolder.id] }} style={[styles.folderCoverBanner, { height: coverHeight }]} />
                   <View style={styles.folderCoverOverlay}>
                     <View style={styles.folderHeader}>
                       <TouchableOpacity style={styles.folderBackBtn} onPress={() => setSelectedFolder(null)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
@@ -556,7 +566,14 @@ export default function HomeScreen() {
                   </View>
                 </View>
               )}
-              <ScrollView contentContainerStyle={styles.list}>
+              <Animated.ScrollView
+                contentContainerStyle={styles.list}
+                scrollEventThrottle={16}
+                onScroll={Animated.event(
+                  [{ nativeEvent: { contentOffset: { y: coverScroll } } }],
+                  { useNativeDriver: false },
+                )}
+              >
                 {entries.filter((e) => e.folder === selectedFolder.id).length === 0 && (
                   <View style={styles.emptyState}>
                     <Text style={styles.emptyText}>아직 p!ng가 없어요</Text>
@@ -599,7 +616,7 @@ export default function HomeScreen() {
                     </View>
                   </TouchableOpacity>
                 ))}
-              </ScrollView>
+              </Animated.ScrollView>
             </>
           ) : (
             /* ── 폴더 목록 / 전체 보기 ── */
