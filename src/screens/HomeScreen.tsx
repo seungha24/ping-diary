@@ -69,6 +69,22 @@ export default function HomeScreen() {
   }, [resetParam]);
   const hasUnreadNotif = getNotifUnread() > 0;
   const [selectedFolder, setSelectedFolder] = useState<DiaryFolder | null>(null);
+
+  // 좌우 스와이프로 개인 ↔ 그룹 전환 (폴더 상세에서는 비활성)
+  const swipeStateRef = useRef({ selectedFolder: false });
+  const swipePan = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, g) =>
+        !swipeStateRef.current.selectedFolder &&
+        Math.abs(g.dx) > 28 && Math.abs(g.dx) > Math.abs(g.dy) * 2,
+      onPanResponderRelease: (_, g) => {
+        if (g.dx <= -40) setTab('group');
+        else if (g.dx >= 40) setTab('personal');
+      },
+    })
+  ).current;
+  swipeStateRef.current.selectedFolder = !!selectedFolder;
+
   const [personalView, setPersonalView] = useState<'folder' | 'all'>('folder');
   // 캐시된 프로필로 초기화 → 폴더 커버·목록이 즉시 표시(시간차 제거), 아래 useEffect가 갱신
   const [folderCovers, setFolderCovers] = useState<Record<string, string>>(() => getCachedMe()?.folder_covers ?? {});
@@ -484,6 +500,7 @@ export default function HomeScreen() {
         </PopWrap>
       )}
 
+      <View style={{ flex: 1 }} {...swipePan.panHandlers}>
       <FadeIn
         key={tab === 'group' ? 'group' : selectedFolder ? `folder-${selectedFolder.id}` : `personal-${personalView}`}
         style={{ flex: 1 }}
@@ -779,6 +796,7 @@ export default function HomeScreen() {
         </ScrollView>
       )}
       </FadeIn>
+      </View>
 
       {shareEntry && (
         <SheetWrap style={styles.overlayWrap}>
