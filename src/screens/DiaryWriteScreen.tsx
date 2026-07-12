@@ -183,7 +183,6 @@ export default function DiaryWriteScreen() {
     () => entryToBlocks(editEntry ? { ...editEntry, body: initQ.rest } : undefined)
   );
   const focusRef = useRef({ block: 0, sel: { start: 0, end: 0 } }); // 사진 삽입 위치(커서)
-  const [blockHeights, setBlockHeights] = useState<Record<number, number>>({}); // 자동 높이
   const [tags, setTags] = useState<string[]>(editEntry?.tags ?? []);
   const [tagInput, setTagInput] = useState('');
   const [persona, setPersona] = useState(editEntry?.persona ?? '선생님');
@@ -277,7 +276,6 @@ export default function DiaryWriteScreen() {
     const dq = extractQuestion(d.body);
     setSelectedPrompt(dq.question);
     setBlocks(entryToBlocks({ body: dq.rest, photo: null, photos: [] }));
-    setBlockHeights({}); // 블록 구성이 통째로 바뀌므로 높이 캐시 재측정
     setTags(d.tags);
     setPersona(d.persona);
     setFolder(d.folder);
@@ -376,7 +374,6 @@ export default function DiaryWriteScreen() {
         );
         return normalizeBlocks(next);
       });
-      setBlockHeights({}); // 인덱스 기반 높이 캐시는 블록이 밀리면 어긋나므로 재측정
     } catch (e: any) {
       notify(e?.message ?? '사진 업로드에 실패했어요. 다시 시도해주세요.');
     } finally {
@@ -387,7 +384,6 @@ export default function DiaryWriteScreen() {
   // 사진 블록 제거 (앞뒤 텍스트는 자동 병합)
   function removePhotoBlock(i: number) {
     setBlocks((prev) => normalizeBlocks(prev.filter((_, j) => j !== i)));
-    setBlockHeights({}); // 인덱스가 당겨지므로 높이 캐시 재측정
   }
 
   function dateLabel() {
@@ -559,10 +555,9 @@ export default function DiaryWriteScreen() {
               key={`t${i}`}
               style={[
                 styles.bodyInput,
-                // 사진 앞뒤에 자동으로 끼는 빈 텍스트(스페이서)는 최소 높이만, 실제 입력칸만 넉넉하게
-                b.text === '' && blocks.length > 1
-                  ? { minHeight: Math.max(24, blockHeights[i] ?? 0) }
-                  : { minHeight: Math.max(blocks.length === 1 ? 180 : 44, blockHeights[i] ?? 0) },
+                // multiline이 내용에 맞춰 자동으로 늘어나므로 '최소 높이'만 지정.
+                // (예전엔 인덱스별 측정 높이를 주입했는데, 블록 순서가 바뀌면 남의 높이가 남아 여백이 튀었음)
+                { minHeight: blocks.length === 1 ? 180 : (b.text === '' ? 22 : 40) },
               ]}
               value={b.text}
               multiline
@@ -575,10 +570,6 @@ export default function DiaryWriteScreen() {
               }
               onFocus={() => { focusRef.current.block = i; }}
               onSelectionChange={(e) => { focusRef.current = { block: i, sel: e.nativeEvent.selection }; }}
-              onContentSizeChange={(e) => {
-                const h = Math.ceil(e.nativeEvent.contentSize.height);
-                setBlockHeights((p) => (p[i] === h ? p : { ...p, [i]: h }));
-              }}
             />
           ) : (
             <View key={`p${i}`} style={styles.blockPhotoWrap}>
