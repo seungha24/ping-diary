@@ -559,7 +559,10 @@ export default function DiaryWriteScreen() {
               key={`t${i}`}
               style={[
                 styles.bodyInput,
-                { minHeight: Math.max(blocks.length === 1 ? 180 : 44, blockHeights[i] ?? 0) },
+                // 사진 앞뒤에 자동으로 끼는 빈 텍스트(스페이서)는 최소 높이만, 실제 입력칸만 넉넉하게
+                b.text === '' && blocks.length > 1
+                  ? { minHeight: Math.max(24, blockHeights[i] ?? 0) }
+                  : { minHeight: Math.max(blocks.length === 1 ? 180 : 44, blockHeights[i] ?? 0) },
               ]}
               value={b.text}
               multiline
