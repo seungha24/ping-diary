@@ -19,6 +19,9 @@ export interface Notif {
 
 let notifs: Notif[] = [];
 let refreshing = false;
+// 갱신 중에 '모두 읽음'이 호출되면 갱신이 끝난 뒤 한 번 더 적용한다
+// (알림창을 첫 로딩이 끝나기 전에 들어갔다 나가도 빨간 점이 확실히 사라지게)
+let markAllPending = false;
 const listeners = new Set<() => void>();
 
 const READ_KEY = 'ping_notif_read';
@@ -160,6 +163,13 @@ export async function refreshNotifs() {
     items.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
     const readSet = loadReadSet();
     notifs = items.slice(0, 50).map((n) => ({ ...n, read: readSet.has(n.id) }));
+    // 갱신 도중 '모두 읽음'이 호출됐다면 새로 만든 목록에도 적용
+    if (markAllPending) {
+      markAllPending = false;
+      notifs.forEach((n) => readSet.add(n.id));
+      persistReadSet(readSet);
+      notifs = notifs.map((n) => (n.read ? n : { ...n, read: true }));
+    }
     emit();
   } finally {
     refreshing = false;
@@ -175,6 +185,7 @@ export function getUnreadCount(): number {
 }
 
 export function markAllRead() {
+  if (refreshing) markAllPending = true; // 갱신이 끝난 뒤에도 한 번 더 적용
   const readSet = loadReadSet();
   notifs.forEach((n) => readSet.add(n.id));
   persistReadSet(readSet);

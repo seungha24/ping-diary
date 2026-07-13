@@ -1,8 +1,11 @@
-import React from 'react';
-import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
+import React, { useRef } from 'react';
+import {
+  NavigationContainer, DefaultTheme, DarkTheme, useNavigationContainerRef,
+} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator, BottomTabBar } from '@react-navigation/bottom-tabs';
 import { StyleSheet } from 'react-native';
+import { usePostHog } from 'posthog-react-native';
 
 import HomeScreen from '../screens/HomeScreen';
 import CalendarScreen from '../screens/CalendarScreen';
@@ -103,8 +106,19 @@ export default function RootNavigator() {
     ? { ...DarkTheme, colors: { ...DarkTheme.colors, background: '#0e131e', card: '#171f2e', border: '#2c384f' } }
     : { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: '#ffffff' } };
   const contentStyle = { backgroundColor: mode === 'dark' ? '#0e131e' : '#ffffff' };
+  // PostHog 화면 추적: 프로바이더가 컨테이너 밖이라 autocapture 대신 라우트 변경 시 직접 전송
+  const posthog = usePostHog();
+  const navRef = useNavigationContainerRef<RootStackParamList>();
+  const routeNameRef = useRef<string | undefined>(undefined);
+  const trackScreen = () => {
+    const name = navRef.getCurrentRoute()?.name;
+    if (name && name !== routeNameRef.current) {
+      routeNameRef.current = name;
+      posthog?.screen(name);
+    }
+  };
   return (
-    <NavigationContainer theme={navTheme}>
+    <NavigationContainer ref={navRef} theme={navTheme} onReady={trackScreen} onStateChange={trackScreen}>
       <Stack.Navigator initialRouteName="Main" screenOptions={{ headerShown: false, contentStyle }}>
         <Stack.Screen name="Main" component={MainTabs} />
         <Stack.Screen name="DiaryWrite" component={DiaryWriteScreen} options={{ presentation: 'modal' }} />

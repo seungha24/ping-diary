@@ -53,7 +53,9 @@ function Analytics({ children }: { children: React.ReactNode }) {
     <PostHogProvider
       apiKey={POSTHOG_KEY}
       options={{ host: POSTHOG_HOST }}
-      autocapture={{ captureTouches: true, captureScreens: true }}
+      // captureScreens는 NavigationContainer 안에서만 동작해 여기선 끄고,
+      // RootNavigator에서 onStateChange로 직접 화면 이벤트를 보낸다
+      autocapture={{ captureTouches: true, captureScreens: false }}
     >
       {children}
     </PostHogProvider>
