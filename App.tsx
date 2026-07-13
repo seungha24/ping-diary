@@ -2,6 +2,7 @@ import 'react-native-gesture-handler';
 import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import * as Updates from 'expo-updates';
+import { PostHogProvider, usePostHog } from 'posthog-react-native';
 import RootNavigator from './src/navigation/RootNavigator';
 import LoginScreen from './src/screens/LoginScreen';
 import ResetPasswordScreen from './src/screens/ResetPasswordScreen';
@@ -13,6 +14,7 @@ import ToastHost from './src/components/ToastHost';
 import ErrorBoundary from './src/components/ErrorBoundary';
 import { notify } from './src/notify';
 import { registerPush } from './src/push';
+import { POSTHOG_KEY, POSTHOG_HOST } from './src/config';
 
 /** 다크 모드에 맞춰 상태바 글자색 전환 */
 function ThemedStatusBar() {
@@ -27,6 +29,35 @@ function PushRegistrar() {
     if (authed) registerPush();
   }, [authed]);
   return null;
+}
+
+/** 로그인/로그아웃에 맞춰 PostHog 사용자 식별을 동기화 (이벤트를 사용자에 연결) */
+function AnalyticsIdentify() {
+  const posthog = usePostHog();
+  const { authed, email } = useAuth();
+  useEffect(() => {
+    if (!posthog) return;
+    if (authed && email) posthog.identify(email, { email });
+    else posthog.reset();
+  }, [posthog, authed, email]);
+  return null;
+}
+
+/**
+ * PostHog 분석 프로바이더. 키가 설정된 경우에만 감싸고,
+ * 미설정이면 아무 것도 하지 않아 안전하게 no-op 된다.
+ */
+function Analytics({ children }: { children: React.ReactNode }) {
+  if (!POSTHOG_KEY) return <>{children}</>;
+  return (
+    <PostHogProvider
+      apiKey={POSTHOG_KEY}
+      options={{ host: POSTHOG_HOST }}
+      autocapture={{ captureTouches: true, captureScreens: true }}
+    >
+      {children}
+    </PostHogProvider>
+  );
 }
 
 /** 백그라운드에서 새 버전 다운로드가 끝나면 토스트로 알려줌 */
@@ -64,20 +95,23 @@ export default function App() {
   }, []);
 
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <EntriesProvider>
-          <GroupsProvider>
-            <ThemedStatusBar />
-            <ErrorBoundary>
-              <Gate />
-            </ErrorBoundary>
-            <PushRegistrar />
-            <UpdateWatcher />
-            <ToastHost />
-          </GroupsProvider>
-        </EntriesProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <Analytics>
+      <ThemeProvider>
+        <AuthProvider>
+          <EntriesProvider>
+            <GroupsProvider>
+              <ThemedStatusBar />
+              <ErrorBoundary>
+                <Gate />
+              </ErrorBoundary>
+              <PushRegistrar />
+              <AnalyticsIdentify />
+              <UpdateWatcher />
+              <ToastHost />
+            </GroupsProvider>
+          </EntriesProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </Analytics>
   );
 }
