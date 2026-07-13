@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, StyleSheet,
   SafeAreaView, Pressable, TextInput, ActivityIndicator, Modal, Image, Keyboard,
+  RefreshControl,
 } from 'react-native';
 import KeyboardDismissButton from '../components/KeyboardDismissButton';
 import TouchableOpacity from '../components/Touchable';
@@ -326,6 +327,14 @@ export default function GroupScreen() {
   const [loading, setLoading] = useState(true);
 
   // 그룹 공유 피드(멤버들의 '친구 공개' p!ng)를 서버에서 로드
+  async function loadFeed() {
+    try {
+      const rows = await fetchGroupEntries(group.id);
+      setEntries(sortByNewest(rows.map(mapGroupEntry)));
+    } catch {
+      // 새로고침 실패 시 기존 목록 유지 (첫 로드 실패면 빈 목록 그대로)
+    }
+  }
   useEffect(() => {
     let cancelled = false;
     fetchGroupEntries(group.id)
@@ -334,6 +343,17 @@ export default function GroupScreen() {
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [group.id]);
+
+  // 당겨서 새로고침 — 그룹 피드 + 그룹 정보(멤버 수 등) 재조회
+  const [refreshing, setRefreshing] = useState(false);
+  async function handleRefresh() {
+    setRefreshing(true);
+    try {
+      await Promise.all([loadFeed(), refreshGroups()]);
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   function toggleShare(id: number) {
     setSharedAiComments((prev) => {
@@ -514,7 +534,7 @@ export default function GroupScreen() {
           <Text style={styles.feedEmptyHint}>p!ng를 '친구 공개'로 저장하면 그룹에 나타나요.</Text>
         </View>
       ) : viewMode === 'list' ? (
-        <ScrollView contentContainerStyle={styles.listContent}>
+        <ScrollView contentContainerStyle={styles.listContent} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#9ca3af" colors={[accent]} />}>
           {entries.map((entry) => (
             <ListCard
               key={entry.id}
@@ -528,7 +548,7 @@ export default function GroupScreen() {
           ))}
         </ScrollView>
       ) : (
-        <ScrollView contentContainerStyle={styles.gridContent}>
+        <ScrollView contentContainerStyle={styles.gridContent} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#9ca3af" colors={[accent]} />}>
           {/* 2열 독립 컬럼(마소너리) — 짧은 일기는 카드도 짧게, 줄 맞춤 없이 자연스럽게 쌓임 */}
           <View style={styles.gridLayout}>
             {[0, 1].map((col) => (

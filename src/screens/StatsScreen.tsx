@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, SafeAreaView, TextInput, ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import TouchableOpacity from '../components/Touchable';
 import { useNavigation } from '@react-navigation/native';
@@ -25,7 +26,14 @@ export default function StatsScreen() {
   const tabSwipe = useTabSwipe('Profile', 'Calendar'); // 좌우 스와이프로 옆 탭 이동
   const navigation = useNavigation<Nav>();
   const { accent, mode } = useTheme();
-  const { entries } = useEntries();
+  const { entries, refresh: refreshEntries } = useEntries();
+
+  // 당겨서 새로고침 — 통계의 근거 데이터(일기 목록) 재조회
+  const [refreshing, setRefreshing] = useState(false);
+  async function handleRefresh() {
+    setRefreshing(true);
+    try { await refreshEntries(); } finally { setRefreshing(false); }
+  }
 
   // 개수 기준 단계형 그라데이션 (기록이 쌓일수록 진해짐) — 다크 모드 색 대응
   function getMonthTextColor(count: number): string {
@@ -186,7 +194,13 @@ export default function StatsScreen() {
         <View style={{ width: 36, height: 36 }} />
       </View>
 
-      <ScrollView style={{ backgroundColor: mode === 'dark' ? '#0e131e' : '#f9fafb' }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        style={{ backgroundColor: mode === 'dark' ? '#0e131e' : '#f9fafb' }}
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#9ca3af" colors={[accent]} />}
+      >
         {/* Summary */}
         <View style={styles.statsGrid}>
           <TouchableOpacity style={styles.statCard} onPress={() => setListOpen(true)} activeOpacity={0.7}>

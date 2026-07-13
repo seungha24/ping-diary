@@ -12,6 +12,7 @@ interface EntriesContextValue {
   updateEntry: (entry: DiaryEntry) => void;
   updateLocal: (entry: DiaryEntry) => void;
   deleteEntry: (id: number) => void;
+  refresh: () => Promise<void>; // 당겨서 새로고침 등 수동 재조회
 }
 
 const EntriesContext = createContext<EntriesContextValue>({
@@ -21,6 +22,7 @@ const EntriesContext = createContext<EntriesContextValue>({
   updateEntry: () => {},
   updateLocal: () => {},
   deleteEntry: () => {},
+  refresh: async () => {},
 });
 
 export function EntriesProvider({ children }: { children: React.ReactNode }) {
@@ -107,8 +109,16 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
     });
   }
 
+  // 당겨서 새로고침 등 수동 재조회 (실패 시 기존 목록 유지)
+  async function refresh() {
+    try {
+      const list = await fetchEntries();
+      setEntries(sortByNewest(list));
+    } catch {}
+  }
+
   return (
-    <EntriesContext.Provider value={{ entries, loading, addEntry, updateEntry, updateLocal, deleteEntry }}>
+    <EntriesContext.Provider value={{ entries, loading, addEntry, updateEntry, updateLocal, deleteEntry, refresh }}>
       {children}
     </EntriesContext.Provider>
   );

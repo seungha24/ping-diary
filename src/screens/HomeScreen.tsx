@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, SafeAreaView,
   Modal, Pressable, Image, TextInput, PanResponder, InteractionManager, Animated,
+  RefreshControl,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import TouchableOpacity from '../components/Touchable';
@@ -39,9 +40,23 @@ export default function HomeScreen() {
   const styles = useThemedStyles(lightStyles);
   const navigation = useNavigation<Nav>();
   const { accent, mode } = useTheme();
-  const { entries, updateEntry } = useEntries();
+  const { entries, updateEntry, refresh: refreshEntries } = useEntries();
   const { groups, refresh: refreshGroups } = useGroups();
   const { token } = useAuth();
+
+  // 당겨서 새로고침 — 일기·그룹·알림을 한 번에 재조회
+  const [refreshing, setRefreshing] = useState(false);
+  async function handleRefresh() {
+    setRefreshing(true);
+    try {
+      await Promise.all([refreshEntries(), refreshGroups(), refreshNotifs()]);
+    } finally {
+      setRefreshing(false);
+    }
+  }
+  const refreshControl = (
+    <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#9ca3af" colors={[accent]} />
+  );
   const [tab, setTab] = useState<'personal' | 'group'>('personal');
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const [zoomedGroup, setZoomedGroup] = useState<{ emoji: string; photo?: string; name: string } | null>(null);
@@ -577,6 +592,7 @@ export default function HomeScreen() {
               <Animated.ScrollView
                 contentContainerStyle={styles.list}
                 scrollEventThrottle={16}
+                refreshControl={refreshControl}
                 onScroll={Animated.event(
                   [{ nativeEvent: { contentOffset: { y: coverScroll } } }],
                   { useNativeDriver: false },
@@ -647,7 +663,7 @@ export default function HomeScreen() {
               </View>
 
               {personalView === 'folder' ? (
-            <ScrollView contentContainerStyle={styles.folderList} scrollEnabled={!dragId}>
+            <ScrollView contentContainerStyle={styles.folderList} scrollEnabled={!dragId} refreshControl={refreshControl}>
               <View
                 style={styles.folderGrid}
                 {...dragPan.panHandlers}
@@ -708,7 +724,7 @@ export default function HomeScreen() {
               </View>
             </ScrollView>
               ) : (
-              <ScrollView contentContainerStyle={styles.list}>
+              <ScrollView contentContainerStyle={styles.list} refreshControl={refreshControl}>
                 {entries.length === 0 && (
                   <View style={styles.emptyState}>
                     <Text style={styles.emptyText}>아직 p!ng가 없어요</Text>
@@ -768,7 +784,7 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </>
       ) : (
-        <ScrollView contentContainerStyle={styles.folderList} scrollEnabled={!gDragId}>
+        <ScrollView contentContainerStyle={styles.folderList} scrollEnabled={!gDragId} refreshControl={refreshControl}>
           <Text style={[styles.sectionLabel, { marginBottom: 10 }]}>참여 중인 그룹</Text>
           {groups.length === 0 && (
             <Text style={styles.groupEmptyHint}>아직 참여 중인 그룹이 없어요.{'\n'}새 그룹을 만들거나 초대 코드로 참여해보세요.</Text>
