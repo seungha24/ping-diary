@@ -265,12 +265,12 @@ export default function DiaryWriteScreen() {
   // 임시저장 후 내용을 더 고치면 '저장됨 ✓' 해제 (최신 내용까지 저장된 것처럼 보이지 않게)
   useEffect(() => { setDraftSaved(false); }, [title, blocks, tags]);
 
-  /** 현재 작성 중인 내용을 임시저장함에 저장한다 (이어쓰던 초안이면 갱신) */
-  async function handleSaveDraft() {
+  /** 현재 작성 중인 내용을 임시저장함에 저장한다 (이어쓰던 초안이면 갱신). 성공 여부 반환 */
+  async function handleSaveDraft(): Promise<boolean> {
     const draftBody = (selectedPrompt ? `[q:${selectedPrompt}]\n` : '') + blocksToBody(blocks);
     if (!title.trim() && !draftBody.trim()) {
       notify('내용을 입력한 뒤 임시저장할 수 있어요.');
-      return;
+      return false;
     }
     const firstPhoto = (blocks.find((b) => b.type === 'photo') as any)?.url ?? null;
     try {
@@ -287,9 +287,31 @@ export default function DiaryWriteScreen() {
       setDrafts(await listDrafts());
       setDraftSaved(true);
       notify('임시저장했어요. 임시저장함에서 이어쓸 수 있어요.');
+      return true;
     } catch {
       notify('임시저장에 실패했어요.');
+      return false;
     }
+  }
+
+  // ── 취소 시 임시저장 확인 ──
+  const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
+
+  /** 취소: 새 글에 쓰다 만 내용이 있으면 임시저장 여부를 먼저 묻는다 */
+  function handleCancel() {
+    const hasContent = title.trim().length > 0 || blocksToBody(blocks).trim().length > 0;
+    if (!editEntry && hasContent && !draftSaved) {
+      setExitConfirmOpen(true);
+      return;
+    }
+    navigation.goBack();
+  }
+
+  /** 임시저장하고 나가기 (저장 실패 시엔 화면에 남는다) */
+  async function saveDraftAndExit() {
+    const ok = await handleSaveDraft();
+    setExitConfirmOpen(false);
+    if (ok) navigation.goBack();
   }
 
   /** 임시저장함의 초안을 작성 화면으로 불러온다 */
@@ -434,7 +456,7 @@ export default function DiaryWriteScreen() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={handleCancel}>
           <Text style={styles.cancelText}>취소</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{editEntry ? 'p!ng 수정' : '오늘의 p!ng'}</Text>
@@ -899,6 +921,29 @@ export default function DiaryWriteScreen() {
       </SheetWrap>
       )}
 
+      {/* 취소 시 임시저장 확인 */}
+      {exitConfirmOpen && (
+      <SheetWrap style={styles.overlayWrap}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setExitConfirmOpen(false)}>
+          <TouchableOpacity activeOpacity={1}>
+            <View style={styles.exitCard}>
+              <Text style={styles.exitTitle}>쓰던 p!ng을 임시저장할까요?</Text>
+              <Text style={styles.exitSub}>임시저장하면 임시저장함에서 이어쓸 수 있어요.</Text>
+              <TouchableOpacity style={[styles.exitSaveBtn, { backgroundColor: accent }]} onPress={saveDraftAndExit}>
+                <Text style={styles.exitSaveText}>임시저장하고 나가기</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.exitDiscardBtn} onPress={() => { setExitConfirmOpen(false); navigation.goBack(); }}>
+                <Text style={styles.exitDiscardText}>저장 안 하고 나가기</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.exitKeepBtn} onPress={() => setExitConfirmOpen(false)}>
+                <Text style={styles.exitKeepText}>계속 쓰기</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </SheetWrap>
+      )}
+
       {lightboxPhoto && (
         <PhotoLightbox photo={lightboxPhoto} onClose={() => setLightboxPhoto(null)} />
       )}
@@ -1139,4 +1184,17 @@ const lightStyles = StyleSheet.create({
     paddingVertical: 12, alignItems: 'center',
   },
   calConfirmText: { color: '#ffffff', fontSize: 14, fontWeight: '600' },
+  // 취소 시 임시저장 확인 카드
+  exitCard: {
+    backgroundColor: '#ffffff', borderRadius: 20, padding: 22, width: 300, gap: 8,
+    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 8,
+  },
+  exitTitle: { fontSize: 16, fontWeight: '700', color: '#111827' },
+  exitSub: { fontSize: 13, color: '#6b7280', lineHeight: 19, marginBottom: 8 },
+  exitSaveBtn: { borderRadius: 12, paddingVertical: 13, alignItems: 'center' },
+  exitSaveText: { color: '#ffffff', fontSize: 14, fontWeight: '600' },
+  exitDiscardBtn: { borderRadius: 12, paddingVertical: 13, alignItems: 'center', backgroundColor: '#f3f4f6' },
+  exitDiscardText: { fontSize: 14, fontWeight: '600', color: '#ef4444' },
+  exitKeepBtn: { paddingVertical: 10, alignItems: 'center' },
+  exitKeepText: { fontSize: 13, color: '#9ca3af', fontWeight: '500' },
 });
