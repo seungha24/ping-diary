@@ -122,32 +122,33 @@ function IconRefresh({ color, size = 16 }: IconProps) {
 }
 function IconQuote({ color, size = 16 }: IconProps) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+    // 180도 회전 → 여는 따옴표(“) 방향
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={color} style={{ transform: [{ rotate: '180deg' }] }}>
       <Path d="M7 7h5v5c0 2.4-1.7 4.3-4.1 4.9l-.4-1.5c1.3-.3 2.2-1.1 2.4-2.3H7V7zm7 0h5v5c0 2.4-1.7 4.3-4.1 4.9l-.4-1.5c1.3-.3 2.2-1.1 2.4-2.3H14V7z" />
     </Svg>
   );
 }
 
-/** AI 프롬프트 질문 (새로고침으로 순환) */
+/** AI 프롬프트 질문 (새로고침으로 순환) — 부드러운 반말 톤 */
 const PROMPTS = [
-  '오늘 솔직히 어땠어요?',
-  '오늘 뭐가 제일 별로였어요?',
-  '요즘 뭐가 제일 재밌어요?',
-  '오늘 뭐 먹었어요? 맛있었어요?',
-  '오늘 누구 때문에 웃었어요?',
-  '오늘 언제 시간이 제일 빨리 갔어요?',
-  '오늘 제일 귀찮았던 건 뭐였어요?',
-  '요즘 돈을 어디에 제일 많이 써요?',
-  '잠은 잘 자요? 어제 몇 시에 잤어요?',
-  '요즘 무슨 생각하면서 지내요?',
-  '오늘 후회되는 거 하나 있어요?',
-  '요즘 누가 제일 자주 생각나요?',
-  '오늘 아무한테도 말 안 한 거, 있지 않아요?',
-  '요즘 뭐가 제일 불안해요?',
-  '오늘 나한테 잘한 거 하나만 적어봐요',
-  '별일 없었으면, 별일 없는 하루는 어땠어요?',
-  '오늘 같은 하루가 반복돼도 괜찮아요?',
-  '요즘의 나, 몇 점이에요?',
+  '오늘 솔직히 어땠어?',
+  '오늘 뭐가 제일 별로였어?',
+  '요즘 뭐가 제일 재밌어?',
+  '오늘 뭐 먹었어? 맛있었어?',
+  '오늘 누구 때문에 웃었어?',
+  '오늘 언제 시간이 제일 빨리 갔어?',
+  '오늘 제일 귀찮았던 건 뭐였어?',
+  '요즘 돈을 어디에 제일 많이 써?',
+  '요즘 잠은 잘 자? 어제 몇 시에 잤어?',
+  '요즘 무슨 생각하면서 지내?',
+  '오늘 후회되는 거 하나 있어?',
+  '요즘 누가 제일 자주 생각나?',
+  '오늘 아무한테도 말 안 한 거, 있지 않아?',
+  '요즘 뭐가 제일 불안해?',
+  '오늘 나한테 잘한 거 하나만 적어보는 건 어때?',
+  '별일 없었으면, 별일 없는 하루는 어땠어?',
+  '오늘 같은 하루가 반복돼도 괜찮을까?',
+  '요즘의 나, 몇 점일까?',
 ];
 
 async function playPing() {
@@ -561,7 +562,7 @@ export default function DiaryWriteScreen() {
             { backgroundColor: hexToRgba(accent, selectedPrompt ? 0.18 : 0.1), borderColor: hexToRgba(accent, selectedPrompt ? 0.5 : 0.2) },
           ]}
         >
-          <IconQuote color={accent} size={15} />
+          <IconQuote color={accent} size={20} />
           <View style={{ flex: 1 }}>
             <Text style={styles.promptText}>{selectedPrompt ?? PROMPTS[promptIndex]}</Text>
             <Text style={[styles.promptSelectHint, { color: accent }]}>
