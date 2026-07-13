@@ -13,10 +13,10 @@ import { notify } from '../notify';
 
 /** 내 일기 리마인더 시간 선택지 */
 const REMINDER_HOURS = [
-  { hour: 8, label: '아침 8시' },
-  { hour: 12, label: '낮 12시' },
-  { hour: 20, label: '저녁 8시' },
-  { hour: 22, label: '밤 10시' },
+  { hour: 8, label: 'AM 8:00' },
+  { hour: 12, label: 'PM 12:00' },
+  { hour: 20, label: 'PM 8:00' },
+  { hour: 22, label: 'PM 10:00' },
 ];
 
 /** 테마색이 웹에서도 확실히 적용되는 커스텀 토글 (RN Switch가 웹에서 색 무시하는 문제 회피) */
