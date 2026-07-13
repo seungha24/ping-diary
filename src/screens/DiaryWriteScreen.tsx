@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   View, Text, ScrollView, TextInput,
   StyleSheet, SafeAreaView, Modal, Image, ActivityIndicator, Keyboard,
+  PanResponder, Animated as RNAnimated, Platform,
 } from 'react-native';
 import TouchableOpacity from '../components/Touchable';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -182,10 +183,73 @@ export default function DiaryWriteScreen() {
   // 본문 맨 앞의 [q:질문] 마커는 분리해서 '오늘의 질문' 선택 상태로
   const initQ = extractQuestion(editEntry?.body ?? '');
   const [selectedPrompt, setSelectedPrompt] = useState<string | null>(initQ.question);
-  const [movingPhotoUrl, setMovingPhotoUrl] = useState<string | null>(null); // 사진 위치 이동 모드
+  const [movingPhotoUrl, setMovingPhotoUrl] = useState<string | null>(null); // 사진 드래그 이동 중
   const [blocks, setBlocks] = useState<EditorBlock[]>(
     () => entryToBlocks(editEntry ? { ...editEntry, body: initQ.rest } : undefined)
   );
+  // ── 사진 꾹 눌러 드래그로 위치 이동 ──
+  const blocksRef = useRef<EditorBlock[]>([]);
+  const blockHeights = useRef<Record<number, number>>({}); // 블록 index → 측정 높이 (onLayout)
+  const dragY = useRef(new RNAnimated.Value(0)).current;   // 드래그 중 사진의 화면상 이동량
+  const drag = useRef({ active: false, url: '', base: 0 }); // base: 스왑으로 이미 소화된 이동량
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const BLOCK_GAP = 12;
+
+  function endPhotoDrag() {
+    if (holdTimer.current) { clearTimeout(holdTimer.current); holdTimer.current = null; }
+    if (!drag.current.active) return;
+    drag.current.active = false;
+    setMovingPhotoUrl(null);
+    RNAnimated.spring(dragY, { toValue: 0, useNativeDriver: Platform.OS !== 'web', friction: 8 }).start();
+  }
+
+  // 드래그 중 손가락을 따라가다, 옆 블록 높이의 60%를 넘으면 그 블록과 자리를 바꾼다 (실시간 스왑)
+  const photoDragPan = useRef(
+    PanResponder.create({
+      // 드래그 모드가 켜진 뒤의 움직임만 가로챈다 (평소엔 스크롤·탭 그대로)
+      onMoveShouldSetPanResponderCapture: () => drag.current.active,
+      onPanResponderTerminationRequest: () => !drag.current.active,
+      onPanResponderMove: (_, g) => {
+        if (!drag.current.active) return;
+        const dy = g.dy - drag.current.base;
+        dragY.setValue(dy);
+        const list = blocksRef.current;
+        const i = list.findIndex((b) => b.type === 'photo' && (b as any).url === drag.current.url);
+        if (i < 0) return;
+        if (dy < 0 && i > 0) {
+          const hUp = (blockHeights.current[i - 1] ?? 0) + BLOCK_GAP;
+          if (hUp > BLOCK_GAP && dy < -hUp * 0.6) {
+            movePhotoByUrl(drag.current.url, -1);
+            drag.current.base -= hUp;
+            dragY.setValue(g.dy - drag.current.base);
+          }
+        } else if (dy > 0 && i < list.length - 1) {
+          const hDown = (blockHeights.current[i + 1] ?? 0) + BLOCK_GAP;
+          if (hDown > BLOCK_GAP && dy > hDown * 0.6) {
+            movePhotoByUrl(drag.current.url, 1);
+            drag.current.base += hDown;
+            dragY.setValue(g.dy - drag.current.base);
+          }
+        }
+      },
+      onPanResponderRelease: () => endPhotoDrag(),
+      onPanResponderTerminate: () => endPhotoDrag(),
+    })
+  ).current;
+
+  /** 사진에 손가락을 올렸을 때: 280ms 유지하면 드래그 모드 시작 */
+  function startHold(url: string) {
+    if (holdTimer.current) clearTimeout(holdTimer.current);
+    holdTimer.current = setTimeout(() => {
+      drag.current = { active: true, url, base: 0 };
+      dragY.setValue(0);
+      setMovingPhotoUrl(url); // 스크롤 잠금 + 들어올린 스타일
+    }, 280);
+  }
+  function cancelHold() {
+    if (holdTimer.current) { clearTimeout(holdTimer.current); holdTimer.current = null; }
+  }
+  blocksRef.current = blocks;
   const focusRef = useRef({ block: 0, sel: { start: 0, end: 0 } }); // 사진 삽입 위치(커서)
   const [tags, setTags] = useState<string[]>(editEntry?.tags ?? []);
   const [tagInput, setTagInput] = useState('');
@@ -534,7 +598,17 @@ export default function DiaryWriteScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+      {/* 드래그 제스처는 래퍼에서 캡처 (드래그 모드일 때만 — 평소 스크롤·탭은 그대로) */}
+      <View style={{ flex: 1 }} {...photoDragPan.panHandlers}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        // iOS: 키보드가 올라오면 그만큼 인셋을 줘서 커서/글자가 가려지지 않게
+        automaticallyAdjustKeyboardInsets
+        // 사진 드래그 중에는 스크롤이 손가락을 뺏지 않게 잠금
+        scrollEnabled={!movingPhotoUrl}
+      >
         {/* 임시저장함 배너 (새 글에서만) */}
         {!editEntry && drafts.length > 0 && (
           <FadeIn style={[styles.draftBanner, { borderColor: hexToRgba(accent, 0.3), backgroundColor: hexToRgba(accent, 0.07) }]}>
@@ -635,35 +709,38 @@ export default function DiaryWriteScreen() {
               }
               onFocus={() => { focusRef.current.block = i; }}
               onSelectionChange={(e) => { focusRef.current = { block: i, sel: e.nativeEvent.selection }; }}
+              onLayout={(e) => { blockHeights.current[i] = e.nativeEvent.layout.height; }}
             />
           ) : (
-            <View key={`p-${b.url}`} style={[styles.blockPhotoWrap, movingPhotoUrl === b.url && { borderWidth: 2, borderColor: accent }]}>
+            <RNAnimated.View
+              key={`p-${b.url}`}
+              onLayout={(e) => { blockHeights.current[i] = e.nativeEvent.layout.height; }}
+              // 손가락을 280ms 유지하면 드래그 모드 — 그대로 끌어서 위치 이동
+              onTouchStart={() => startHold(b.url)}
+              onTouchMove={() => { if (!drag.current.active) cancelHold(); }}
+              onTouchEnd={() => { cancelHold(); endPhotoDrag(); }}
+              style={[
+                styles.blockPhotoWrap,
+                movingPhotoUrl === b.url && {
+                  transform: [{ translateY: dragY }, { scale: 1.03 }],
+                  zIndex: 10, elevation: 8,
+                  shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 16, shadowOffset: { width: 0, height: 8 },
+                  borderWidth: 2, borderColor: accent, borderRadius: 14,
+                },
+              ]}
+            >
               <TouchableOpacity
                 activeOpacity={0.9}
-                onPress={() => (movingPhotoUrl ? setMovingPhotoUrl(null) : setLightboxPhoto(b.url))}
-                onLongPress={() => setMovingPhotoUrl(b.url)}
-                delayLongPress={280}
+                onPress={() => { if (!movingPhotoUrl) setLightboxPhoto(b.url); }}
               >
                 <AspectPhoto photo={b.url} minRatio={1} />
               </TouchableOpacity>
-              {movingPhotoUrl === b.url ? (
-                <View style={styles.moveBar}>
-                  <TouchableOpacity style={styles.moveBtn} onPress={() => movePhotoByUrl(b.url, -1)}>
-                    <Text style={styles.moveArrow}>↑</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.moveDone, { backgroundColor: accent }]} onPress={() => setMovingPhotoUrl(null)}>
-                    <Text style={styles.moveDoneText}>완료</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.moveBtn} onPress={() => movePhotoByUrl(b.url, 1)}>
-                    <Text style={styles.moveArrow}>↓</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
+              {movingPhotoUrl !== b.url && (
                 <TouchableOpacity style={styles.photoRemove} onPress={() => removePhotoBlock(i)}>
                   <Text style={styles.photoRemoveText}>✕</Text>
                 </TouchableOpacity>
               )}
-            </View>
+            </RNAnimated.View>
           )
         )}
 
@@ -728,6 +805,7 @@ export default function DiaryWriteScreen() {
           <IconChev dir="right" size={16} color="#9ca3af" />
         </TouchableOpacity>
       </ScrollView>
+      </View>
 
       {/* 페르소나 선택 모달 */}
       {/* 임시저장함 모달 */}
@@ -1042,20 +1120,6 @@ const lightStyles = StyleSheet.create({
   },
   photoRemoveText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   // 사진 위치 이동 바 (꾹 누르면 나타남)
-  moveBar: {
-    position: 'absolute', bottom: 10, alignSelf: 'center',
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 999,
-    paddingHorizontal: 8, paddingVertical: 6,
-  },
-  moveBtn: {
-    width: 34, height: 34, borderRadius: 17,
-    backgroundColor: 'rgba(255,255,255,0.22)',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  moveArrow: { color: '#fff', fontSize: 18, fontWeight: '700', lineHeight: 20 },
-  moveDone: { paddingHorizontal: 14, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
-  moveDoneText: { color: '#fff', fontSize: 13, fontWeight: '700' },
   mainPhotoBadge: {
     position: 'absolute', top: 8, left: 8,
     backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 8,
