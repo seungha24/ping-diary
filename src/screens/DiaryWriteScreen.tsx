@@ -674,7 +674,7 @@ export default function DiaryWriteScreen() {
             : (
               <>
                 <IconCamera color="#6b7280" size={14} />
-                <Text style={styles.inlinePhotoBtnText}>사진 넣기</Text>
+                <Text style={styles.inlinePhotoBtnText}>사진 추가</Text>
               </>
             )}
         </TouchableOpacity>
