@@ -97,9 +97,7 @@ function MainTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: '홈' }} />
       <Tab.Screen name="Calendar" component={CalendarScreen} options={{ tabBarLabel: '달력' }} />
-      {/* 통계는 집계·차트가 무거워 처음 그릴 때 회색 배경만 몇 프레임 보이는 문제가 있어
-          이 탭만 동결을 끄고(lazy까지 꺼서) 앱 시작 때 미리 그려둔다 — 전환 즉시 완성 화면이 보이게 */}
-      <Tab.Screen name="Stats" component={StatsScreen} options={{ tabBarLabel: '통계', freezeOnBlur: false, lazy: false }} />
+      <Tab.Screen name="Stats" component={StatsScreen} options={{ tabBarLabel: '통계' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: '프로필' }} />
     </Tab.Navigator>
   );
