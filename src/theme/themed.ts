@@ -68,7 +68,7 @@ function darkifySheet<T extends Record<string, any>>(sheet: T): T {
 const cache = new WeakMap<object, any>();
 
 /** 흰색에 테마색을 아주 살짝 섞은 배경색 (순백이 심심하지 않게, 그라데이션 방해 없는 수준) */
-export function accentTintedWhite(accent: string, amount = 0.035): string {
+export function accentTintedWhite(accent: string, amount = 0.02): string {
   const ch = (i: number) => parseInt(accent.slice(i, i + 2), 16);
   const mix = (c: number) => Math.round(255 + (c - 255) * amount).toString(16).padStart(2, '0');
   return `#${mix(ch(1))}${mix(ch(3))}${mix(ch(5))}`;
