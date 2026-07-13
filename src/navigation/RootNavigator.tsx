@@ -76,11 +76,11 @@ function MainTabs() {
       )}
       screenOptions={({ route }) => ({
         headerShown: false,
-        // 탭 전환 애니메이션 없음 (iOS 표준) — 'shift'는 전환 중 빈 프레임이 생겨
-        // 기기에 따라 회색 화면이 노출되는 문제가 있어 제거
-        animation: 'none',
-        // 전환 중 씬 뒤에 비치는 배경을 명시 — 기본값(회색)이 새어 보이는 것 방지
-        sceneStyle: { backgroundColor: mode === 'dark' ? '#0e131e' : '#ffffff' },
+        // 내장 'shift' 전환: 양방향 대칭 (커스텀 페이드는 역방향에서 나가는 화면이 비쳐 보였음)
+        animation: 'shift',
+        // 전환 중 씬 뒤에 비치는 배경을 페이지 배경과 '완전히 같은 색'으로 —
+        // 빈 프레임이 생겨도 색이 같아 눈에 보이지 않는다 (기본값 회색 노출 방지)
+        sceneStyle: { backgroundColor: mode === 'dark' ? '#0e131e' : accentTintedWhite(accent) },
         // 블러된 탭은 렌더 동결 → 전환 중 무거운 화면 이중 렌더로 인한 버벅임 제거
         freezeOnBlur: true,
         tabBarStyle: styles.tabBar,
