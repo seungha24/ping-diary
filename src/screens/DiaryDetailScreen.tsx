@@ -475,7 +475,6 @@ export default function DiaryDetailScreen() {
                     style={[styles.personaRow, active && { borderColor: accent, backgroundColor: hexToRgba(accent, 0.08) }]}
                     onPress={() => handleChangeFolder(f.id)}
                   >
-                    <Text style={styles.folderEmoji}>{f.emoji}</Text>
                     <Text style={[styles.personaLabel, active && { color: accent, fontWeight: '600' }]}>{f.name}</Text>
                     {active && <Text style={[styles.personaCheck, { color: accent }]}>✓</Text>}
                   </TouchableOpacity>
@@ -598,7 +597,6 @@ const lightStyles = StyleSheet.create({
   },
   folderChipText: { fontSize: 13, color: '#374151', fontWeight: '600' },
   folderList: { maxHeight: 320 },
-  folderEmoji: { fontSize: 18, width: 22, textAlign: 'center' },
   aiCommentBox: {
     backgroundColor: '#f9fafb', borderRadius: 14,
     borderWidth: 1, borderColor: '#e5e7eb', padding: 16,
