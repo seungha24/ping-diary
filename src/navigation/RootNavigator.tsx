@@ -27,7 +27,7 @@ import IconPerson from '../components/icons/IconPerson';
 import AdBanner from '../components/AdBanner';
 import { DiaryEntry } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
-import { useThemedStyles } from '../theme/themed';
+import { useThemedStyles, accentTintedWhite } from '../theme/themed';
 
 /** 네비게이션에서 넘기는 그룹 정보 (서버 그룹 기반) */
 export interface GroupNav {
@@ -100,12 +100,13 @@ function MainTabs() {
 }
 
 export default function RootNavigator() {
-  const { mode } = useTheme();
-  // 전환 중 비치는 배경을 모드에 맞춰서 다크에서 흰 번쩍임이 없게
+  const { mode, accent } = useTheme();
+  // 전환 중 비치는 배경을 모드에 맞춰서: 다크는 네이비, 라이트는 페이지와 같은 테마 틴트
+  const lightBg = accentTintedWhite(accent);
   const navTheme = mode === 'dark'
     ? { ...DarkTheme, colors: { ...DarkTheme.colors, background: '#0e131e', card: '#171f2e', border: '#2c384f' } }
-    : { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: '#ffffff' } };
-  const contentStyle = { backgroundColor: mode === 'dark' ? '#0e131e' : '#ffffff' };
+    : { ...DefaultTheme, colors: { ...DefaultTheme.colors, background: lightBg } };
+  const contentStyle = { backgroundColor: mode === 'dark' ? '#0e131e' : lightBg };
   // PostHog 화면 추적: 프로바이더가 컨테이너 밖이라 autocapture 대신 라우트 변경 시 직접 전송
   const posthog = usePostHog();
   const navRef = useNavigationContainerRef<RootStackParamList>();

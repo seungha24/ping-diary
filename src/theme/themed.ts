@@ -66,13 +66,44 @@ function darkifySheet<T extends Record<string, any>>(sheet: T): T {
 
 const cache = new WeakMap<object, any>();
 
-/** 현재 모드에 맞는 스타일 시트 반환 (다크면 색만 자동 변환) */
+/** 흰색에 테마색을 아주 살짝 섞은 배경색 (순백이 심심하지 않게, 그라데이션 방해 없는 수준) */
+export function accentTintedWhite(accent: string, amount = 0.035): string {
+  const ch = (i: number) => parseInt(accent.slice(i, i + 2), 16);
+  const mix = (c: number) => Math.round(255 + (c - 255) * amount).toString(16).padStart(2, '0');
+  return `#${mix(ch(1))}${mix(ch(3))}${mix(ch(5))}`;
+}
+
+/** 라이트 모드: 순백 배경만 테마색 틴트로 치환 (글자·테두리는 그대로) */
+function tintifySheet<T extends Record<string, any>>(sheet: T, accent: string): T {
+  const tint = accentTintedWhite(accent);
+  const out: any = {};
+  for (const key of Object.keys(sheet)) {
+    const st: any = sheet[key];
+    const bg = typeof st?.backgroundColor === 'string' ? st.backgroundColor.trim().toLowerCase() : '';
+    out[key] = bg === '#ffffff' || bg === '#fff' || bg === 'white'
+      ? { ...st, backgroundColor: tint }
+      : st;
+  }
+  return out;
+}
+
+// 라이트 틴트 캐시: 시트별로 마지막 accent 결과 1개만 보관 (accent 변경은 드묾)
+const tintCache = new WeakMap<object, { accent: string; sheet: any }>();
+
+/** 현재 모드에 맞는 스타일 시트 반환 (다크면 색 자동 변환, 라이트면 흰 배경에 테마 틴트) */
 export function useThemedStyles<T extends Record<string, any>>(light: T): T {
-  const { mode } = useTheme();
+  const { mode, accent } = useTheme();
   return useMemo(() => {
-    if (mode !== 'dark') return light;
+    if (mode !== 'dark') {
+      let hit = tintCache.get(light);
+      if (!hit || hit.accent !== accent) {
+        hit = { accent, sheet: tintifySheet(light, accent) };
+        tintCache.set(light, hit);
+      }
+      return hit.sheet;
+    }
     let dark = cache.get(light);
     if (!dark) { dark = darkifySheet(light); cache.set(light, dark); }
     return dark;
-  }, [mode, light]);
+  }, [mode, accent, light]);
 }
