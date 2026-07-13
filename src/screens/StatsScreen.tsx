@@ -13,6 +13,7 @@ import { getMonthlyAwards, MonthlyAward } from '../api';
 import { IconX, PersonaIcon, IconTrophy } from '../components/icons/Line';
 import IconChev from '../components/icons/IconChev';
 import PingLogo from '../components/PingLogo';
+import useTabSwipe from '../hooks/useTabSwipe';
 import { useThemedStyles } from '../theme/themed';
 import SheetWrap from '../components/SheetWrap';
 import { animateLayout } from '../anim';
@@ -21,6 +22,7 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export default function StatsScreen() {
   const styles = useThemedStyles(lightStyles);
+  const tabSwipe = useTabSwipe('Profile', 'Calendar'); // 좌우 스와이프로 옆 탭 이동
   const navigation = useNavigation<Nav>();
   const { accent, mode } = useTheme();
   const { entries } = useEntries();
@@ -174,7 +176,7 @@ export default function StatsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} collapsable={false}>
+    <SafeAreaView style={styles.container} collapsable={false} {...tabSwipe}>
       <View style={styles.header}>
         <PingLogo />
         <View style={{ width: 36, height: 36 }} />

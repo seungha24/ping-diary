@@ -83,8 +83,9 @@ export default function HomeScreen() {
   });
   useEffect(() => { coverScroll.setValue(0); }, [selectedFolder]); // 폴더 바꿀 때 커버 높이 초기화
 
-  // 좌우 스와이프: 폴더 목록에선 개인↔그룹 전환, 폴더 상세에선 왼쪽으로 밀면 나가기
-  const swipeStateRef = useRef({ selectedFolder: false });
+  // 좌우 스와이프: 폴더 목록에선 개인↔그룹 전환, 그룹에서 한 번 더 밀면 달력 탭으로.
+  // 폴더 상세에선 왼쪽으로 밀면 나가기
+  const swipeStateRef = useRef({ selectedFolder: false, tab: 'personal' as 'personal' | 'group' });
   const swipePan = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) =>
@@ -94,12 +95,15 @@ export default function HomeScreen() {
           if (g.dx >= 40) setSelectedFolder(null); // 폴더 상세에서 오른쪽으로 밀면 폴더 목록으로 나가기 (iOS 뒤로가기 제스처)
           return;
         }
-        if (g.dx <= -40) setTab('group');
-        else if (g.dx >= 40) setTab('personal');
+        if (g.dx <= -40) {
+          if (swipeStateRef.current.tab === 'group') navigation.navigate('Main', { screen: 'Calendar' } as any);
+          else setTab('group');
+        } else if (g.dx >= 40) setTab('personal');
       },
     })
   ).current;
   swipeStateRef.current.selectedFolder = !!selectedFolder;
+  swipeStateRef.current.tab = tab;
 
   const [personalView, setPersonalView] = useState<'folder' | 'all'>('folder');
   // 캐시된 프로필로 초기화 → 폴더 커버·목록이 즉시 표시(시간차 제거), 아래 useEffect가 갱신

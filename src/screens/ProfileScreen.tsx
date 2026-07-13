@@ -14,12 +14,14 @@ import { useAuth } from '../context/AuthContext';
 import { getMe, getCachedMe, uploadPhoto, saveProfile } from '../api';
 import { notify } from '../notify';
 import { IconUser, IconPencil } from '../components/icons/Line';
+import useTabSwipe from '../hooks/useTabSwipe';
 import { useThemedStyles } from '../theme/themed';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export default function ProfileScreen() {
   const styles = useThemedStyles(lightStyles);
+  const tabSwipe = useTabSwipe(undefined, 'Stats'); // 좌우 스와이프로 옆 탭 이동
   const navigation = useNavigation<Nav>();
   const { accent, themeKey, setTheme, mode, setMode } = useTheme();
   const { email, token, logout } = useAuth();
@@ -74,7 +76,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} {...tabSwipe}>
       <View style={styles.header}>
         <PingLogo />
         <View style={{ width: 36, height: 36 }} />

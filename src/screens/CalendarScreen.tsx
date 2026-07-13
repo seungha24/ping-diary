@@ -11,6 +11,7 @@ import { MONTHS, DAYS } from '../data/types';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { IconPencil } from '../components/icons/Line';
+import useTabSwipe from '../hooks/useTabSwipe';
 import { useThemedStyles } from '../theme/themed';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -21,6 +22,7 @@ function getFirstDayOfMonth(year: number, month: number) { return new Date(year,
 
 export default function CalendarScreen() {
   const styles = useThemedStyles(lightStyles);
+  const tabSwipe = useTabSwipe('Stats', 'Home'); // 좌우 스와이프로 옆 탭 이동
   const navigation = useNavigation<Nav>();
   const route = useRoute<CalendarRoute>();
   const { accent } = useTheme();
@@ -84,7 +86,7 @@ export default function CalendarScreen() {
   const selectedEntries = monthEntries.filter((e) => e.dates.includes(selectedDay));
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} {...tabSwipe}>
       {/* 상단 로고 (모든 탭 공통) */}
       <View style={styles.header}>
         <PingLogo />
