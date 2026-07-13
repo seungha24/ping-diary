@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, StyleSheet,
-  SafeAreaView, Pressable, TextInput, ActivityIndicator, Modal, Image,
+  SafeAreaView, Pressable, TextInput, ActivityIndicator, Modal, Image, Keyboard,
 } from 'react-native';
+import KeyboardDismissButton from '../components/KeyboardDismissButton';
 import TouchableOpacity from '../components/Touchable';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -401,6 +402,7 @@ export default function GroupScreen() {
   }
 
   function saveAndClose() {
+    Keyboard.dismiss(); // 숫자 키패드가 열린 채 저장해도 자판이 정리되게
     const parsed = parseInt(draftInterval, 10);
     const nextInterval = !isNaN(parsed) && parsed > 0 ? parsed : 1;
     setFrequency(draftFreq);
@@ -739,7 +741,11 @@ export default function GroupScreen() {
               <TouchableOpacity
                 key={opt.value}
                 style={[styles.freqRow, draftFreq === opt.value && { borderColor: accent, backgroundColor: hexToRgba(accent, 0.08) }]}
-                onPress={() => setDraftFreq(opt.value)}
+                onPress={() => {
+                  setDraftFreq(opt.value);
+                  // 다른 옵션을 고르면 'N일마다' 입력 키패드를 내린다
+                  if (opt.value !== 'interval') Keyboard.dismiss();
+                }}
                 activeOpacity={0.8}
               >
                 <View style={styles.freqRowLeft}>
@@ -804,6 +810,8 @@ export default function GroupScreen() {
             <Text style={styles.saveBtnText}>저장</Text>
           </TouchableOpacity>
         </View>
+        {/* 숫자 키패드에는 완료 키가 없어 자판을 내릴 방법이 필요 (작성 화면과 동일한 플로팅 버튼) */}
+        <KeyboardDismissButton />
       </SheetWrap>
       )}
     </SafeAreaView>
