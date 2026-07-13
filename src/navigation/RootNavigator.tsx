@@ -95,7 +95,9 @@ function MainTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: '홈' }} />
       <Tab.Screen name="Calendar" component={CalendarScreen} options={{ tabBarLabel: '달력' }} />
-      <Tab.Screen name="Stats" component={StatsScreen} options={{ tabBarLabel: '통계' }} />
+      {/* 통계는 집계·차트가 무거워 동결 해제 직후 회색 배경만 몇 프레임 보이는 문제가 있어
+          이 탭만 동결을 끈다 (블러 상태에서도 그려둬서 전환 즉시 완성 화면이 보이게) */}
+      <Tab.Screen name="Stats" component={StatsScreen} options={{ tabBarLabel: '통계', freezeOnBlur: false }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: '프로필' }} />
     </Tab.Navigator>
   );
