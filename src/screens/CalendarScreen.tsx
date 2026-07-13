@@ -97,8 +97,8 @@ export default function CalendarScreen() {
           <IconChev dir="left" size={20} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.monthTitleBtn} onPress={openPicker}>
-          <Text style={styles.monthTitle}>{year} 년 {MONTHS[month]}</Text>
-          <IconChev dir="down" size={14} color="#9ca3af" />
+          <Text style={[styles.monthTitle, { color: accent }]}>{year} 년 {MONTHS[month]}</Text>
+          <IconChev dir="down" size={14} color={accent} />
         </TouchableOpacity>
         <TouchableOpacity style={styles.navBtn} onPress={() => shiftMonth(1)}>
           <IconChev dir="right" size={20} />
