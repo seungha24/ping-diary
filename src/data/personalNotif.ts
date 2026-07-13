@@ -6,7 +6,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface PersonalReminderSetting {
   enabled: boolean;
-  hour: number; // 0~23 (매일 이 시각에 알림)
+  hour: number;    // 0~23 (매일 이 시각에 알림)
+  minute?: number; // 0~59 (없으면 정각)
 }
 
 const KEY = 'ping_personal_reminder';
@@ -67,7 +68,7 @@ export async function applyPersonalReminder(setting: PersonalReminderSetting): P
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
         hour: setting.hour,
-        minute: 0,
+        minute: setting.minute ?? 0,
       },
     });
   } catch {

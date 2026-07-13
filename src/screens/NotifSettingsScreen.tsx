@@ -11,13 +11,12 @@ import { useThemedStyles } from '../theme/themed';
 import { loadPersonalReminder, savePersonalReminder, applyPersonalReminder } from '../data/personalNotif';
 import { notify } from '../notify';
 
-/** 내 일기 리마인더 시간 선택지 */
-const REMINDER_HOURS = [
-  { hour: 8, label: 'AM 8:00' },
-  { hour: 12, label: 'PM 12:00' },
-  { hour: 20, label: 'PM 8:00' },
-  { hour: 22, label: 'PM 10:00' },
-];
+/** 24시간제 시각을 "PM 8:30" 형태로 표기 */
+function timeLabel(hour: number, minute: number): string {
+  const pm = hour >= 12;
+  const h12 = hour % 12 === 0 ? 12 : hour % 12;
+  return `${pm ? 'PM' : 'AM'} ${h12}:${String(minute).padStart(2, '0')}`;
+}
 
 /** 테마색이 웹에서도 확실히 적용되는 커스텀 토글 (RN Switch가 웹에서 색 무시하는 문제 회피) */
 function ThemeSwitch({ value, onChange, disabled, accent }: { value: boolean; onChange: (v: boolean) => void; disabled?: boolean; accent: string }) {
@@ -76,25 +75,36 @@ export default function NotifSettingsScreen() {
   // ── 내 일기 리마인더 (실제 동작: 매일 지정 시각 로컬 알림) ──
   const [myReminderOn, setMyReminderOn] = useState(false);
   const [myReminderHour, setMyReminderHour] = useState(20);
+  const [myReminderMinute, setMyReminderMinute] = useState(0);
   useEffect(() => {
     loadPersonalReminder().then((s) => {
       if (!s) return;
       setMyReminderOn(s.enabled);
       setMyReminderHour(s.hour);
+      setMyReminderMinute(s.minute ?? 0);
     }).catch(() => {});
   }, []);
-  function updateMyReminder(enabled: boolean, hour: number) {
+  function updateMyReminder(enabled: boolean, hour: number, minute: number) {
     setMyReminderOn(enabled);
     setMyReminderHour(hour);
-    const setting = { enabled, hour };
+    setMyReminderMinute(minute);
+    const setting = { enabled, hour, minute };
     savePersonalReminder(setting).catch(() => {});
     applyPersonalReminder(setting).catch(() => {});
     if (enabled) {
-      const label = REMINDER_HOURS.find((h) => h.hour === hour)?.label ?? `${hour}시`;
-      notify(`매일 ${label}에 일기 리마인더를 보내드릴게요.`);
+      notify(`매일 ${timeLabel(hour, minute)}에 일기 리마인더를 보내드릴게요.`);
     } else {
       notify('내 일기 리마인더를 껐어요.');
     }
+  }
+  // 12시간제 조작 (AM/PM + 1~12시 + 분)
+  const reminderIsPm = myReminderHour >= 12;
+  const reminderHour12 = myReminderHour % 12 === 0 ? 12 : myReminderHour % 12;
+  function setReminderAmPm(pm: boolean) {
+    updateMyReminder(true, (reminderHour12 % 12) + (pm ? 12 : 0), myReminderMinute);
+  }
+  function setReminderHour12(h12: number) {
+    updateMyReminder(true, (h12 % 12) + (reminderIsPm ? 12 : 0), myReminderMinute);
   }
 
   function toggleAll(v: boolean) {
@@ -179,30 +189,61 @@ export default function NotifSettingsScreen() {
               label="매일 일기 알림"
               desc="정해둔 시간에 일기 쓸 시간을 알려드려요"
               value={myReminderOn}
-              onChange={(v) => updateMyReminder(v, myReminderHour)}
+              onChange={(v) => updateMyReminder(v, myReminderHour, myReminderMinute)}
             />
             {myReminderOn && (
               <>
                 <View style={styles.divider} />
-                <View style={styles.hourRow}>
-                  {REMINDER_HOURS.map((h) => {
-                    const active = myReminderHour === h.hour;
+                {/* 오전/오후 */}
+                <View style={styles.ampmRow}>
+                  {([['AM', false], ['PM', true]] as const).map(([label, pm]) => {
+                    const active = reminderIsPm === pm;
                     return (
                       <TouchableOpacity
-                        key={h.hour}
-                        style={[
-                          styles.hourChip,
-                          active && { backgroundColor: hexToRgba(accent, 0.12), borderColor: accent },
-                        ]}
-                        onPress={() => updateMyReminder(true, h.hour)}
+                        key={label}
+                        style={[styles.ampmChip, active && { backgroundColor: hexToRgba(accent, 0.12), borderColor: accent }]}
+                        onPress={() => setReminderAmPm(pm)}
+                      >
+                        <Text style={[styles.hourChipText, active && { color: accent, fontWeight: '700' }]}>{label}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                {/* 시 (1~12) */}
+                <View style={styles.hourRow}>
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((h12) => {
+                    const active = reminderHour12 === h12;
+                    return (
+                      <TouchableOpacity
+                        key={h12}
+                        style={[styles.hourChip, active && { backgroundColor: hexToRgba(accent, 0.12), borderColor: accent }]}
+                        onPress={() => setReminderHour12(h12)}
+                      >
+                        <Text style={[styles.hourChipText, active && { color: accent, fontWeight: '700' }]}>{h12}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+                {/* 분 */}
+                <View style={styles.minuteRow}>
+                  {[0, 10, 20, 30, 40, 50].map((m) => {
+                    const active = myReminderMinute === m;
+                    return (
+                      <TouchableOpacity
+                        key={m}
+                        style={[styles.hourChip, active && { backgroundColor: hexToRgba(accent, 0.12), borderColor: accent }]}
+                        onPress={() => updateMyReminder(true, myReminderHour, m)}
                       >
                         <Text style={[styles.hourChipText, active && { color: accent, fontWeight: '700' }]}>
-                          {h.label}
+                          :{String(m).padStart(2, '0')}
                         </Text>
                       </TouchableOpacity>
                     );
                   })}
                 </View>
+                <Text style={styles.timeSummary}>
+                  매일 <Text style={{ color: accent, fontWeight: '700' }}>{timeLabel(myReminderHour, myReminderMinute)}</Text>에 알려드려요
+                </Text>
               </>
             )}
           </View>
@@ -297,14 +338,25 @@ const lightStyles = StyleSheet.create({
   },
   timeBtnText: { fontSize: 16, fontWeight: '700', color: '#111827', letterSpacing: 0.5 },
   timeSep: { fontSize: 18, color: '#d1d5db', marginTop: 18 },
+  ampmRow: { flexDirection: 'row', gap: 8, paddingTop: 14 },
+  ampmChip: {
+    flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 10,
+    backgroundColor: '#f3f4f6', borderWidth: 1.5, borderColor: 'transparent',
+  },
   hourRow: {
     flexDirection: 'row', flexWrap: 'wrap', gap: 8,
-    paddingVertical: 14,
+    paddingTop: 12,
+  },
+  minuteRow: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 8,
+    paddingTop: 12,
   },
   hourChip: {
-    paddingHorizontal: 13, paddingVertical: 8, borderRadius: 10,
+    minWidth: 44, alignItems: 'center',
+    paddingHorizontal: 10, paddingVertical: 8, borderRadius: 10,
     backgroundColor: '#f3f4f6', borderWidth: 1.5, borderColor: 'transparent',
   },
   hourChipText: { fontSize: 12.5, fontWeight: '600', color: '#6b7280' },
+  timeSummary: { fontSize: 12.5, color: '#9ca3af', textAlign: 'center', paddingVertical: 14 },
   footerNote: { fontSize: 12, color: '#d1d5db', textAlign: 'center' },
 });
