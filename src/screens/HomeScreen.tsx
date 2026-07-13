@@ -24,7 +24,7 @@ import { useAuth } from '../context/AuthContext';
 import { uploadPhoto, updateGroupPhoto, getMe, getCachedMe, setFolderCover, saveFolders, saveHiddenFolders, saveGroupOrder } from '../api';
 import { notify } from '../notify';
 import Svg, { Path, Line, Circle } from 'react-native-svg';
-import { IconFolder, IconList, IconUsers, IconPencil, IconX, IconCamera } from '../components/icons/Line';
+import { IconFolder, IconList, IconLock, IconUsers, IconPencil, IconX, IconCamera } from '../components/icons/Line';
 import { useThemedStyles } from '../theme/themed';
 import SheetWrap from '../components/SheetWrap';
 import FadeIn from '../components/FadeIn';
@@ -492,17 +492,19 @@ export default function HomeScreen() {
       {!(tab === 'personal' && selectedFolder) && (
       <View style={styles.tabRow}>
         <View style={styles.tabPill}>
-          {(['personal', 'group'] as const).map((t) => (
-            <TouchableOpacity
-              key={t}
-              style={[styles.tabItem, tab === t && styles.tabItemActive]}
-              onPress={() => setTab(t)}
-            >
-              <Text style={[styles.tabText, tab === t && { color: accent, fontWeight: '600' }]}>
-                {t === 'personal' ? '개인' : '그룹'}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {(['personal', 'group'] as const).map((t) => {
+            // 개인 = 자물쇠(나만 보는 공간), 그룹 = 사람들
+            const Icon = t === 'personal' ? IconLock : IconUsers;
+            return (
+              <TouchableOpacity
+                key={t}
+                style={[styles.tabItem, tab === t && styles.tabItemActive]}
+                onPress={() => setTab(t)}
+              >
+                <Icon size={17} color={tab === t ? accent : '#9ca3af'} />
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
       )}
