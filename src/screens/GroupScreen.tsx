@@ -72,7 +72,7 @@ type Frequency = 'interval' | 'weekly' | 'biweekly' | 'off';
 const FREQ_OPTIONS: { value: Frequency; label: string; desc: string }[] = [
   { value: 'interval', label: '직접 입력', desc: '며칠마다 알림 받을지 설정' },
   { value: 'weekly',   label: '매주',      desc: '선택한 요일에 알림' },
-  { value: 'biweekly', label: '격주',      desc: '2주에 한 번 알림' },
+  { value: 'biweekly', label: '격주',      desc: '선택한 요일에 2주마다 알림' },
   { value: 'off',      label: '알림 끄기', desc: '이 그룹의 알림 없음' },
 ];
 
@@ -822,7 +822,7 @@ export default function GroupScreen() {
           </View>
 
           {/* 요일 선택 (매주일 때만) */}
-          {draftFreq === 'weekly' && (
+          {(draftFreq === 'weekly' || draftFreq === 'biweekly') && (
             <View style={styles.daySection}>
               <Text style={styles.daySectionTitle}>알림 받을 요일</Text>
               <View style={styles.dayRow}>

@@ -110,9 +110,34 @@ export async function applyGroupReminderSchedule(
       return;
     }
 
-    // 격주=14일, 직접 입력=N일 간격 — 지정 시각을 지키기 위해
+    if (setting.frequency === 'biweekly') {
+      // 격주: 선택한 요일마다 2주 간격 — 다음 해당 요일부터 14일씩 일회성 10회 예약
+      const days = setting.days.length ? setting.days : [1]; // 미선택이면 월요일
+      const jobs = [];
+      for (const d of days) {
+        const first = new Date();
+        first.setHours(hour, minute, 0, 0);
+        first.setDate(first.getDate() + ((d - first.getDay() + 7) % 7));
+        if (first.getTime() <= Date.now()) first.setDate(first.getDate() + 7);
+        for (let i = 0; i < 10; i++) {
+          const at = new Date(first);
+          at.setDate(first.getDate() + 14 * i);
+          jobs.push(
+            Notifications.scheduleNotificationAsync({
+              identifier: `${prefix}bi-${d}-${i}`,
+              content,
+              trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at },
+            })
+          );
+        }
+      }
+      await Promise.all(jobs);
+      return;
+    }
+
+    // 직접 입력=N일 간격 — 지정 시각을 지키기 위해
     // 반복 타이머 대신 앞으로 20회를 일회성 예약으로 깐다 (설정 변경·재적용 시 갱신)
-    const stepDays = setting.frequency === 'biweekly' ? 14 : Math.max(1, setting.intervalDays);
+    const stepDays = Math.max(1, setting.intervalDays);
     const first = new Date();
     first.setHours(hour, minute, 0, 0);
     if (first.getTime() <= Date.now()) first.setDate(first.getDate() + stepDays);

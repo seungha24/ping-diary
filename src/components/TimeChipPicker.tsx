@@ -61,7 +61,7 @@ export default function TimeChipPicker({ hour, minute, onChange }: Props) {
             style={[styles.chip, minute === m && activeStyle]}
             onPress={() => onChange(hour, m)}
           >
-            <Text style={[styles.chipText, minute === m && activeText]}>:{String(m).padStart(2, '0')}</Text>
+            <Text style={[styles.chipText, minute === m && activeText]}>{String(m).padStart(2, '0')}</Text>
           </TouchableOpacity>
         ))}
       </View>
