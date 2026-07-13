@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, StyleSheet,
   SafeAreaView,
@@ -8,6 +8,16 @@ import { useNavigation } from '@react-navigation/native';
 import IconChev from '../components/icons/IconChev';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useThemedStyles } from '../theme/themed';
+import { loadPersonalReminder, savePersonalReminder, applyPersonalReminder } from '../data/personalNotif';
+import { notify } from '../notify';
+
+/** 내 일기 리마인더 시간 선택지 */
+const REMINDER_HOURS = [
+  { hour: 8, label: '아침 8시' },
+  { hour: 12, label: '낮 12시' },
+  { hour: 20, label: '저녁 8시' },
+  { hour: 22, label: '밤 10시' },
+];
 
 /** 테마색이 웹에서도 확실히 적용되는 커스텀 토글 (RN Switch가 웹에서 색 무시하는 문제 회피) */
 function ThemeSwitch({ value, onChange, disabled, accent }: { value: boolean; onChange: (v: boolean) => void; disabled?: boolean; accent: string }) {
@@ -62,6 +72,30 @@ export default function NotifSettingsScreen() {
   const [groupInvite, setGroupInvite] = useState(true);
   const [reminder, setReminder] = useState(true);
   const [quietHours, setQuietHours] = useState(false);
+
+  // ── 내 일기 리마인더 (실제 동작: 매일 지정 시각 로컬 알림) ──
+  const [myReminderOn, setMyReminderOn] = useState(false);
+  const [myReminderHour, setMyReminderHour] = useState(20);
+  useEffect(() => {
+    loadPersonalReminder().then((s) => {
+      if (!s) return;
+      setMyReminderOn(s.enabled);
+      setMyReminderHour(s.hour);
+    }).catch(() => {});
+  }, []);
+  function updateMyReminder(enabled: boolean, hour: number) {
+    setMyReminderOn(enabled);
+    setMyReminderHour(hour);
+    const setting = { enabled, hour };
+    savePersonalReminder(setting).catch(() => {});
+    applyPersonalReminder(setting).catch(() => {});
+    if (enabled) {
+      const label = REMINDER_HOURS.find((h) => h.hour === hour)?.label ?? `${hour}시`;
+      notify(`매일 ${label}에 일기 리마인더를 보내드릴게요.`);
+    } else {
+      notify('내 일기 리마인더를 껐어요.');
+    }
+  }
 
   function toggleAll(v: boolean) {
     setAllOn(v);
@@ -134,6 +168,43 @@ export default function NotifSettingsScreen() {
               onChange={setReminder}
               disabled={!allOn}
             />
+          </View>
+        </View>
+
+        {/* 내 일기 리마인더 (개인) */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>내 일기 리마인더</Text>
+          <View style={styles.card}>
+            <ToggleRow
+              label="매일 일기 알림"
+              desc="정해둔 시간에 일기 쓸 시간을 알려드려요"
+              value={myReminderOn}
+              onChange={(v) => updateMyReminder(v, myReminderHour)}
+            />
+            {myReminderOn && (
+              <>
+                <View style={styles.divider} />
+                <View style={styles.hourRow}>
+                  {REMINDER_HOURS.map((h) => {
+                    const active = myReminderHour === h.hour;
+                    return (
+                      <TouchableOpacity
+                        key={h.hour}
+                        style={[
+                          styles.hourChip,
+                          active && { backgroundColor: hexToRgba(accent, 0.12), borderColor: accent },
+                        ]}
+                        onPress={() => updateMyReminder(true, h.hour)}
+                      >
+                        <Text style={[styles.hourChipText, active && { color: accent, fontWeight: '700' }]}>
+                          {h.label}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </>
+            )}
           </View>
         </View>
 
@@ -226,5 +297,14 @@ const lightStyles = StyleSheet.create({
   },
   timeBtnText: { fontSize: 16, fontWeight: '700', color: '#111827', letterSpacing: 0.5 },
   timeSep: { fontSize: 18, color: '#d1d5db', marginTop: 18 },
+  hourRow: {
+    flexDirection: 'row', flexWrap: 'wrap', gap: 8,
+    paddingVertical: 14,
+  },
+  hourChip: {
+    paddingHorizontal: 13, paddingVertical: 8, borderRadius: 10,
+    backgroundColor: '#f3f4f6', borderWidth: 1.5, borderColor: 'transparent',
+  },
+  hourChipText: { fontSize: 12.5, fontWeight: '600', color: '#6b7280' },
   footerNote: { fontSize: 12, color: '#d1d5db', textAlign: 'center' },
 });
