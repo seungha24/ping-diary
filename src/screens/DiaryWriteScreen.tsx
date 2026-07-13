@@ -696,7 +696,7 @@ export default function DiaryWriteScreen() {
             <IconMessage color={accent} size={16} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.aiCardTitle}>AI 코멘트</Text>
+            <Text style={styles.aiCardTitle}>p0ng</Text>
             <Text style={styles.aiCardSub}>{persona} · 10 시간 뒤 도착</Text>
           </View>
           <IconChev dir="right" size={16} color="#9ca3af" />
@@ -746,8 +746,8 @@ export default function DiaryWriteScreen() {
         <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setPersonaModalOpen(false)}>
           <TouchableOpacity activeOpacity={1}>
             <View style={styles.personaModal}>
-              <Text style={styles.personaModalTitle}>AI 코멘트 페르소나</Text>
-              <Text style={styles.personaModalSub}>어떤 말투로 코멘트를 받을까요?</Text>
+              <Text style={styles.personaModalTitle}>p0ng 페르소나</Text>
+              <Text style={styles.personaModalSub}>어떤 말투로 퐁을 받을까요? (AI가 페르소나의 말투로 써줘요)</Text>
               <View style={styles.personaGrid}>
                 {PERSONAS.map((p) => (
                   <TouchableOpacity
