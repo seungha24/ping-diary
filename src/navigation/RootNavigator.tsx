@@ -35,6 +35,7 @@ export interface GroupNav {
   name: string;
   member_count?: number;
   invite_code?: string;
+  created_by?: string | null; // 방장(만든 사람) — 삭제 메뉴 노출 판별용
 }
 
 export type RootStackParamList = {

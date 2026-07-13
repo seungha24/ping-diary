@@ -17,7 +17,8 @@ import { DiaryEntry, entryDateLabel, stripPhotoMarkers } from '../data/types';
 import { sortByNewest } from '../data/entrySort';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useGroups } from '../context/GroupsContext';
-import { fetchGroupEntries, leaveGroup, deleteGroup, renameGroup, reportContent, saveBlockedUsers, getCachedMe, uploadPhoto, updateGroupPhoto } from '../api';
+import { fetchGroupEntries, leaveGroup, deleteGroup, renameGroup, reportContent, saveBlockedUsers, saveMutedGroups, getCachedMe, uploadPhoto, updateGroupPhoto } from '../api';
+import { loadGroupNotifSetting, saveGroupNotifSetting, applyGroupReminderSchedule } from '../data/groupNotif';
 import { notify } from '../notify';
 import { Platform } from 'react-native';
 import { IconUsers, IconUser, IconBell as IconBellLine, IconSprout, IconSparkle, IconPencil, IconTrash, IconCamera, PersonaIcon } from '../components/icons/Line';
@@ -211,7 +212,10 @@ export default function GroupScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { group } = useRoute<Route>().params;
   const { accent } = useTheme();
-  const { refresh: refreshGroups } = useGroups();
+  const { groups: allGroups, refresh: refreshGroups } = useGroups();
+  // 방장 여부 — 목록의 최신 created_by 기준 (레거시 null이면 기존처럼 모두 삭제 허용)
+  const liveGroup = allGroups.find((g) => g.id === group.id) ?? group;
+  const isOwner = !liveGroup.created_by || liveGroup.created_by === getCachedMe()?.id;
   const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   // 초대 코드/링크 공유
@@ -366,11 +370,23 @@ export default function GroupScreen() {
     }
   }
 
-  // 알림 설정 상태
+  // 알림 설정 상태 (기기에 저장, '끄기'는 서버 푸시 뮤트 + 나머진 로컬 리마인더 예약)
   const [notifModalOpen, setNotifModalOpen] = useState(false);
   const [frequency, setFrequency] = useState<Frequency>('weekly');
   const [selectedDays, setSelectedDays] = useState<number[]>([1]); // 월요일 기본
   const [intervalDays, setIntervalDays] = useState(3); // N일마다
+
+  // 저장된 설정 복원
+  useEffect(() => {
+    let cancelled = false;
+    loadGroupNotifSetting(group.id).then((s) => {
+      if (!s || cancelled) return;
+      setFrequency(s.frequency);
+      setSelectedDays(s.days);
+      setIntervalDays(s.intervalDays);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [group.id]);
 
   // 저장 전 임시 상태
   const [draftFreq, setDraftFreq] = useState<Frequency>(frequency);
@@ -385,11 +401,23 @@ export default function GroupScreen() {
   }
 
   function saveAndClose() {
+    const parsed = parseInt(draftInterval, 10);
+    const nextInterval = !isNaN(parsed) && parsed > 0 ? parsed : 1;
     setFrequency(draftFreq);
     setSelectedDays(draftDays);
-    const parsed = parseInt(draftInterval, 10);
-    setIntervalDays(!isNaN(parsed) && parsed > 0 ? parsed : 1);
+    setIntervalDays(nextInterval);
     setNotifModalOpen(false);
+
+    // 실제 반영: 기기 저장 + 리마인더 재예약 + '끄기'는 서버 푸시 뮤트
+    const setting = { frequency: draftFreq, days: draftDays, intervalDays: nextInterval };
+    saveGroupNotifSetting(group.id, setting).catch(() => {});
+    applyGroupReminderSchedule(group.id, groupName, setting).catch(() => {});
+    const muted = new Set(getCachedMe()?.muted_groups ?? []);
+    if (draftFreq === 'off') muted.add(group.id); else muted.delete(group.id);
+    saveMutedGroups([...muted]).catch(() => {});
+    notify(draftFreq === 'off'
+      ? '이 그룹의 알림을 껐어요. 새 글 알림도 오지 않아요.'
+      : '알림 설정을 저장했어요.');
   }
 
   function toggleDay(d: number) {
@@ -617,10 +645,12 @@ export default function GroupScreen() {
               <IconExit size={17} color="#374151" />
               <Text style={styles.actionText}>그룹 나가기</Text>
             </TouchableOpacity>
+            {isOwner && (
             <TouchableOpacity style={styles.menuRow} onPress={() => { setMenuOpen(false); setConfirmMode('delete'); }}>
               <IconTrash size={17} color="#ef4444" />
               <Text style={[styles.actionText, styles.actionDanger]}>그룹 삭제</Text>
             </TouchableOpacity>
+            )}
             <TouchableOpacity style={styles.menuRow} onPress={() => setMenuOpen(false)}>
               <Text style={[styles.actionText, { color: '#9ca3af', marginLeft: 2 }]}>취소</Text>
             </TouchableOpacity>

@@ -296,6 +296,7 @@ export interface ServerGroup {
   invite_code: string;
   member_count?: number;
   created_at?: string;
+  created_by?: string | null; // 방장(만든 사람) — 그룹 삭제 권한 판별용
   photo_url?: string | null;
 }
 
@@ -355,6 +356,7 @@ export interface Me {
   folders: UserFolder[];
   hidden_folders: string[];
   blocked_users: string[];
+  muted_groups: number[];
   group_order: number[];
   display_name: string | null;
   username: string | null;
@@ -409,6 +411,7 @@ export async function getMe(): Promise<Me> {
       folders: Array.isArray(r?.folders) ? r.folders : [],
       hidden_folders: Array.isArray(r?.hidden_folders) ? r.hidden_folders : [],
       blocked_users: Array.isArray(r?.blocked_users) ? r.blocked_users : [],
+      muted_groups: Array.isArray(r?.muted_groups) ? r.muted_groups : [],
       group_order: Array.isArray(r?.group_order) ? r.group_order : [],
       display_name: r?.display_name ?? null,
       username: r?.username ?? null,
@@ -442,6 +445,14 @@ export async function saveBlockedUsers(blocked: string[]): Promise<string[]> {
   const r = await request('/auth/blocked-users', { method: 'PATCH', body: JSON.stringify({ blocked }) });
   const next = Array.isArray(r?.blocked_users) ? r.blocked_users : [];
   patchMeCache({ blocked_users: next });
+  return next;
+}
+
+/** 푸시 알림을 끈 그룹 id 목록 저장 (그룹별 알림 끄기 — 서버 푸시에서 제외됨) */
+export async function saveMutedGroups(muted: number[]): Promise<number[]> {
+  const r = await request('/auth/muted-groups', { method: 'PATCH', body: JSON.stringify({ muted }) });
+  const next = Array.isArray(r?.muted_groups) ? r.muted_groups : [];
+  patchMeCache({ muted_groups: next });
   return next;
 }
 
