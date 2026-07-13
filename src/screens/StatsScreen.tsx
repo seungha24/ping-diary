@@ -11,6 +11,7 @@ import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { getMonthlyAwards, MonthlyAward } from '../api';
 import { IconX, PersonaIcon, IconTrophy } from '../components/icons/Line';
+import IconChev from '../components/icons/IconChev';
 import PingLogo from '../components/PingLogo';
 import { useThemedStyles } from '../theme/themed';
 import SheetWrap from '../components/SheetWrap';
@@ -130,6 +131,20 @@ export default function StatsScreen() {
     setRevealed((prev) => new Set(prev).add(key));
   }
 
+  // 시상식 접기/펼치기 (달별로 기억 — 다 보고 나면 접어둘 수 있게)
+  const [collapsedMonths, setCollapsedMonths] = useState<Set<number>>(new Set());
+  const awardsCollapsed = collapsedMonths.has(reportMonth);
+  const allAwardsRevealed =
+    !!monthAwards && monthAwards.awards.every((_, i) => revealed.has(`${reportMonth}-${i}`));
+  function toggleAwardsCollapsed() {
+    animateLayout();
+    setCollapsedMonths((prev) => {
+      const next = new Set(prev);
+      if (next.has(reportMonth)) next.delete(reportMonth); else next.add(reportMonth);
+      return next;
+    });
+  }
+
   const topTags = useMemo(() => {
     const tagCounts: Record<string, number> = {};
     entries.forEach((e) => e.tags.forEach((t) => { tagCounts[t] = (tagCounts[t] || 0) + 1; }));
@@ -228,6 +243,17 @@ export default function StatsScreen() {
             >
               <Text style={[styles.helpBtnText, { color: accent }]}>?</Text>
             </TouchableOpacity>
+            {monthAwards && (
+              <TouchableOpacity
+                onPress={toggleAwardsCollapsed}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                style={{ marginLeft: 10 }}
+              >
+                <View style={{ transform: [{ rotate: awardsCollapsed ? '0deg' : '180deg' }] }}>
+                  <IconChev dir="down" size={15} color="#9ca3af" />
+                </View>
+              </TouchableOpacity>
+            )}
           </View>
           {awardsHelpOpen && (
             <Text style={styles.reportDesc}>
@@ -236,6 +262,14 @@ export default function StatsScreen() {
             </Text>
           )}
           {monthAwards ? (
+            awardsCollapsed ? (
+              // 접힌 상태: 한 줄 요약만 (탭하면 다시 펼침)
+              <TouchableOpacity onPress={toggleAwardsCollapsed} activeOpacity={0.7}>
+                <Text style={styles.awardCollapsedSummary}>
+                  {monthAwards.awards.length} 개의 상 · 탭해서 다시 보기
+                </Text>
+              </TouchableOpacity>
+            ) : (
             <>
               {monthAwards.awards.map((a, i) => {
                 const key = `${reportMonth}-${i}`;
@@ -274,11 +308,16 @@ export default function StatsScreen() {
                   </View>
                 );
               })}
-              {!!monthAwards.closing &&
-                monthAwards.awards.every((_, i) => revealed.has(`${reportMonth}-${i}`)) && (
+              {!!monthAwards.closing && allAwardsRevealed && (
                 <Text style={styles.awardClosing}>{monthAwards.closing}</Text>
               )}
+              {allAwardsRevealed && (
+                <TouchableOpacity onPress={toggleAwardsCollapsed} style={styles.awardCollapseBtn}>
+                  <Text style={styles.awardCollapseText}>시상식 접기</Text>
+                </TouchableOpacity>
+              )}
             </>
+            )
           ) : (
             <>
               {awardsError && <Text style={styles.reportError}>{awardsError}</Text>}
@@ -544,6 +583,9 @@ const lightStyles = StyleSheet.create({
   awardComment: { fontSize: 13, color: '#4b5563', lineHeight: 20 },
   awardLink: { fontSize: 12.5, fontWeight: '600', marginTop: 2 },
   awardClosing: { fontSize: 12.5, color: '#9ca3af', textAlign: 'center', paddingVertical: 4 },
+  awardCollapsedSummary: { fontSize: 12.5, color: '#9ca3af', textAlign: 'center', paddingVertical: 6 },
+  awardCollapseBtn: { alignSelf: 'center', paddingVertical: 6, paddingHorizontal: 14 },
+  awardCollapseText: { fontSize: 12.5, color: '#9ca3af', fontWeight: '600' },
   reportError: { fontSize: 12, color: '#ef4444' },
   reportBtn: { borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
   reportBtnText: { fontSize: 13, fontWeight: '600', color: '#ffffff' },
