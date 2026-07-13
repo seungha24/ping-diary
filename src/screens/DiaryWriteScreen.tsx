@@ -455,6 +455,9 @@ export default function DiaryWriteScreen() {
                 : base;
               const createdAtISO = isNaN(diaryDate.getTime()) ? base.toISOString() : diaryDate.toISOString();
               const storedBody = (selectedPrompt ? `[q:${selectedPrompt}]\n` : '') + blocksToBody(blocks); // 질문+블록 → 마커 본문
+              // 제목을 안 쓰면 일기 날짜가 제목이 된다 (예: "7 월 14 일의 p!ng")
+              const titleDate = new Date(createdAtISO);
+              const finalTitle = title.trim() || `${MONTHS[titleDate.getMonth()]} ${titleDate.getDate()} 일의 p!ng`;
               // 본문 첫 사진이 대표 (목록 썸네일용)
               const mainPhoto = (blocks.find((b) => b.type === 'photo') as any)?.url ?? null;
 
@@ -463,7 +466,7 @@ export default function DiaryWriteScreen() {
                 const needRegen = personaChanged && !!editEntry.aiComment;
                 const updated = {
                   // 날짜를 안 골랐으면(달력만 둘러본 경우) 기존 날짜 배지 유지
-                  ...editEntry, title, body: storedBody, tags, persona, folder,
+                  ...editEntry, title: finalTitle, body: storedBody, tags, persona, folder,
                   dates: selectedDates.length > 0 ? selectedDates : (editEntry.dates ?? []),
                   photo: mainPhoto, photos: [], visibility,
                   sharedGroups: visibility === 'friends' && shareGroupIds.size > 0 ? Array.from(shareGroupIds) : null,
@@ -486,7 +489,7 @@ export default function DiaryWriteScreen() {
               } else {
                 addEntry({
                   id: Date.now() + Math.random(), // 낙관적 임시 id (같은 ms 더블 저장 충돌 방지)
-                  title,
+                  title: finalTitle,
                   body: storedBody,
                   tags,
                   persona,
