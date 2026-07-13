@@ -68,6 +68,9 @@ function MainTabs() {
   const styles = useThemedStyles(lightStyles);
   return (
     <Tab.Navigator
+      // 비활성 탭을 화면 트리에서 떼어내지 않는다 — detach가 shift 전환과 얽히면
+      // 화면이 다시 붙지 않아 빈(회색) 화면으로 남는 버그가 있었음 (특히 통계 탭)
+      detachInactiveScreens={false}
       tabBar={(props) => (
         <>
           {AD_ROUTES.has(props.state.routes[props.state.index].name) && <AdBanner />}
@@ -81,8 +84,9 @@ function MainTabs() {
         // 전환 중 씬 뒤에 비치는 배경을 페이지 배경과 '완전히 같은 색'으로 —
         // 빈 프레임이 생겨도 색이 같아 눈에 보이지 않는다 (기본값 회색 노출 방지)
         sceneStyle: { backgroundColor: mode === 'dark' ? '#0e131e' : accentTintedWhite(accent) },
-        // 블러된 탭은 렌더 동결 → 전환 중 무거운 화면 이중 렌더로 인한 버벅임 제거
-        freezeOnBlur: true,
+        // 렌더 동결(freeze)도 끈다 — 동결 해제 타이밍이 어긋나면 빈 화면이 남는 원인이 됨.
+        // 모든 탭을 항상 그려두는 대신 안정성을 택함
+        freezeOnBlur: false,
         tabBarStyle: styles.tabBar,
         tabBarActiveTintColor: accent,
         tabBarInactiveTintColor: '#9ca3af',
