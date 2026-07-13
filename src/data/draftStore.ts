@@ -11,6 +11,9 @@ export interface DiaryDraft {
   persona: string;
   folder?: string;
   dates: number[];
+  // dates(일 숫자)가 속한 연·월 — 없으면 복원 시점의 달로 붙던 버그 방지용 (구초안엔 없음)
+  calYear?: number;
+  calMonth?: number;
   photo: string | null;
   photos?: string[];
   visibility: 'private' | 'friends';

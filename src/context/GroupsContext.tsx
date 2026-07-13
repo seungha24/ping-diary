@@ -15,12 +15,13 @@ const GroupsContext = createContext<GroupsContextValue>({
 });
 
 export function GroupsProvider({ children }: { children: React.ReactNode }) {
-  const { ready, token } = useAuth();
+  // authed(불리언) 기준 — 토큰 문자열은 1시간마다 자동 갱신되므로 그때마다 재조회하지 않게
+  const { ready, authed } = useAuth();
   const [groups, setGroups] = useState<ServerGroup[]>([]);
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    if (!token) { setGroups([]); setLoading(false); return; }
+    if (!authed) { setGroups([]); setLoading(false); return; }
     try {
       const list = await fetchGroups();
       setGroups(list);
@@ -29,12 +30,12 @@ export function GroupsProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [authed]);
 
   useEffect(() => {
     if (!ready) return;
     refresh();
-  }, [ready, token, refresh]);
+  }, [ready, authed, refresh]);
 
   return (
     <GroupsContext.Provider value={{ groups, loading, refresh }}>

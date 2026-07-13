@@ -15,15 +15,16 @@ import {
 } from '../data/notifStore';
 
 // 알림 종류별 아이콘·색 (이모지 대신 라인 아이콘)
-const TYPE_ICON: Record<Notif['type'], { bg: string; color: string; Icon: React.ComponentType<{ size?: number; color?: string }> }> = {
-  ai:    { bg: '#f3e8ff', color: '#8b5cf6', Icon: IconSparkle },
-  diary: { bg: '#e0f2fe', color: '#0ea5e9', Icon: IconPencil },
+// 인라인 색이라 다크 자동 매핑을 안 타므로 다크 배경(bgDark)을 함께 정의
+const TYPE_ICON: Record<Notif['type'], { bg: string; bgDark: string; color: string; Icon: React.ComponentType<{ size?: number; color?: string }> }> = {
+  ai:    { bg: '#f3e8ff', bgDark: '#2a2545', color: '#8b5cf6', Icon: IconSparkle },
+  diary: { bg: '#e0f2fe', bgDark: '#1a2a45', color: '#0ea5e9', Icon: IconPencil },
 };
 
 export default function NotificationScreen() {
   const styles = useThemedStyles(lightStyles);
   const navigation = useNavigation();
-  const { accent } = useTheme();
+  const { accent, mode } = useTheme();
   const [, forceUpdate] = useState(0);
   const [loading, setLoading] = useState(getNotifs().length === 0);
 
@@ -93,7 +94,7 @@ export default function NotificationScreen() {
               }}
               activeOpacity={0.7}
             >
-              <View style={[styles.iconBox, { backgroundColor: t.bg }]}>
+              <View style={[styles.iconBox, { backgroundColor: mode === 'dark' ? t.bgDark : t.bg }]}>
                 <Icon size={19} color={t.color} />
               </View>
               <View style={styles.notifBody}>

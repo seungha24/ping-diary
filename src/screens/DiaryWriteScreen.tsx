@@ -196,19 +196,33 @@ export default function DiaryWriteScreen() {
   const { groups } = useGroups();
   const [shareGroupIds, setShareGroupIds] = useState<Set<number>>(() => {
     if (editEntry?.visibility === 'friends') {
-      return new Set(editEntry.sharedGroups?.length ? editEntry.sharedGroups : []);
+      // sharedGroups=null은 "모든 그룹 공개"(레거시) — 전체 선택으로 시드해 의미 보존
+      if (editEntry.sharedGroups?.length) return new Set(editEntry.sharedGroups);
+      return new Set(groups.map((g) => g.id));
     }
     return new Set();
   });
   const [groupPickOpen, setGroupPickOpen] = useState(false);
+  // 시트 열기 전 상태 백업 — 바깥 탭(취소) 시 복원해 실수로 공개되는 것 방지
+  const shareBackupRef = useRef<{ ids: Set<number>; visibility: 'private' | 'friends' } | null>(null);
 
   function openGroupPick() {
+    shareBackupRef.current = { ids: new Set(shareGroupIds), visibility };
     // 처음 열 때(선택 없음)는 모든 그룹 체크로 시작
     if (shareGroupIds.size === 0 && groups.length > 0) {
       setShareGroupIds(new Set(groups.map((g) => g.id)));
     }
     Keyboard.dismiss();
     setGroupPickOpen(true);
+  }
+
+  /** 바깥 탭 = 취소: 열기 전 선택·공개 상태로 되돌리고 닫는다 (확정은 아래 버튼만) */
+  function cancelGroupPick() {
+    if (shareBackupRef.current) {
+      setShareGroupIds(shareBackupRef.current.ids);
+      setVisibility(shareBackupRef.current.visibility);
+    }
+    setGroupPickOpen(false);
   }
 
   function toggleShareGroup(id: number) {
@@ -247,6 +261,9 @@ export default function DiaryWriteScreen() {
     return () => { cancelled = true; };
   }, [editEntry]);
 
+  // 임시저장 후 내용을 더 고치면 '저장됨 ✓' 해제 (최신 내용까지 저장된 것처럼 보이지 않게)
+  useEffect(() => { setDraftSaved(false); }, [title, blocks, tags]);
+
   /** 현재 작성 중인 내용을 임시저장함에 저장한다 (이어쓰던 초안이면 갱신) */
   async function handleSaveDraft() {
     const draftBody = (selectedPrompt ? `[q:${selectedPrompt}]\n` : '') + blocksToBody(blocks);
@@ -260,6 +277,7 @@ export default function DiaryWriteScreen() {
         id: draftId,
         title, body: draftBody, tags, persona, folder,
         dates: selectedDates,
+        calYear, calMonth, // 날짜가 속한 연·월도 저장 (다른 달에 복원해도 원래 달 유지)
         photo: firstPhoto,
         photos: [],
         visibility,
@@ -283,6 +301,9 @@ export default function DiaryWriteScreen() {
     setPersona(d.persona);
     setFolder(d.folder);
     setSelectedDates(d.dates);
+    // 초안이 기억하는 연·월로 달력 복원 (없는 구초안은 현재 달 유지)
+    if (typeof d.calYear === 'number') setCalYear(d.calYear);
+    if (typeof d.calMonth === 'number') setCalMonth(d.calMonth);
     setVisibility(d.visibility);
     setDraftId(d.id);
     setDraftSaved(false);
@@ -440,7 +461,9 @@ export default function DiaryWriteScreen() {
                 const personaChanged = editEntry.persona !== persona;
                 const needRegen = personaChanged && !!editEntry.aiComment;
                 const updated = {
-                  ...editEntry, title, body: storedBody, tags, persona, folder, dates: selectedDates,
+                  // 날짜를 안 골랐으면(달력만 둘러본 경우) 기존 날짜 배지 유지
+                  ...editEntry, title, body: storedBody, tags, persona, folder,
+                  dates: selectedDates.length > 0 ? selectedDates : (editEntry.dates ?? []),
                   photo: mainPhoto, photos: [], visibility,
                   sharedGroups: visibility === 'friends' && shareGroupIds.size > 0 ? Array.from(shareGroupIds) : null,
                   createdAt: createdAtISO,
@@ -674,7 +697,7 @@ export default function DiaryWriteScreen() {
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.aiCardTitle}>AI 코멘트</Text>
-            <Text style={styles.aiCardSub}>{persona} · 24 시간 뒤 도착</Text>
+            <Text style={styles.aiCardSub}>{persona} · 10 시간 뒤 도착</Text>
           </View>
           <IconChev dir="right" size={16} color="#9ca3af" />
         </TouchableOpacity>
@@ -775,7 +798,7 @@ export default function DiaryWriteScreen() {
       {/* 그룹 공개 대상 선택 모달 */}
       {groupPickOpen && (
       <SheetWrap style={styles.overlayWrap}>
-        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={confirmGroupPick}>
+        <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={cancelGroupPick}>
           <TouchableOpacity activeOpacity={1}>
             <View style={styles.personaModal}>
               <Text style={styles.personaModalTitle}>그룹 공개</Text>

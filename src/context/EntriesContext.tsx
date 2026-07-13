@@ -24,7 +24,8 @@ const EntriesContext = createContext<EntriesContextValue>({
 });
 
 export function EntriesProvider({ children }: { children: React.ReactNode }) {
-  const { ready, token } = useAuth();
+  // authed(불리언) 기준 — 토큰 문자열은 1시간마다 자동 갱신되므로 그때마다 전체 리로드하지 않게
+  const { ready, authed } = useAuth();
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,7 +35,7 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
     if (!ready) return;
 
     async function load() {
-      if (!token) {
+      if (!authed) {
         if (!cancelled) { setEntries([]); setLoading(false); }
         return;
       }
@@ -58,7 +59,7 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
 
     load();
     return () => { cancelled = true; };
-  }, [ready, token]);
+  }, [ready, authed]);
 
   // 낙관적 추가: 화면에 먼저 반영하고 서버 저장 후 실제 엔트리로 교체 (항상 최신순 유지)
   function addEntry(entry: DiaryEntry) {

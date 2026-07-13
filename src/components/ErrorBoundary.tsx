@@ -1,7 +1,7 @@
 // 화면 렌더 중 JS 에러가 나면 앱 전체가 빈(회색) 화면으로 죽는 대신
 // 에러 내용과 '다시 시도' 버튼을 보여주는 안전망.
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Appearance } from 'react-native';
 
 interface Props { children: React.ReactNode }
 interface State { error: Error | null }
@@ -46,12 +46,15 @@ export default class ErrorBoundary extends React.Component<Props, State> {
 
   render() {
     if (this.state.error) {
+      // ThemeProvider 바깥(트리 최상단)이라 앱 테마를 못 읽음 → 시스템 다크 여부로 판단
+      // (다크 사용 중 크래시 시 순백 화면이 번쩍이는 것 방지)
+      const dark = Appearance.getColorScheme() === 'dark';
       return (
-        <View style={styles.wrap}>
+        <View style={[styles.wrap, dark && { backgroundColor: '#0e131e' }]}>
           <Text style={styles.emoji}>🛠️</Text>
-          <Text style={styles.title}>화면을 그리다 문제가 생겼어요</Text>
+          <Text style={[styles.title, dark && { color: '#eef1f7' }]}>화면을 그리다 문제가 생겼어요</Text>
           <Text style={styles.detail} numberOfLines={4}>{describeError(this.state.error)}</Text>
-          <TouchableOpacity style={styles.btn} onPress={this.reset}>
+          <TouchableOpacity style={[styles.btn, dark && { backgroundColor: '#222c40' }]} onPress={this.reset}>
             <Text style={styles.btnText}>다시 시도</Text>
           </TouchableOpacity>
         </View>

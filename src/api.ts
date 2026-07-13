@@ -102,6 +102,13 @@ function fromServer(row: any): DiaryEntry {
   };
 }
 
+// 401(토큰 만료·무효) 시 호출될 전역 핸들러 — AuthProvider가 로그아웃을 등록한다.
+// 만료 토큰을 쥔 채 "로그인된 척 전부 실패"하는 상태에 갇히지 않게 하는 안전망.
+let onUnauthorized: (() => void) | null = null;
+export function setOnUnauthorized(fn: (() => void) | null) {
+  onUnauthorized = fn;
+}
+
 async function request(path: string, options: RequestInit = {}) {
   const token = getToken();
   const res = await fetch(`${API_BASE_URL}${path}`, {
@@ -115,6 +122,8 @@ async function request(path: string, options: RequestInit = {}) {
   if (res.status === 204) return null;
   const data = await res.json().catch(() => null);
   if (!res.ok) {
+    // 인증된 요청이 401이면 세션이 죽은 것 → 로그인 화면으로 복귀시킨다
+    if (res.status === 401 && token && onUnauthorized) onUnauthorized();
     throw new Error((data && data.error) || `요청 실패 (${res.status})`);
   }
   return data;
@@ -128,7 +137,9 @@ export async function signup(email: string, password: string) {
   });
 }
 
-/** 로그인 → 토큰·이메일 저장 후 토큰 반환 */
+/** 로그인 → 토큰·이메일 저장 후 토큰 반환.
+ * refresh_token이 오면 Supabase 세션으로 채택해 1시간 만료 후에도 자동 갱신되게 한다
+ * (갱신된 토큰은 AuthContext의 onAuthStateChange가 계속 반영). */
 export async function login(email: string, password: string): Promise<string> {
   const data = await request('/auth/login', {
     method: 'POST',
@@ -136,6 +147,12 @@ export async function login(email: string, password: string): Promise<string> {
   });
   setToken(data.token);
   if (data.user?.email) storage.set(EMAIL_KEY, data.user.email);
+  if (data.refresh_token) {
+    try {
+      const { supabase } = await import('./supabaseClient');
+      await supabase.auth.setSession({ access_token: data.token, refresh_token: data.refresh_token });
+    } catch {} // 세션 채택 실패해도 토큰 로그인은 유지 (구서버 호환)
+  }
   return data.token;
 }
 

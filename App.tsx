@@ -1,5 +1,6 @@
 import 'react-native-gesture-handler';
 import { useEffect } from 'react';
+import { AppState, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as Updates from 'expo-updates';
 import { PostHogProvider, usePostHog } from 'posthog-react-native';
@@ -96,24 +97,38 @@ export default function App() {
     })();
   }, []);
 
+  // 네이티브: 포그라운드 복귀 시 Supabase 토큰 자동 갱신 타이머 재개 (표준 패턴)
+  // 없으면 긴 백그라운드 후 만료 토큰으로 돌아와 일시 401이 난다.
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    const { supabase } = require('./src/supabaseClient');
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') supabase.auth.startAutoRefresh();
+      else supabase.auth.stopAutoRefresh();
+    });
+    supabase.auth.startAutoRefresh();
+    return () => sub.remove();
+  }, []);
+
   return (
     <Analytics>
-      <ThemeProvider>
-        <AuthProvider>
-          <EntriesProvider>
-            <GroupsProvider>
-              <ThemedStatusBar />
-              <ErrorBoundary>
+      {/* ErrorBoundary가 Provider 렌더 크래시까지 잡도록 트리 전체를 감싼다 (ToastHost 포함) */}
+      <ErrorBoundary>
+        <ThemeProvider>
+          <AuthProvider>
+            <EntriesProvider>
+              <GroupsProvider>
+                <ThemedStatusBar />
                 <Gate />
-              </ErrorBoundary>
-              <PushRegistrar />
-              <AnalyticsIdentify />
-              <UpdateWatcher />
-              <ToastHost />
-            </GroupsProvider>
-          </EntriesProvider>
-        </AuthProvider>
-      </ThemeProvider>
+                <PushRegistrar />
+                <AnalyticsIdentify />
+                <UpdateWatcher />
+                <ToastHost />
+              </GroupsProvider>
+            </EntriesProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </ErrorBoundary>
     </Analytics>
   );
 }

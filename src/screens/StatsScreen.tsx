@@ -59,7 +59,16 @@ export default function StatsScreen() {
     return counts;
   }, [entries, thisYear]);
   const thisMonthCount = monthCounts[thisMonth];
-  const lastMonthCount = thisMonth === 0 ? 0 : monthCounts[thisMonth - 1];
+  // 지난달 수는 연도 경계를 넘어 직접 집계 (1월이면 작년 12월과 비교)
+  const lastMonthCount = useMemo(() => {
+    const prev = new Date(thisYear, thisMonth - 1, 1);
+    const py = prev.getFullYear();
+    const pm = prev.getMonth();
+    return entries.filter((e) => {
+      const d = new Date(e.createdAt);
+      return d.getFullYear() === py && d.getMonth() === pm;
+    }).length;
+  }, [entries, thisYear, thisMonth]);
   const monthDiff = thisMonthCount - lastMonthCount;
 
   // 이번 달에 쓴 p!ng 목록 (시트용)

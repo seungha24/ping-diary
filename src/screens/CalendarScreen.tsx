@@ -57,6 +57,12 @@ export default function CalendarScreen() {
     setMonth(next.getMonth());
   }
 
+  // 월이 바뀌면 선택일을 그 달의 일수로 clamp (31일 선택 후 2월 이동 → "2월 31일" 방지)
+  useEffect(() => {
+    const max = getDaysInMonth(year, month);
+    setSelectedDay((d) => Math.min(d, max));
+  }, [year, month]);
+
   const calGrid = useMemo(() => {
     const daysInMonth = getDaysInMonth(year, month);
     const firstDay = getFirstDayOfMonth(year, month);

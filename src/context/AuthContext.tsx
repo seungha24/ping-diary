@@ -4,6 +4,7 @@ import * as WebBrowser from 'expo-web-browser';
 import {
   getToken, getUserEmail, setToken as apiSetToken, setUserEmail as apiSetUserEmail,
   clearToken, hydrateToken, login as apiLogin, signup as apiSignup, getMe,
+  setOnUnauthorized,
 } from '../api';
 import { supabase } from '../supabaseClient';
 import { API_BASE_URL } from '../config';
@@ -60,10 +61,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { hydrateTheme } = useTheme();
 
   // 로그인되면 내 계정에 저장된 테마를 불러와 적용
+  // (의존성은 authed — 토큰 문자열은 1시간마다 갱신되므로 그때마다 재조회하지 않게)
+  const authed = !!token;
   useEffect(() => {
-    if (!token) return;
+    if (!authed) return;
     getMe().then((me) => { if (me.theme) hydrateTheme(me.theme as any); }).catch(() => {});
-  }, [token]);
+  }, [authed]);
+
+  // API가 401을 만나면(토큰 만료·무효) 로그인 화면으로 깔끔히 복귀
+  useEffect(() => {
+    setOnUnauthorized(() => logout());
+    return () => setOnUnauthorized(null);
+  }, []);
 
   // 소셜 로그인(Supabase) 세션을 우리 토큰 저장소/상태에 반영
   function adoptSession(session: any) {
@@ -257,7 +266,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        ready, authed: !!token, token, email: userEmail,
+        ready, authed, token, email: userEmail,
         login, signup, loginDemo, loginOAuth, logout,
         recovering, resetPassword, completeRecovery, cancelRecovery,
       }}
