@@ -188,8 +188,9 @@ const lightStyles = StyleSheet.create({
   avatarCircle: {
     width: 72, height: 72, borderRadius: 36,
     backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
+    borderWidth: 2, borderColor: '#e5e7eb',
   },
-  avatarImage: { width: 72, height: 72, borderRadius: 36 },
+  avatarImage: { width: 72, height: 72, borderRadius: 36, borderWidth: 2, borderColor: '#e5e7eb' },
   avatarBadge: {
     position: 'absolute', bottom: 0, right: 0,
     width: 22, height: 22, borderRadius: 11,
