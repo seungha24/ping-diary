@@ -150,7 +150,11 @@ export default function StatsScreen() {
   const topTags = useMemo(() => {
     const tagCounts: Record<string, number> = {};
     entries.forEach((e) => e.tags.forEach((t) => { tagCounts[t] = (tagCounts[t] || 0) + 1; }));
-    return Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    // 2번 이상 쓴 태그만 "자주 쓴 태그" (1번짜리는 어떤 게 뽑히는지 임의라 혼란)
+    return Object.entries(tagCounts)
+      .filter(([, n]) => n >= 2)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
   }, [entries]);
   const maxTag = topTags[0]?.[1] || 1;
 
@@ -355,7 +359,7 @@ export default function StatsScreen() {
           </View>
 
           {topTags.length === 0 ? (
-            <Text style={styles.emptyText}>아직 태그가 없어요</Text>
+            <Text style={styles.emptyText}>2 번 이상 쓴 태그가 생기면 여기 표시돼요</Text>
           ) : (
             <View style={styles.tagChart}>
               {topTags.map(([label, count]) => (
