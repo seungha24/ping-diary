@@ -263,12 +263,7 @@ export default function StatsScreen() {
           )}
           {monthAwards ? (
             awardsCollapsed ? (
-              // 접힌 상태: 한 줄 요약만 (탭하면 다시 펼침)
-              <TouchableOpacity onPress={toggleAwardsCollapsed} activeOpacity={0.7}>
-                <Text style={styles.awardCollapsedSummary}>
-                  {monthAwards.awards.length} 개의 상 · 탭해서 다시 보기
-                </Text>
-              </TouchableOpacity>
+              null // 접힌 상태: 헤더만 남김 (화살표로 다시 펼침)
             ) : (
             <>
               {monthAwards.awards.map((a, i) => {
@@ -583,7 +578,6 @@ const lightStyles = StyleSheet.create({
   awardComment: { fontSize: 13, color: '#4b5563', lineHeight: 20 },
   awardLink: { fontSize: 12.5, fontWeight: '600', marginTop: 2 },
   awardClosing: { fontSize: 12.5, color: '#9ca3af', textAlign: 'center', paddingVertical: 4 },
-  awardCollapsedSummary: { fontSize: 12.5, color: '#9ca3af', textAlign: 'center', paddingVertical: 6 },
   awardCollapseBtn: { alignSelf: 'center', paddingVertical: 6, paddingHorizontal: 14 },
   awardCollapseText: { fontSize: 12.5, color: '#9ca3af', fontWeight: '600' },
   reportError: { fontSize: 12, color: '#ef4444' },
