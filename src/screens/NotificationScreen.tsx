@@ -33,6 +33,10 @@ export default function NotificationScreen() {
   useEffect(() => {
     refreshNotifs().finally(() => setLoading(false));
   }, []);
+  // 알림창을 봤다면 나갈 때 자동으로 모두 읽음 처리 (종 아이콘 빨간 점 제거)
+  useEffect(() => {
+    return () => { storeMarkAllRead(); };
+  }, []);
 
   const notifs = getNotifs();
   const unreadCount = getUnreadCount();
