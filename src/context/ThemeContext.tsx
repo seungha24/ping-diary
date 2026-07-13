@@ -135,3 +135,11 @@ export function hexToRgba(hex: string, alpha: number): string {
   const b = parseInt(hex.slice(5, 7), 16);
   return `rgba(${r},${g},${b},${alpha})`;
 }
+
+/** 두 hex 색을 섞은 불투명 색 반환. t = a의 비율 (0~1). 파스텔 틴트 만들 때 사용 */
+export function mixHex(a: string, b: string, t: number): string {
+  const pa = [parseInt(a.slice(1, 3), 16), parseInt(a.slice(3, 5), 16), parseInt(a.slice(5, 7), 16)];
+  const pb = [parseInt(b.slice(1, 3), 16), parseInt(b.slice(3, 5), 16), parseInt(b.slice(5, 7), 16)];
+  const c = pa.map((v, i) => Math.round(v * t + pb[i] * (1 - t)));
+  return `#${c.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+}

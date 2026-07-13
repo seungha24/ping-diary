@@ -17,7 +17,7 @@ import { getUnreadCount as getNotifUnread, subscribeNotifs, refreshNotifs } from
 import { PhotoThumb } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
 import { FOLDERS, DiaryEntry, DiaryFolder, entryDateLabel, mergeFolders, stripPhotoMarkers } from '../data/types';
-import { useTheme, hexToRgba } from '../context/ThemeContext';
+import { useTheme, hexToRgba, mixHex } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { useGroups } from '../context/GroupsContext';
 import { useAuth } from '../context/AuthContext';
@@ -495,7 +495,11 @@ export default function HomeScreen() {
           {(['personal', 'group'] as const).map((t) => (
             <TouchableOpacity
               key={t}
-              style={[styles.tabItem, tab === t && { backgroundColor: hexToRgba(accent, 0.13) }]}
+              style={[
+                styles.tabItem,
+                // 선택 배경: 테마색을 흰색(다크에선 필 배경색)과 섞은 파스텔 — rgba보다 맑고 은은함
+                tab === t && { backgroundColor: mode === 'dark' ? mixHex(accent, '#222c40', 0.22) : mixHex(accent, '#ffffff', 0.12) },
+              ]}
               onPress={() => setTab(t)}
             >
               <Text style={[styles.tabText, tab === t && { color: accent, fontWeight: '600' }]}>
