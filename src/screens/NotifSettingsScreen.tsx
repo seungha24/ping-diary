@@ -11,12 +11,7 @@ import { useThemedStyles } from '../theme/themed';
 import { loadPersonalReminder, savePersonalReminder, applyPersonalReminder } from '../data/personalNotif';
 import { notify } from '../notify';
 
-/** 24시간제 시각을 "PM 8:30" 형태로 표기 */
-function timeLabel(hour: number, minute: number): string {
-  const pm = hour >= 12;
-  const h12 = hour % 12 === 0 ? 12 : hour % 12;
-  return `${pm ? 'PM' : 'AM'} ${h12}:${String(minute).padStart(2, '0')}`;
-}
+import TimeChipPicker, { timeLabel } from '../components/TimeChipPicker';
 
 /** 테마색이 웹에서도 확실히 적용되는 커스텀 토글 (RN Switch가 웹에서 색 무시하는 문제 회피) */
 function ThemeSwitch({ value, onChange, disabled, accent }: { value: boolean; onChange: (v: boolean) => void; disabled?: boolean; accent: string }) {
@@ -96,15 +91,6 @@ export default function NotifSettingsScreen() {
     } else {
       notify('내 일기 리마인더를 껐어요.');
     }
-  }
-  // 12시간제 조작 (AM/PM + 1~12시 + 분)
-  const reminderIsPm = myReminderHour >= 12;
-  const reminderHour12 = myReminderHour % 12 === 0 ? 12 : myReminderHour % 12;
-  function setReminderAmPm(pm: boolean) {
-    updateMyReminder(true, (reminderHour12 % 12) + (pm ? 12 : 0), myReminderMinute);
-  }
-  function setReminderHour12(h12: number) {
-    updateMyReminder(true, (h12 % 12) + (reminderIsPm ? 12 : 0), myReminderMinute);
   }
 
   function toggleAll(v: boolean) {
@@ -194,53 +180,11 @@ export default function NotifSettingsScreen() {
             {myReminderOn && (
               <>
                 <View style={styles.divider} />
-                {/* 오전/오후 */}
-                <View style={styles.ampmRow}>
-                  {([['AM', false], ['PM', true]] as const).map(([label, pm]) => {
-                    const active = reminderIsPm === pm;
-                    return (
-                      <TouchableOpacity
-                        key={label}
-                        style={[styles.ampmChip, active && { backgroundColor: hexToRgba(accent, 0.12), borderColor: accent }]}
-                        onPress={() => setReminderAmPm(pm)}
-                      >
-                        <Text style={[styles.hourChipText, active && { color: accent, fontWeight: '700' }]}>{label}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-                {/* 시 (1~12) */}
-                <View style={styles.hourRow}>
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map((h12) => {
-                    const active = reminderHour12 === h12;
-                    return (
-                      <TouchableOpacity
-                        key={h12}
-                        style={[styles.hourChip, active && { backgroundColor: hexToRgba(accent, 0.12), borderColor: accent }]}
-                        onPress={() => setReminderHour12(h12)}
-                      >
-                        <Text style={[styles.hourChipText, active && { color: accent, fontWeight: '700' }]}>{h12}</Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-                {/* 분 */}
-                <View style={styles.minuteRow}>
-                  {[0, 10, 20, 30, 40, 50].map((m) => {
-                    const active = myReminderMinute === m;
-                    return (
-                      <TouchableOpacity
-                        key={m}
-                        style={[styles.hourChip, active && { backgroundColor: hexToRgba(accent, 0.12), borderColor: accent }]}
-                        onPress={() => updateMyReminder(true, myReminderHour, m)}
-                      >
-                        <Text style={[styles.hourChipText, active && { color: accent, fontWeight: '700' }]}>
-                          :{String(m).padStart(2, '0')}
-                        </Text>
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
+                <TimeChipPicker
+                  hour={myReminderHour}
+                  minute={myReminderMinute}
+                  onChange={(h, m) => updateMyReminder(true, h, m)}
+                />
                 <Text style={styles.timeSummary}>
                   매일 <Text style={{ color: accent, fontWeight: '700' }}>{timeLabel(myReminderHour, myReminderMinute)}</Text>에 알려드려요
                 </Text>

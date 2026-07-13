@@ -21,6 +21,7 @@ import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useGroups } from '../context/GroupsContext';
 import { fetchGroupEntries, leaveGroup, deleteGroup, renameGroup, reportContent, saveBlockedUsers, saveMutedGroups, getCachedMe, uploadPhoto, updateGroupPhoto } from '../api';
 import { loadGroupNotifSetting, saveGroupNotifSetting, applyGroupReminderSchedule } from '../data/groupNotif';
+import TimeChipPicker, { timeLabel } from '../components/TimeChipPicker';
 import { notify } from '../notify';
 import { Platform } from 'react-native';
 import { IconUsers, IconUser, IconBell as IconBellLine, IconSprout, IconSparkle, IconPencil, IconTrash, IconCamera, PersonaIcon } from '../components/icons/Line';
@@ -396,6 +397,8 @@ export default function GroupScreen() {
   const [frequency, setFrequency] = useState<Frequency>('weekly');
   const [selectedDays, setSelectedDays] = useState<number[]>([1]); // 월요일 기본
   const [intervalDays, setIntervalDays] = useState(3); // N일마다
+  const [notifHour, setNotifHour] = useState(20); // 알림 시각 (저녁 8시 기본)
+  const [notifMinute, setNotifMinute] = useState(0);
 
   // 저장된 설정 복원
   useEffect(() => {
@@ -405,6 +408,8 @@ export default function GroupScreen() {
       setFrequency(s.frequency);
       setSelectedDays(s.days);
       setIntervalDays(s.intervalDays);
+      setNotifHour(s.hour ?? 20);
+      setNotifMinute(s.minute ?? 0);
     }).catch(() => {});
     return () => { cancelled = true; };
   }, [group.id]);
@@ -413,11 +418,15 @@ export default function GroupScreen() {
   const [draftFreq, setDraftFreq] = useState<Frequency>(frequency);
   const [draftDays, setDraftDays] = useState<number[]>(selectedDays);
   const [draftInterval, setDraftInterval] = useState(String(intervalDays));
+  const [draftHour, setDraftHour] = useState(notifHour);
+  const [draftMinute, setDraftMinute] = useState(notifMinute);
 
   function openModal() {
     setDraftFreq(frequency);
     setDraftDays(selectedDays);
     setDraftInterval(String(intervalDays));
+    setDraftHour(notifHour);
+    setDraftMinute(notifMinute);
     setNotifModalOpen(true);
   }
 
@@ -428,10 +437,15 @@ export default function GroupScreen() {
     setFrequency(draftFreq);
     setSelectedDays(draftDays);
     setIntervalDays(nextInterval);
+    setNotifHour(draftHour);
+    setNotifMinute(draftMinute);
     setNotifModalOpen(false);
 
     // 실제 반영: 기기 저장 + 리마인더 재예약 + '끄기'는 서버 푸시 뮤트
-    const setting = { frequency: draftFreq, days: draftDays, intervalDays: nextInterval };
+    const setting = {
+      frequency: draftFreq, days: draftDays, intervalDays: nextInterval,
+      hour: draftHour, minute: draftMinute,
+    };
     saveGroupNotifSetting(group.id, setting).catch(() => {});
     applyGroupReminderSchedule(group.id, groupName, setting).catch(() => {});
     const muted = new Set(getCachedMe()?.muted_groups ?? []);
@@ -439,7 +453,7 @@ export default function GroupScreen() {
     saveMutedGroups([...muted]).catch(() => {});
     notify(draftFreq === 'off'
       ? '이 그룹의 알림을 껐어요. 새 글 알림도 오지 않아요.'
-      : '알림 설정을 저장했어요.');
+      : `알림 설정을 저장했어요. ${timeLabel(draftHour, draftMinute)}에 알려드릴게요.`);
   }
 
   function toggleDay(d: number) {
@@ -755,6 +769,8 @@ export default function GroupScreen() {
           <Text style={styles.sheetTitle}>알림 주기 설정</Text>
           <Text style={styles.sheetSubtitle}>{group.name}</Text>
 
+          {/* 옵션이 길어 작은 화면에서도 저장 버튼이 잘리지 않게 스크롤 */}
+          <ScrollView style={{ maxHeight: 430 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           {/* 주기 옵션 */}
           <View style={styles.freqList}>
             {FREQ_OPTIONS.map((opt) => (
@@ -824,6 +840,19 @@ export default function GroupScreen() {
               </View>
             </View>
           )}
+
+          {/* 알림 받을 시간 */}
+          {draftFreq !== 'off' && (
+            <View style={styles.daySection}>
+              <Text style={styles.daySectionTitle}>알림 받을 시간</Text>
+              <TimeChipPicker
+                hour={draftHour}
+                minute={draftMinute}
+                onChange={(h, m) => { setDraftHour(h); setDraftMinute(m); }}
+              />
+            </View>
+          )}
+          </ScrollView>
 
           {/* 저장 버튼 */}
           <TouchableOpacity style={[styles.saveBtn, { backgroundColor: accent }]} onPress={saveAndClose}>

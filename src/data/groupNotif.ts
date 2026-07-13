@@ -11,10 +11,12 @@ export interface GroupNotifSetting {
   frequency: GroupNotifFrequency;
   days: number[];        // weekly용 요일 (0=일 ~ 6=토)
   intervalDays: number;  // interval용 N일
+  hour?: number;         // 알림 시각 (0~23, 없으면 20시)
+  minute?: number;       // 알림 분 (없으면 0)
 }
 
 const KEY = 'ping_group_notif_settings'; // { [groupId]: GroupNotifSetting }
-const REMINDER_HOUR = 20; // 리마인더 발송 시각 (저녁 8시)
+const DEFAULT_HOUR = 20; // 기본 발송 시각 (저녁 8시)
 
 function webStorage(): Storage | null {
   try {
@@ -81,6 +83,8 @@ export async function applyGroupReminderSchedule(
 
     if (setting.frequency === 'off') return;
 
+    const hour = setting.hour ?? DEFAULT_HOUR;
+    const minute = setting.minute ?? 0;
     const content = {
       title: `${groupName}에 p!ng 남길 시간이에요 ✍️`,
       body: '오늘의 이야기를 그룹 친구들과 나눠보세요',
@@ -88,7 +92,7 @@ export async function applyGroupReminderSchedule(
     };
 
     if (setting.frequency === 'weekly') {
-      // 선택한 요일마다 반복 (expo weekday: 1=일 ~ 7=토)
+      // 선택한 요일마다 지정 시각에 반복 (expo weekday: 1=일 ~ 7=토)
       await Promise.all(
         setting.days.map((d) =>
           Notifications.scheduleNotificationAsync({
@@ -97,8 +101,8 @@ export async function applyGroupReminderSchedule(
             trigger: {
               type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
               weekday: d + 1,
-              hour: REMINDER_HOUR,
-              minute: 0,
+              hour,
+              minute,
             },
           })
         )
@@ -106,17 +110,25 @@ export async function applyGroupReminderSchedule(
       return;
     }
 
-    // 격주=14일, 직접 입력=N일 간격 반복 (지금부터 N일 후 첫 알림)
-    const days = setting.frequency === 'biweekly' ? 14 : Math.max(1, setting.intervalDays);
-    await Notifications.scheduleNotificationAsync({
-      identifier: `${prefix}interval`,
-      content,
-      trigger: {
-        type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
-        seconds: days * 24 * 60 * 60,
-        repeats: true,
-      },
-    });
+    // 격주=14일, 직접 입력=N일 간격 — 지정 시각을 지키기 위해
+    // 반복 타이머 대신 앞으로 20회를 일회성 예약으로 깐다 (설정 변경·재적용 시 갱신)
+    const stepDays = setting.frequency === 'biweekly' ? 14 : Math.max(1, setting.intervalDays);
+    const first = new Date();
+    first.setHours(hour, minute, 0, 0);
+    if (first.getTime() <= Date.now()) first.setDate(first.getDate() + stepDays);
+    const jobs = [];
+    for (let i = 0; i < 20; i++) {
+      const at = new Date(first);
+      at.setDate(first.getDate() + stepDays * i);
+      jobs.push(
+        Notifications.scheduleNotificationAsync({
+          identifier: `${prefix}interval-${i}`,
+          content,
+          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at },
+        })
+      );
+    }
+    await Promise.all(jobs);
   } catch {
     // 네이티브 모듈 없는 빌드 등 — 무시
   }
