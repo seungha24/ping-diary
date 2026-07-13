@@ -495,7 +495,7 @@ export default function HomeScreen() {
           {(['personal', 'group'] as const).map((t) => (
             <TouchableOpacity
               key={t}
-              style={[styles.tabItem, tab === t && styles.tabItemActive]}
+              style={[styles.tabItem, tab === t && { backgroundColor: hexToRgba(accent, 0.13) }]}
               onPress={() => setTab(t)}
             >
               <Text style={[styles.tabText, tab === t && { color: accent, fontWeight: '600' }]}>
@@ -1049,10 +1049,7 @@ const lightStyles = StyleSheet.create({
   tabRow: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 12 },
   tabPill: { flexDirection: 'row', backgroundColor: '#f3f4f6', borderRadius: 12, padding: 4 },
   tabItem: { flex: 1, paddingVertical: 10, borderRadius: 9, alignItems: 'center' },
-  tabItemActive: {
-    backgroundColor: 'white', // 'white' 키워드 = 테마 틴트 없이 진짜 흰색 (themed.ts 참고)
-    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 2,
-  },
+  // 선택된 탭 배경은 JSX에서 테마색 은은한 틴트(hexToRgba(accent, 0.13))로 처리
   tabText: { fontSize: 13, color: '#9ca3af', fontWeight: '500' },
   tabTextActive: { color: '#111827', fontWeight: '600' },
   list: { paddingHorizontal: 20, paddingTop: 12, gap: 10, paddingBottom: 80 },
