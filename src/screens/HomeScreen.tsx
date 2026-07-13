@@ -1050,7 +1050,7 @@ const lightStyles = StyleSheet.create({
   tabPill: { flexDirection: 'row', backgroundColor: '#f3f4f6', borderRadius: 12, padding: 4 },
   tabItem: { flex: 1, paddingVertical: 10, borderRadius: 9, alignItems: 'center' },
   tabItemActive: {
-    backgroundColor: '#ffffff',
+    backgroundColor: 'white', // 'white' 키워드 = 테마 틴트 없이 진짜 흰색 (themed.ts 참고)
     shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 2,
   },
   tabText: { fontSize: 13, color: '#9ca3af', fontWeight: '500' },

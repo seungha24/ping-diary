@@ -11,6 +11,7 @@ const DARK_MAP: Record<string, string> = {
   // 표면 계열 (라이트에서 밝을수록 → 다크에서 페이지에 가깝게)
   '#ffffff': '#171f2e', // 카드·시트
   '#fff': '#171f2e',
+  'white': '#171f2e', // 라이트 틴트 탈출구('white')도 다크에선 카드색으로
   '#f9fafb': '#0e131e', // 페이지·스크롤 배경 (가장 어두운 네이비)
   '#fafafa': '#0e131e',
   '#f8fafc': '#0e131e',
@@ -73,14 +74,18 @@ export function accentTintedWhite(accent: string, amount = 0.035): string {
   return `#${mix(ch(1))}${mix(ch(3))}${mix(ch(5))}`;
 }
 
-/** 라이트 모드: 순백 배경만 테마색 틴트로 치환 (글자·테두리는 그대로) */
+/**
+ * 라이트 모드: 순백(#ffffff) 배경만 테마색 틴트로 치환 (글자·테두리는 그대로).
+ * 키워드 'white'는 건드리지 않음 → 틴트 위에서 진짜 흰색이 필요할 때의 탈출구
+ * (예: 개인/그룹 선택 알약).
+ */
 function tintifySheet<T extends Record<string, any>>(sheet: T, accent: string): T {
   const tint = accentTintedWhite(accent);
   const out: any = {};
   for (const key of Object.keys(sheet)) {
     const st: any = sheet[key];
     const bg = typeof st?.backgroundColor === 'string' ? st.backgroundColor.trim().toLowerCase() : '';
-    out[key] = bg === '#ffffff' || bg === '#fff' || bg === 'white'
+    out[key] = bg === '#ffffff' || bg === '#fff'
       ? { ...st, backgroundColor: tint }
       : st;
   }
