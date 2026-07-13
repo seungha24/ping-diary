@@ -760,7 +760,6 @@ export default function DiaryWriteScreen() {
                       style={[styles.folderRow, active && { borderColor: accent, backgroundColor: hexToRgba(accent, 0.08) }]}
                       onPress={() => { setFolder(f.id); setFolderModalOpen(false); }}
                     >
-                      <Text style={styles.folderRowEmoji}>{f.emoji}</Text>
                       <Text style={[styles.folderRowLabel, active && { color: accent, fontWeight: '600' }]}>{f.name}</Text>
                       {active && <Text style={[styles.folderRowCheck, { color: accent }]}>✓</Text>}
                     </TouchableOpacity>
@@ -1054,7 +1053,6 @@ const lightStyles = StyleSheet.create({
     padding: 14, borderRadius: 14, borderWidth: 1.5, borderColor: '#f3f4f6',
     marginBottom: 8,
   },
-  folderRowEmoji: { fontSize: 18, width: 22, textAlign: 'center' },
   folderRowLabel: { fontSize: 14, color: '#374151', flex: 1 },
   folderRowCheck: { fontSize: 15, fontWeight: '700' },
   groupPickConfirm: { borderRadius: 12, paddingVertical: 13, alignItems: 'center', marginTop: 10 },
