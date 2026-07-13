@@ -202,7 +202,7 @@ export default function StatsScreen() {
                 style={[
                   styles.monthCell,
                   { backgroundColor: getMonthBg(count) },
-                  reportMonth === i && { borderWidth: 2, borderColor: accent },
+                  reportMonth === i && { borderColor: accent },
                 ]}
                 onPress={() => selectReportMonth(i)}
                 activeOpacity={0.7}
@@ -560,6 +560,8 @@ const lightStyles = StyleSheet.create({
     width: '22%', borderRadius: 12,
     paddingVertical: 10, paddingHorizontal: 4,
     alignItems: 'center', gap: 2,
+    // 선택 시에만 테두리가 생기면 안쪽 공간이 2px 줄어 글자가 밀림 → 항상 투명 테두리 유지
+    borderWidth: 2, borderColor: 'transparent',
   },
   monthLabel: { fontSize: 12, fontWeight: '500' },
   monthCount: { fontSize: 13, fontWeight: '600' },
