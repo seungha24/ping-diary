@@ -17,7 +17,7 @@ import { getUnreadCount as getNotifUnread, subscribeNotifs, refreshNotifs } from
 import { PhotoThumb } from '../components/PhotoThumb';
 import PhotoLightbox from '../components/PhotoLightbox';
 import { FOLDERS, DiaryEntry, DiaryFolder, entryDateLabel, mergeFolders, stripPhotoMarkers } from '../data/types';
-import { useTheme, hexToRgba, mixHex } from '../context/ThemeContext';
+import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { useGroups } from '../context/GroupsContext';
 import { useAuth } from '../context/AuthContext';
@@ -495,11 +495,7 @@ export default function HomeScreen() {
           {(['personal', 'group'] as const).map((t) => (
             <TouchableOpacity
               key={t}
-              style={[
-                styles.tabItem,
-                // 선택 배경: 테마색을 흰색(다크에선 필 배경색)과 섞은 파스텔 — rgba보다 맑고 은은함
-                tab === t && { backgroundColor: mode === 'dark' ? mixHex(accent, '#222c40', 0.22) : mixHex(accent, '#ffffff', 0.12) },
-              ]}
+              style={[styles.tabItem, tab === t && styles.tabItemActive]}
               onPress={() => setTab(t)}
             >
               <Text style={[styles.tabText, tab === t && { color: accent, fontWeight: '600' }]}>
@@ -1053,7 +1049,10 @@ const lightStyles = StyleSheet.create({
   tabRow: { paddingHorizontal: 20, paddingTop: 10, paddingBottom: 12 },
   tabPill: { flexDirection: 'row', backgroundColor: '#f3f4f6', borderRadius: 12, padding: 4 },
   tabItem: { flex: 1, paddingVertical: 10, borderRadius: 9, alignItems: 'center' },
-  // 선택된 탭 배경은 JSX에서 테마색 은은한 틴트(hexToRgba(accent, 0.13))로 처리
+  tabItemActive: {
+    backgroundColor: 'white', // 'white' 키워드 = 테마 틴트 없이 진짜 흰색 (themed.ts 참고)
+    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, shadowOffset: { width: 0, height: 1 }, elevation: 2,
+  },
   tabText: { fontSize: 13, color: '#9ca3af', fontWeight: '500' },
   tabTextActive: { color: '#111827', fontWeight: '600' },
   list: { paddingHorizontal: 20, paddingTop: 12, gap: 10, paddingBottom: 80 },
