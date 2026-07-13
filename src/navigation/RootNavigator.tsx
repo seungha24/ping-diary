@@ -63,7 +63,7 @@ const Tab = createBottomTabNavigator<TabParamList>();
 const AD_ROUTES = new Set(['Home', 'Stats']);
 
 function MainTabs() {
-  const { accent } = useTheme();
+  const { accent, mode } = useTheme();
   const styles = useThemedStyles(lightStyles);
   return (
     <Tab.Navigator
@@ -77,6 +77,8 @@ function MainTabs() {
         headerShown: false,
         // 내장 'shift' 전환: 양방향 대칭 (커스텀 페이드는 역방향에서 나가는 화면이 비쳐 보였음)
         animation: 'shift',
+        // 전환 중 씬 뒤에 비치는 배경을 명시 — 기본값(회색)이 새어 보이는 것 방지
+        sceneStyle: { backgroundColor: mode === 'dark' ? '#0e131e' : '#ffffff' },
         // 블러된 탭은 렌더 동결 → 전환 중 무거운 화면 이중 렌더로 인한 버벅임 제거
         freezeOnBlur: true,
         tabBarStyle: styles.tabBar,
