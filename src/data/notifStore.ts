@@ -117,7 +117,7 @@ export async function refreshNotifs() {
         items.push({
           id: `ai-${e.id}-${tinyHash(e.aiComment)}`,
           type: 'ai',
-          title: '퐁이 도착했어요',
+          title: 'p0ng이 도착했어요',
           body: `${e.persona || 'AI'} · ${e.title || '제목 없음'}`,
           time: e.createdAt,
           read: false,

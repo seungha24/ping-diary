@@ -851,7 +851,7 @@ export default function DiaryWriteScreen() {
           <TouchableOpacity activeOpacity={1}>
             <View style={styles.personaModal}>
               <Text style={styles.personaModalTitle}>p0ng 페르소나</Text>
-              <Text style={styles.personaModalSub}>어떤 말투로 퐁을 받을까요? (AI가 페르소나의 말투로 써줘요)</Text>
+              <Text style={styles.personaModalSub}>어떤 말투로 p0ng을 받을까요? (AI가 페르소나의 말투로 써줘요)</Text>
               <View style={styles.personaGrid}>
                 {PERSONAS.map((p) => (
                   <TouchableOpacity

@@ -163,7 +163,7 @@ export default function DiaryDetailScreen() {
       setAiComment(updated.aiComment);
       updateLocal(updated); // 목록에도 반영
     } catch (e: any) {
-      notify(e?.message ?? '퐁 생성에 실패했어요. 잠시 후 다시 시도해주세요.');
+      notify(e?.message ?? 'p0ng 생성에 실패했어요. 잠시 후 다시 시도해주세요.');
     } finally {
       setGenLoading(false);
     }
@@ -182,7 +182,7 @@ export default function DiaryDetailScreen() {
       setAiComment(updated.aiComment);
       updateLocal(updated); // 목록에도 반영
     } catch (e: any) {
-      notify(e?.message ?? '퐁 생성에 실패했어요. 잠시 후 다시 시도해주세요.');
+      notify(e?.message ?? 'p0ng 생성에 실패했어요. 잠시 후 다시 시도해주세요.');
       setPersona(prev); // 실패 시 원래 페르소나로 롤백
     } finally {
       setGenLoading(false);
@@ -342,20 +342,20 @@ export default function DiaryDetailScreen() {
               {genLoading ? (
                 <View style={styles.aiRegenRow}>
                   <ActivityIndicator color={accent} size="small" />
-                  <Text style={styles.aiRegenText}>{persona} 말투로 퐁을 다시 쓰고 있어요…</Text>
+                  <Text style={styles.aiRegenText}>{persona} 말투로 p0ng을 다시 쓰고 있어요…</Text>
                 </View>
               ) : (
                 <Text style={styles.aiCommentText} selectable>{aiComment}</Text>
               )}
               <TouchableOpacity style={styles.aiReportBtn} onPress={() => setReportConfirmOpen(true)}>
-                <Text style={styles.aiReportText}>부적절한 퐁인가요? 신고하기</Text>
+                <Text style={styles.aiReportText}>부적절한 p0ng인가요? 신고하기</Text>
               </TouchableOpacity>
             </View>
           ) : (
             <View style={styles.aiLockedBox}>
               {isUnlocked ? <IconSparkle size={26} color={accent} /> : <IconLock size={26} color="#9ca3af" />}
               <Text style={styles.aiLockedText}>
-                {isUnlocked ? '아직 퐁이 없어요' : 'p!ng 작성 10 시간 후 퐁이 도착해요'}
+                {isUnlocked ? '아직 p0ng이 없어요' : 'p!ng 작성 10 시간 후 p0ng이 도착해요'}
               </Text>
               {!isUnlocked && <Text style={styles.aiCountdown}>{formatRemaining(remaining)}</Text>}
               {isMine && (
@@ -366,7 +366,7 @@ export default function DiaryDetailScreen() {
                 >
                   {genLoading
                     ? <ActivityIndicator color="#fff" size="small" />
-                    : <Text style={styles.genBtnText}>{isUnlocked ? '지금 퐁 받기' : '퐁 미리 받기'}</Text>}
+                    : <Text style={styles.genBtnText}>{isUnlocked ? '지금 p0ng 받기' : 'p0ng 미리 받기'}</Text>}
                 </TouchableOpacity>
               )}
             </View>
@@ -428,13 +428,13 @@ export default function DiaryDetailScreen() {
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
             <View style={styles.sheetHeader}>
-              <Text style={styles.sheetTitle}>퐁 말투 바꾸기</Text>
+              <Text style={styles.sheetTitle}>p0ng 말투 바꾸기</Text>
               <TouchableOpacity onPress={() => setPersonaOpen(false)}>
                 <IconX size={18} color="#9ca3af" />
               </TouchableOpacity>
             </View>
             <Text style={styles.sheetSub}>
-              {aiComment ? '고르면 그 말투로 퐁을 다시 써줘요.' : '어떤 말투로 퐁을 받을까요?'}
+              {aiComment ? '고르면 그 말투로 p0ng을 다시 써줘요.' : '어떤 말투로 p0ng을 받을까요?'}
             </Text>
             {PERSONAS.map((p) => {
               const active = p.label === persona;
@@ -491,7 +491,7 @@ export default function DiaryDetailScreen() {
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
             <View style={styles.deleteContent}>
-              <Text style={styles.deleteTitle}>이 퐁을 신고할까요?</Text>
+              <Text style={styles.deleteTitle}>이 p0ng을 신고할까요?</Text>
               <Text style={styles.deleteSub}>운영팀에 접수되고, 검토 후 조치돼요</Text>
               <TouchableOpacity style={styles.deleteConfirmBtn} onPress={reportAiComment}>
                 <Text style={styles.deleteConfirmText}>신고하기</Text>

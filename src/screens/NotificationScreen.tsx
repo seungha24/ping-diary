@@ -76,7 +76,7 @@ export default function NotificationScreen() {
               <>
                 <IconBellOff size={40} color="#d1d5db" />
                 <Text style={styles.emptyText}>알림이 없어요</Text>
-                <Text style={styles.emptySubText}>퐁이 도착하거나{'\n'}그룹에 새 p!ng가 올라오면 알려드릴게요</Text>
+                <Text style={styles.emptySubText}>p0ng이 도착하거나{'\n'}그룹에 새 p!ng가 올라오면 알려드릴게요</Text>
               </>
             )}
           </View>
