@@ -8,7 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { MONTHS, entryDateLabel, stripPhotoMarkers } from '../data/types';
-import { useTheme, hexToRgba } from '../context/ThemeContext';
+import { useTheme, hexToRgba, mixHex } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { getMonthlyAwards, MonthlyAward } from '../api';
 import { IconX, PersonaIcon, IconTrophy } from '../components/icons/Line';
@@ -27,6 +27,11 @@ export default function StatsScreen() {
   const navigation = useNavigation<Nav>();
   const { accent, mode } = useTheme();
   const { entries, refresh: refreshEntries } = useEntries();
+
+  // 통계 블록 배경: 테마색을 아주 옅게(라이트 5%·다크 8%) 섞은 틴트
+  const blockTint = {
+    backgroundColor: mode === 'dark' ? mixHex(accent, '#171f2e', 0.08) : mixHex(accent, '#ffffff', 0.05),
+  };
 
   // 당겨서 새로고침 — 통계의 근거 데이터(일기 목록) 재조회
   const [refreshing, setRefreshing] = useState(false);
@@ -203,11 +208,11 @@ export default function StatsScreen() {
       >
         {/* Summary */}
         <View style={styles.statsGrid}>
-          <TouchableOpacity style={styles.statCard} onPress={() => setListOpen(true)} activeOpacity={0.7}>
+          <TouchableOpacity style={[styles.statCard, blockTint]} onPress={() => setListOpen(true)} activeOpacity={0.7}>
             <Text style={[styles.statVal, { color: accent }]}>{entries.length} 개</Text>
             <Text style={styles.statLabel}>전체 p!ng</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.statCard} onPress={() => setMonthOpen(true)} activeOpacity={0.7}>
+          <TouchableOpacity style={[styles.statCard, blockTint]} onPress={() => setMonthOpen(true)} activeOpacity={0.7}>
             <Text style={[styles.statVal, { color: accent }]}>{thisMonthCount} 개</Text>
             <Text style={styles.statLabel}>이번 달</Text>
           </TouchableOpacity>
@@ -215,20 +220,20 @@ export default function StatsScreen() {
 
         {/* 지난달 대비 / 연속 기록 (요약 아래 작은 칩) */}
         <View style={styles.statsGrid}>
-          <View style={styles.statChip}>
+          <View style={[styles.statChip, blockTint]}>
             <Text style={styles.statChipLabel}>지난달 대비</Text>
             <Text style={[styles.statChipVal, { color: accent }]}>
               {monthDiff >= 0 ? `+${monthDiff} 개` : `${monthDiff} 개`}
             </Text>
           </View>
-          <View style={styles.statChip}>
+          <View style={[styles.statChip, blockTint]}>
             <Text style={styles.statChipLabel}>연속 기록</Text>
             <Text style={[styles.statChipVal, { color: accent }]}>{streak} 일</Text>
           </View>
         </View>
 
         {/* Monthly heatmap */}
-        <View style={styles.card}>
+        <View style={[styles.card, blockTint]}>
           <Text style={styles.cardTitle}>월별 기록 · {thisYear}</Text>
           <View style={styles.monthGrid}>
             {monthCounts.map((count, i) => (
@@ -252,7 +257,7 @@ export default function StatsScreen() {
         </View>
 
         {/* 월말 p!ng 어워즈 */}
-        <View style={[styles.card, { borderColor: hexToRgba(accent, 0.3) }]}>
+        <View style={[styles.card, blockTint, { borderColor: hexToRgba(accent, 0.3) }]}>
           <View style={styles.reportHeader}>
             <IconTrophy size={15} color={accent} />
             <Text style={[styles.cardTitle, { flex: 1 }]}>{reportMonth + 1} 월 p!ng 어워즈</Text>
@@ -350,7 +355,7 @@ export default function StatsScreen() {
         </View>
 
         {/* Tag bar chart */}
-        <View style={styles.card}>
+        <View style={[styles.card, blockTint]}>
           <Text style={styles.cardTitle}>자주 쓴 태그 · 탭하여 검색</Text>
 
           {/* 검색창 */}
@@ -403,7 +408,7 @@ export default function StatsScreen() {
 
         {/* 검색 결과 */}
         {query.length > 0 && (
-          <View style={styles.card}>
+          <View style={[styles.card, blockTint]}>
             <Text style={styles.cardTitle}>
               #{query} 검색 결과 · {filteredEntries.length} 개
             </Text>
