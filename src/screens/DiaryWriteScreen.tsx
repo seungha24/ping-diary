@@ -454,19 +454,23 @@ export default function DiaryWriteScreen() {
     setTagInput('');
   }
 
-  // 사진 선택 → 업로드 → 커서 위치에 사진 블록 삽입
+  // 사진 선택(여러 장 가능) → 업로드 → 커서 위치에 고른 순서대로 사진 블록 삽입
   async function insertPhoto() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') return;
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
+      allowsMultipleSelection: true, // 여러 장 선택 (allowsEditing과는 동시 사용 불가)
+      orderedSelection: true,        // 고른 순서대로 번호 표시·삽입
+      selectionLimit: 10,
       quality: 0.8,
     });
-    if (result.canceled || !result.assets[0]) return;
+    if (result.canceled || !result.assets?.length) return;
     setUploading(true);
     try {
-      const url = await uploadPhoto(result.assets[0].uri);
+      // 고른 순서 보장을 위해 순차 업로드
+      const urls: string[] = [];
+      for (const a of result.assets) urls.push(await uploadPhoto(a.uri));
       setBlocks((prev) => {
         const next = prev.map((b) => ({ ...b }));
         // 커서가 있던 텍스트 블록에서 분할 삽입 (없으면 마지막 텍스트 블록 끝에)
@@ -480,10 +484,10 @@ export default function DiaryWriteScreen() {
         const after = t.text.slice(pos).replace(/^\n/, '');
         next.splice(idx, 1,
           { type: 'text', text: before },
-          { type: 'photo', url },
+          ...urls.map((url) => ({ type: 'photo' as const, url })),
           { type: 'text', text: after },
         );
-        return normalizeBlocks(next);
+        return normalizeBlocks(next); // 연속 사진 사이 빈 텍스트 블록은 자동 삽입됨
       });
     } catch (e: any) {
       notify(e?.message ?? '사진 업로드에 실패했어요. 다시 시도해주세요.');
