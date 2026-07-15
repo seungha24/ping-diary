@@ -325,6 +325,28 @@ export async function fetchGroupEntries(id: number): Promise<any[]> {
   return Array.isArray(rows) ? rows : [];
 }
 
+/** 일기 댓글 */
+export interface EntryComment {
+  id: number;
+  entry_id: number;
+  user_id: string;
+  content: string;
+  created_at: string;
+  author: string;
+  author_avatar: string | null;
+  is_me: boolean;
+}
+export async function fetchComments(entryId: number): Promise<EntryComment[]> {
+  const rows = await request(`/entries/${entryId}/comments`);
+  return Array.isArray(rows) ? rows : [];
+}
+export async function addComment(entryId: number, content: string): Promise<EntryComment> {
+  return request(`/entries/${entryId}/comments`, { method: 'POST', body: JSON.stringify({ content }) });
+}
+export async function deleteComment(entryId: number, commentId: number): Promise<void> {
+  await request(`/entries/${entryId}/comments/${commentId}`, { method: 'DELETE' });
+}
+
 /** 그룹 멤버 목록 */
 export interface GroupMember {
   id: string;

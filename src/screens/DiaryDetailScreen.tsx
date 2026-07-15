@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, SafeAreaView,
-  ActivityIndicator, Image,
+  ActivityIndicator, Image, TextInput,
 } from 'react-native';
 import TouchableOpacity from '../components/Touchable';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -17,7 +17,7 @@ import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
 import { useGroups } from '../context/GroupsContext';
 import { PERSONAS, DiaryFolder, entryDateLabel, mergeFolders, parseBodySegments, extractQuestion } from '../data/types';
-import { generateComment, reportContent, getCachedMe } from '../api';
+import { generateComment, reportContent, getCachedMe, fetchComments, addComment, deleteComment, EntryComment } from '../api';
 import { notify } from '../notify';
 import Svg, { Path, Line } from 'react-native-svg';
 import { IconLock, IconX, IconSparkle, IconTrash as IconTrashLine, IconFolder, PersonaIcon } from '../components/icons/Line';
@@ -99,6 +99,58 @@ export default function DiaryDetailScreen() {
   const [genLoading, setGenLoading] = useState(false);
   const [folder, setFolder] = useState<string | undefined>(entry.folder);
   const [folderOpen, setFolderOpen] = useState(false);
+
+  // ── 댓글 (그룹에 공유된 일기에서만) ──
+  const commentsEnabled = entry.visibility === 'friends';
+  const [comments, setComments] = useState<EntryComment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentInput, setCommentInput] = useState('');
+  const [commentSending, setCommentSending] = useState(false);
+
+  useEffect(() => {
+    if (!commentsEnabled) return;
+    let cancelled = false;
+    setCommentsLoading(true);
+    fetchComments(entry.id)
+      .then((rows) => { if (!cancelled) setComments(rows); })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setCommentsLoading(false); });
+    return () => { cancelled = true; };
+  }, [entry.id, commentsEnabled]);
+
+  async function submitComment() {
+    const text = commentInput.trim();
+    if (!text || commentSending) return;
+    setCommentSending(true);
+    try {
+      const saved = await addComment(entry.id, text);
+      setComments((prev) => [...prev, saved]);
+      setCommentInput('');
+    } catch (e: any) {
+      notify(e?.message ?? '댓글 등록에 실패했어요.');
+    } finally {
+      setCommentSending(false);
+    }
+  }
+
+  async function removeComment(c: EntryComment) {
+    setComments((prev) => prev.filter((x) => x.id !== c.id)); // 낙관적 삭제
+    try {
+      await deleteComment(entry.id, c.id);
+    } catch (e: any) {
+      setComments((prev) => [...prev, c].sort((a, b) => a.created_at.localeCompare(b.created_at)));
+      notify(e?.message ?? '댓글 삭제에 실패했어요.');
+    }
+  }
+
+  function commentTimeLabel(iso: string): string {
+    const d = new Date(iso);
+    const diff = Date.now() - d.getTime();
+    if (diff < 60_000) return '방금';
+    if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}분 전`;
+    if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}시간 전`;
+    return `${d.getMonth() + 1}/${d.getDate()}`;
+  }
 
   // 수정 화면에서 바꾼 내용(페르소나·코멘트·폴더·공개범위)이 돌아오자마자 반영되게 동기화
   useEffect(() => {
@@ -240,7 +292,7 @@ export default function DiaryDetailScreen() {
         )}
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} automaticallyAdjustKeyboardInsets keyboardShouldPersistTaps="handled">
         <Text style={styles.date}>{entryDateLabel(entry)}</Text>
         <Text style={styles.title}>{entry.title}</Text>
 
@@ -372,6 +424,62 @@ export default function DiaryDetailScreen() {
             </View>
           )}
         </View>
+
+        {/* 댓글 — 그룹에 공유된 일기에서만 */}
+        {commentsEnabled && (
+          <View style={styles.commentSection}>
+            <Text style={styles.commentTitle}>
+              댓글{comments.length > 0 ? ` ${comments.length}` : ''}
+            </Text>
+            {commentsLoading ? (
+              <ActivityIndicator color={accent} style={{ paddingVertical: 12 }} />
+            ) : comments.length === 0 ? (
+              <Text style={styles.commentEmpty}>첫 댓글을 남겨보세요</Text>
+            ) : (
+              comments.map((c) => (
+                <View key={c.id} style={styles.commentRow}>
+                  <View style={styles.commentAvatar}>
+                    {c.author_avatar
+                      ? <Image source={{ uri: c.author_avatar }} style={styles.commentAvatarImg} />
+                      : <Text style={styles.commentAvatarFallback}>{c.author.slice(0, 1)}</Text>}
+                  </View>
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <View style={styles.commentMeta}>
+                      <Text style={styles.commentAuthor}>{c.author}</Text>
+                      <Text style={styles.commentTime}>{commentTimeLabel(c.created_at)}</Text>
+                    </View>
+                    <Text style={styles.commentBody}>{c.content}</Text>
+                  </View>
+                  {(c.is_me || isMine) && (
+                    <TouchableOpacity onPress={() => removeComment(c)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                      <Text style={styles.commentDelete}>✕</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ))
+            )}
+            <View style={styles.commentInputRow}>
+              <TextInput
+                style={styles.commentInput}
+                value={commentInput}
+                onChangeText={setCommentInput}
+                placeholder="댓글 쓰기…"
+                placeholderTextColor="#9ca3af"
+                maxLength={500}
+                multiline
+              />
+              <TouchableOpacity
+                style={[styles.commentSendBtn, { backgroundColor: accent }, (!commentInput.trim() || commentSending) && { opacity: 0.4 }]}
+                onPress={submitComment}
+                disabled={!commentInput.trim() || commentSending}
+              >
+                {commentSending
+                  ? <ActivityIndicator color="#fff" size="small" />
+                  : <Text style={styles.commentSendText}>등록</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </ScrollView>
 
       {shareOpen && (
@@ -566,6 +674,30 @@ const lightStyles = StyleSheet.create({
   questionText: { flex: 1, fontSize: 13.5, color: '#374151', lineHeight: 20, fontWeight: '600' },
 
   aiSection: { gap: 10, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
+  // 댓글
+  commentSection: { gap: 10, paddingTop: 16, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
+  commentTitle: { fontSize: 13, fontWeight: '700', color: '#374151' },
+  commentEmpty: { fontSize: 13, color: '#d1d5db', paddingVertical: 6 },
+  commentRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  commentAvatar: {
+    width: 30, height: 30, borderRadius: 15, backgroundColor: '#f3f4f6',
+    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+  },
+  commentAvatarImg: { width: 30, height: 30, borderRadius: 15 },
+  commentAvatarFallback: { fontSize: 13, fontWeight: '700', color: '#9ca3af' },
+  commentMeta: { flexDirection: 'row', alignItems: 'baseline', gap: 6 },
+  commentAuthor: { fontSize: 12.5, fontWeight: '700', color: '#374151' },
+  commentTime: { fontSize: 11, color: '#c2c8d0' },
+  commentBody: { fontSize: 13.5, color: '#374151', lineHeight: 20, marginTop: 1 },
+  commentDelete: { fontSize: 13, color: '#d1d5db', paddingHorizontal: 2 },
+  commentInputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 2 },
+  commentInput: {
+    flex: 1, borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 14,
+    paddingHorizontal: 12, paddingVertical: 9, fontSize: 13.5, color: '#111827',
+    maxHeight: 90,
+  },
+  commentSendBtn: { borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 },
+  commentSendText: { color: '#ffffff', fontSize: 13, fontWeight: '700' },
   aiTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   aiDot: {
     width: 18, height: 18, borderRadius: 9, backgroundColor: '#111827',
