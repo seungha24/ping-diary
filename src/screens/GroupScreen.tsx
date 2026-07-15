@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, StyleSheet,
   SafeAreaView, Pressable, TextInput, ActivityIndicator, Modal, Image, Keyboard,
@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import KeyboardDismissButton from '../components/KeyboardDismissButton';
 import TouchableOpacity from '../components/Touchable';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Svg, { Line, Rect, Circle, Path } from 'react-native-svg';
 import { RootStackParamList } from '../navigation/RootNavigator';
@@ -359,6 +359,13 @@ export default function GroupScreen() {
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [group.id]);
+
+  // 화면에 돌아올 때마다 피드 재조회 — 상세에서 공유 그룹을 빼거나 새 글을 쓰고 돌아오면 즉시 반영
+  useFocusEffect(
+    useCallback(() => {
+      loadFeed();
+    }, [group.id])
+  );
 
   // 당겨서 새로고침 — 그룹 피드 + 그룹 정보(멤버 수 등) 재조회
   const [refreshing, setRefreshing] = useState(false);
