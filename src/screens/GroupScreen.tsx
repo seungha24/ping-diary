@@ -19,6 +19,7 @@ import { DiaryEntry, entryDateLabel, stripPhotoMarkers } from '../data/types';
 import { sortByNewest } from '../data/entrySort';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useGroups } from '../context/GroupsContext';
+import { useEntries } from '../context/EntriesContext';
 import { fetchGroupEntries, fetchGroupMembers, GroupMember as GroupMemberInfo, leaveGroup, deleteGroup, renameGroup, reportContent, saveBlockedUsers, saveMutedGroups, getCachedMe, uploadPhoto, updateGroupPhoto } from '../api';
 import { loadGroupNotifSetting, saveGroupNotifSetting, applyGroupReminderSchedule } from '../data/groupNotif';
 import TimeChipPicker, { timeLabel } from '../components/TimeChipPicker';
@@ -340,6 +341,18 @@ export default function GroupScreen() {
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null);
   const [sharedAiComments, setSharedAiComments] = useState<Set<number>>(new Set());
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
+
+  // 내가 이 그룹에 공유한 일기를 로컬(낙관적 저장 포함)에서 합쳐 표시 —
+  // 방금 쓴 글이 서버 저장 완료 전이어도 피드에 즉시 보이게
+  const { entries: myEntries } = useEntries();
+  const displayEntries = React.useMemo(() => {
+    const me = getCachedMe();
+    const serverIds = new Set(entries.map((e) => e.id));
+    const mine = myEntries
+      .filter((e) => e.visibility === 'friends' && Array.isArray(e.sharedGroups) && e.sharedGroups.includes(group.id) && !serverIds.has(e.id))
+      .map((e) => ({ ...e, author: me?.display_name || '나', authorId: me?.id ?? e.authorId, avatarUrl: me?.avatar_url ?? null }));
+    return mine.length ? sortByNewest([...entries, ...mine]) : entries;
+  }, [entries, myEntries, group.id]);
   const [loading, setLoading] = useState(true);
 
   // 그룹 공유 피드(멤버들의 '친구 공개' p!ng)를 서버에서 로드
@@ -563,7 +576,7 @@ export default function GroupScreen() {
         <View style={styles.feedEmpty}>
           <ActivityIndicator color={accent} />
         </View>
-      ) : entries.length === 0 ? (
+      ) : displayEntries.length === 0 ? (
         <View style={styles.feedEmpty}>
           <IconSprout size={34} color="#d1d5db" />
           <Text style={styles.feedEmptyText}>아직 공유된 p!ng가 없어요.</Text>
@@ -571,7 +584,7 @@ export default function GroupScreen() {
         </View>
       ) : viewMode === 'list' ? (
         <ScrollView contentContainerStyle={styles.listContent} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#9ca3af" colors={[accent]} />}>
-          {entries.map((entry) => (
+          {displayEntries.map((entry) => (
             <ListCard
               key={entry.id}
               entry={entry}
@@ -589,7 +602,7 @@ export default function GroupScreen() {
           <View style={styles.gridLayout}>
             {[0, 1].map((col) => (
               <View key={col} style={styles.gridColumn}>
-                {entries.filter((_, i) => i % 2 === col).map((entry, i) => (
+                {displayEntries.filter((_, i) => i % 2 === col).map((entry, i) => (
                   <GridCard
                     key={entry.id}
                     entry={entry}
