@@ -43,8 +43,8 @@ function IconExit({ color = '#374151', size = 16 }: { color?: string; size?: num
   );
 }
 
-/** 서버 그룹 피드 행 → DiaryEntry 매핑 */
-function mapGroupEntry(row: any): DiaryEntry {
+/** 서버 그룹 피드 행 → DiaryEntry 매핑 (알림 딥링크에서도 사용) */
+export function mapGroupEntry(row: any): DiaryEntry {
   return {
     id: row.id,
     title: row.title || '',

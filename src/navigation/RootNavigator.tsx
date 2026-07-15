@@ -1,10 +1,10 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import {
   NavigationContainer, DefaultTheme, DarkTheme, useNavigationContainerRef,
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator, BottomTabBar } from '@react-navigation/bottom-tabs';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { usePostHog } from 'posthog-react-native';
 
 import HomeScreen from '../screens/HomeScreen';
@@ -25,6 +25,8 @@ import IconChart from '../components/icons/IconChart';
 import IconPerson from '../components/icons/IconPerson';
 
 import AdBanner from '../components/AdBanner';
+import { fetchEntries, fetchGroupEntries } from '../api';
+import { mapGroupEntry } from '../screens/GroupScreen';
 import { DiaryEntry } from '../data/types';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedStyles, accentTintedWhite } from '../theme/themed';
@@ -119,6 +121,49 @@ export default function RootNavigator() {
   const posthog = usePostHog();
   const navRef = useNavigationContainerRef<RootStackParamList>();
   const routeNameRef = useRef<string | undefined>(undefined);
+  // 푸시 알림 탭 → 해당 글로 이동 (댓글: 내 일기, 그룹 새 글: 그룹 피드의 글)
+  const handledNotifId = useRef<string | null>(null);
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    let sub: { remove: () => void } | undefined;
+    let cancelled = false;
+
+    async function openFromNotification(data: any) {
+      try {
+        if (data?.type === 'comment' && data.entryId != null) {
+          const mine = await fetchEntries();
+          const e = mine.find((x) => Number(x.id) === Number(data.entryId));
+          if (e) navRef.navigate('DiaryDetail', { entry: e });
+        } else if (data?.type === 'group_entry' && data.groupId != null) {
+          const rows = await fetchGroupEntries(Number(data.groupId));
+          const row = rows.find((r) => Number(r.id) === Number(data.entryId));
+          if (row) navRef.navigate('DiaryDetail', { entry: mapGroupEntry(row) });
+        }
+      } catch {
+        // 로그인 전이거나 글이 삭제된 경우 — 조용히 무시 (앱은 평소처럼 열림)
+      }
+    }
+
+    (async () => {
+      try {
+        const Notifications = await import('expo-notifications');
+        const handle = (resp: any) => {
+          const id = resp?.notification?.request?.identifier;
+          if (!id || handledNotifId.current === id) return; // 같은 응답 중복 처리 방지
+          handledNotifId.current = id;
+          openFromNotification(resp?.notification?.request?.content?.data);
+        };
+        sub = Notifications.addNotificationResponseReceivedListener(handle);
+        // 알림 탭으로 앱이 '켜진' 경우(콜드 스타트)
+        const last = await Notifications.getLastNotificationResponseAsync();
+        if (!cancelled && last) handle(last);
+      } catch {
+        // 구버전 빌드(모듈 없음)·웹 — 무시
+      }
+    })();
+    return () => { cancelled = true; try { sub?.remove(); } catch {} };
+  }, []);
+
   const trackScreen = () => {
     const name = navRef.getCurrentRoute()?.name;
     if (name && name !== routeNameRef.current) {
