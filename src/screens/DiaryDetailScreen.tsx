@@ -106,6 +106,7 @@ export default function DiaryDetailScreen() {
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentInput, setCommentInput] = useState('');
   const [commentSending, setCommentSending] = useState(false);
+  const [replyTo, setReplyTo] = useState<EntryComment | null>(null); // 답글 대상 (원댓글)
 
   useEffect(() => {
     if (!commentsEnabled) return;
@@ -123,9 +124,12 @@ export default function DiaryDetailScreen() {
     if (!text || commentSending) return;
     setCommentSending(true);
     try {
-      const saved = await addComment(entry.id, text);
+      // 답글의 답글도 같은 스레드(루트)에 붙는다
+      const parentId = replyTo ? (replyTo.parent_id ?? replyTo.id) : null;
+      const saved = await addComment(entry.id, text, parentId);
       setComments((prev) => [...prev, saved]);
       setCommentInput('');
+      setReplyTo(null);
     } catch (e: any) {
       notify(e?.message ?? '댓글 등록에 실패했어요.');
     } finally {
@@ -436,35 +440,51 @@ export default function DiaryDetailScreen() {
             ) : comments.length === 0 ? (
               <Text style={styles.commentEmpty}>{isMine ? '아직 댓글이 없어요' : '첫 댓글을 남겨보세요'}</Text>
             ) : (
-              comments.map((c) => (
-                <View key={c.id} style={styles.commentRow}>
-                  <View style={styles.commentAvatar}>
-                    {c.author_avatar
-                      ? <Image source={{ uri: c.author_avatar }} style={styles.commentAvatarImg} />
-                      : <Text style={styles.commentAvatarFallback}>{c.author.slice(0, 1)}</Text>}
-                  </View>
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <View style={styles.commentMeta}>
-                      <Text style={styles.commentAuthor}>{c.author}</Text>
-                      <Text style={styles.commentTime}>{commentTimeLabel(c.created_at)}</Text>
+              comments.filter((c) => c.parent_id == null).map((root) => (
+                <View key={root.id} style={{ gap: 8 }}>
+                  {[root, ...comments.filter((r) => r.parent_id === root.id)].map((c, i) => (
+                    <View key={c.id} style={[styles.commentRow, i > 0 && styles.commentReplyRow]}>
+                      <View style={[styles.commentAvatar, i > 0 && styles.commentAvatarSm]}>
+                        {c.author_avatar
+                          ? <Image source={{ uri: c.author_avatar }} style={[styles.commentAvatarImg, i > 0 && styles.commentAvatarImgSm]} />
+                          : <Text style={styles.commentAvatarFallback}>{c.author.slice(0, 1)}</Text>}
+                      </View>
+                      <View style={{ flex: 1, minWidth: 0 }}>
+                        <View style={styles.commentMeta}>
+                          <Text style={styles.commentAuthor}>{c.author}</Text>
+                          <Text style={styles.commentTime}>{commentTimeLabel(c.created_at)}</Text>
+                        </View>
+                        <Text style={styles.commentBody}>{c.content}</Text>
+                        <TouchableOpacity onPress={() => setReplyTo(root)} hitSlop={{ top: 6, bottom: 6 }}>
+                          <Text style={[styles.commentReplyBtn, { color: accent }]}>답글</Text>
+                        </TouchableOpacity>
+                      </View>
+                      {(c.is_me || isMine) && (
+                        <TouchableOpacity onPress={() => removeComment(c)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                          <Text style={styles.commentDelete}>✕</Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
-                    <Text style={styles.commentBody}>{c.content}</Text>
-                  </View>
-                  {(c.is_me || isMine) && (
-                    <TouchableOpacity onPress={() => removeComment(c)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                      <Text style={styles.commentDelete}>✕</Text>
-                    </TouchableOpacity>
-                  )}
+                  ))}
                 </View>
               ))
             )}
-            {!isMine && (
+            {(!isMine || replyTo) && (
+            <View>
+              {replyTo && (
+                <View style={styles.replyBanner}>
+                  <Text style={styles.replyBannerText} numberOfLines={1}>{replyTo.author}님에게 답글 남기는 중</Text>
+                  <TouchableOpacity onPress={() => setReplyTo(null)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                    <Text style={styles.commentDelete}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             <View style={styles.commentInputRow}>
               <TextInput
                 style={styles.commentInput}
                 value={commentInput}
                 onChangeText={setCommentInput}
-                placeholder="댓글 쓰기…"
+                placeholder={replyTo ? "답글 쓰기…" : "댓글 쓰기…"}
                 placeholderTextColor="#9ca3af"
                 maxLength={500}
                 multiline
@@ -478,6 +498,7 @@ export default function DiaryDetailScreen() {
                   ? <ActivityIndicator color="#fff" size="small" />
                   : <Text style={styles.commentSendText}>등록</Text>}
               </TouchableOpacity>
+            </View>
             </View>
             )}
           </View>
@@ -692,6 +713,15 @@ const lightStyles = StyleSheet.create({
   commentTime: { fontSize: 11, color: '#c2c8d0' },
   commentBody: { fontSize: 13.5, color: '#374151', lineHeight: 20, marginTop: 1 },
   commentDelete: { fontSize: 13, color: '#d1d5db', paddingHorizontal: 2 },
+  commentReplyRow: { marginLeft: 34 },
+  commentAvatarSm: { width: 24, height: 24, borderRadius: 12 },
+  commentAvatarImgSm: { width: 24, height: 24, borderRadius: 12 },
+  commentReplyBtn: { fontSize: 11.5, fontWeight: '700', marginTop: 3 },
+  replyBanner: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#f9fafb', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, marginBottom: 6,
+  },
+  replyBannerText: { fontSize: 12, color: '#6b7280', flex: 1 },
   commentInputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, marginTop: 2 },
   commentInput: {
     flex: 1, borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 14,
