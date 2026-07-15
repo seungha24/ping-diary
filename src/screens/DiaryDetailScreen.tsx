@@ -15,6 +15,7 @@ import IconEdit from '../components/icons/IconEdit';
 import IconTrash from '../components/icons/IconTrash';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useEntries } from '../context/EntriesContext';
+import { warningHaptic } from '../haptics';
 import { useGroups } from '../context/GroupsContext';
 import { PERSONAS, DiaryFolder, entryDateLabel, mergeFolders, parseBodySegments, extractQuestion } from '../data/types';
 import { generateComment, reportContent, getCachedMe, fetchComments, addComment, deleteComment, EntryComment } from '../api';
@@ -675,7 +676,7 @@ export default function DiaryDetailScreen() {
               <Text style={styles.deleteSub}>삭제하면 되돌릴 수 없어요</Text>
               <TouchableOpacity
                 style={styles.deleteConfirmBtn}
-                onPress={() => { deleteEntry(entry.id); navigation.goBack(); }}
+                onPress={() => { warningHaptic(); deleteEntry(entry.id); navigation.goBack(); }}
               >
                 <Text style={styles.deleteConfirmText}>삭제</Text>
               </TouchableOpacity>

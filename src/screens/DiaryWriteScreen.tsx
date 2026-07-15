@@ -6,7 +6,6 @@ import {
 } from 'react-native';
 import TouchableOpacity from '../components/Touchable';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { createAudioPlayer } from 'expo-audio';
 import * as ImagePicker from 'expo-image-picker';
 import Svg, { Path, Rect, Circle, Polyline } from 'react-native-svg';
 import Tag from '../components/Tag';
@@ -69,7 +68,8 @@ import { useGroups } from '../context/GroupsContext';
 import { uploadPhoto, getCachedMe, patchEntry, generateComment } from '../api';
 import { saveDraft, listDrafts, deleteDraft, DiaryDraft } from '../data/draftStore';
 import { notify } from '../notify';
-import { lightHaptic } from '../haptics';
+import { playPing } from '../sound';
+import { selectionHaptic } from '../haptics';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { useThemedStyles } from '../theme/themed';
 import FadeIn from '../components/FadeIn';
@@ -151,17 +151,6 @@ const PROMPTS = [
   '오늘 같은 하루가 반복돼도 괜찮을까?',
   '요즘의 나, 몇 점일까?',
 ];
-
-async function playPing() {
-  lightHaptic(); // 효과음과 함께 약한 진동
-  try {
-    const player = createAudioPlayer(require('../../assets/ping.wav'));
-    player.addListener('playbackStatusUpdate', (status) => {
-      if (status.didJustFinish) player.remove();
-    });
-    player.play();
-  } catch (_) {}
-}
 
 function getDaysInMonth(year: number, month: number) {
   return new Date(year, month + 1, 0).getDate();
@@ -861,7 +850,7 @@ export default function DiaryWriteScreen() {
                   <TouchableOpacity
                     key={p.label}
                     style={[styles.personaCard, persona === p.label && { backgroundColor: accent, borderColor: accent }]}
-                    onPress={() => { setPersona(p.label); setPersonaModalOpen(false); }}
+                    onPress={() => { selectionHaptic(); setPersona(p.label); setPersonaModalOpen(false); }}
                   >
                     <PersonaIcon persona={p.label} size={20} color={persona === p.label ? '#ffffff' : '#6b7280'} />
                     <Text style={[styles.personaLabel, persona === p.label && styles.personaLabelActive]}>{p.label}</Text>

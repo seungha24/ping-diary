@@ -3,6 +3,7 @@ import { View, StyleSheet } from 'react-native';
 import TouchableOpacity from './Touchable';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedStyles } from '../theme/themed';
+import { selectionHaptic } from '../haptics';
 
 /** 테마색이 웹에서도 확실히 적용되는 커스텀 토글 (알림 설정과 동일한 모양) */
 export default function ThemeSwitch({ value, onChange, disabled, accent }: {
@@ -15,7 +16,7 @@ export default function ThemeSwitch({ value, onChange, disabled, accent }: {
     <TouchableOpacity
       activeOpacity={0.85}
       disabled={disabled}
-      onPress={() => onChange(!value)}
+      onPress={() => { selectionHaptic(); onChange(!value); }}
       style={[
         styles.switchTrack,
         { backgroundColor: value ? accent : offColor, justifyContent: value ? 'flex-end' : 'flex-start' },
