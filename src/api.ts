@@ -325,6 +325,20 @@ export async function fetchGroupEntries(id: number): Promise<any[]> {
   return Array.isArray(rows) ? rows : [];
 }
 
+/** 그룹 멤버 목록 */
+export interface GroupMember {
+  id: string;
+  name: string;
+  username: string | null;
+  avatar_url: string | null;
+  is_owner: boolean;
+  is_me: boolean;
+}
+export async function fetchGroupMembers(id: number): Promise<GroupMember[]> {
+  const rows = await request(`/groups/${id}/members`);
+  return Array.isArray(rows) ? rows : [];
+}
+
 /** 그룹 나가기 */
 export async function leaveGroup(id: number): Promise<void> {
   await request(`/groups/${id}/leave`, { method: 'POST' });

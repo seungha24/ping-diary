@@ -19,7 +19,7 @@ import { DiaryEntry, entryDateLabel, stripPhotoMarkers } from '../data/types';
 import { sortByNewest } from '../data/entrySort';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useGroups } from '../context/GroupsContext';
-import { fetchGroupEntries, leaveGroup, deleteGroup, renameGroup, reportContent, saveBlockedUsers, saveMutedGroups, getCachedMe, uploadPhoto, updateGroupPhoto } from '../api';
+import { fetchGroupEntries, fetchGroupMembers, GroupMember as GroupMemberInfo, leaveGroup, deleteGroup, renameGroup, reportContent, saveBlockedUsers, saveMutedGroups, getCachedMe, uploadPhoto, updateGroupPhoto } from '../api';
 import { loadGroupNotifSetting, saveGroupNotifSetting, applyGroupReminderSchedule } from '../data/groupNotif';
 import TimeChipPicker, { timeLabel } from '../components/TimeChipPicker';
 import { notify } from '../notify';
@@ -225,6 +225,24 @@ export default function GroupScreen() {
   // 초대 코드/링크 공유
   const [inviteOpen, setInviteOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+
+  // 멤버 목록 시트 (헤더의 그룹명/멤버 수를 누르면)
+  const [membersOpen, setMembersOpen] = useState(false);
+  const [members, setMembers] = useState<GroupMemberInfo[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
+
+  async function openMembers() {
+    setMembersOpen(true);
+    setMembersLoading(true);
+    try {
+      setMembers(await fetchGroupMembers(group.id));
+    } catch {
+      notify('멤버 목록을 불러오지 못했어요.');
+      setMembersOpen(false);
+    } finally {
+      setMembersLoading(false);
+    }
+  }
 
   async function copyText(text: string) {
     const ok = await copyToClipboard(text);
@@ -480,7 +498,7 @@ export default function GroupScreen() {
           <IconChev dir="left" size={18} color="#9ca3af" />
         </TouchableOpacity>
 
-        <View style={styles.headerInfo}>
+        <TouchableOpacity style={styles.headerInfo} onPress={openMembers} activeOpacity={0.7}>
           <IconUsers size={20} color="#6b7280" />
           <View style={styles.headerText}>
             <Text style={styles.groupName}>{groupName}</Text>
@@ -488,7 +506,7 @@ export default function GroupScreen() {
               멤버 {group.member_count ?? 1} 명
             </Text>
           </View>
-        </View>
+        </TouchableOpacity>
 
         <View style={styles.headerRight}>
           {/* 초대 코드/링크 공유 */}
@@ -633,6 +651,43 @@ export default function GroupScreen() {
       )}
 
       {/* 초대 코드/링크 공유 */}
+      {/* 멤버 목록 시트 (헤더의 그룹명/멤버 수 탭) */}
+      {membersOpen && (
+        <SheetWrap style={styles.overlayWrap}>
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setMembersOpen(false)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.actionSheetTitle}>멤버 {members.length > 0 ? members.length : (group.member_count ?? 1)} 명</Text>
+            {membersLoading ? (
+              <ActivityIndicator color={accent} style={{ paddingVertical: 24 }} />
+            ) : (
+              <ScrollView style={{ maxHeight: 340 }} showsVerticalScrollIndicator={false}>
+                {members.map((m) => (
+                  <View key={m.id} style={styles.memberRow}>
+                    <View style={styles.authorAvatar}>
+                      {m.avatar_url
+                        ? <Image source={{ uri: m.avatar_url }} style={styles.authorAvatarImg} />
+                        : <IconUser size={16} color="#9ca3af" />}
+                    </View>
+                    <View style={{ flex: 1, minWidth: 0 }}>
+                      <Text style={styles.memberName} numberOfLines={1}>
+                        {m.name}{m.is_me ? ' (나)' : ''}
+                      </Text>
+                      {!!m.username && <Text style={styles.memberSub} numberOfLines={1}>@{m.username}</Text>}
+                    </View>
+                    {m.is_owner && (
+                      <View style={[styles.memberBadge, { backgroundColor: hexToRgba(accent, 0.12) }]}>
+                        <Text style={[styles.memberBadgeText, { color: accent }]}>방장</Text>
+                      </View>
+                    )}
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+          </View>
+        </SheetWrap>
+      )}
+
       {inviteOpen && (
         <SheetWrap style={styles.overlayWrap}>
           <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setInviteOpen(false)} />
@@ -935,6 +990,15 @@ const lightStyles = StyleSheet.create({
     backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
   },
   authorAvatarImg: { width: 34, height: 34, borderRadius: 17 },
+  // 멤버 목록 시트
+  memberRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#f3f4f6',
+  },
+  memberName: { fontSize: 14, fontWeight: '600', color: '#111827' },
+  memberSub: { fontSize: 12, color: '#9ca3af', marginTop: 1 },
+  memberBadge: { borderRadius: 999, paddingHorizontal: 9, paddingVertical: 3 },
+  memberBadgeText: { fontSize: 11.5, fontWeight: '700' },
   gridAvatar: {
     width: 22, height: 22, borderRadius: 11, overflow: 'hidden',
     backgroundColor: '#f3f4f6', alignItems: 'center', justifyContent: 'center',
