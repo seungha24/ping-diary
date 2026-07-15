@@ -13,6 +13,7 @@ import { createGroup, joinGroup } from '../api';
 import { IconUsers } from '../components/icons/Line';
 import { useThemedStyles } from '../theme/themed';
 import SheetWrap from '../components/SheetWrap';
+import { copyToClipboard, shareText } from '../clipboard';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -33,17 +34,15 @@ export default function GroupCreateScreen() {
   const [result, setResult] = useState<Result | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // 초대 코드 복사 (웹: navigator.clipboard, 네이티브: 미지원 시 조용히 무시)
+  // 초대 코드 복사 (웹·네이티브 공통, 클립보드 미지원 환경은 공유 시트로 폴백)
   async function copyCode(code: string) {
-    try {
-      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard) {
-        await navigator.clipboard.writeText(code);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-      }
-    } catch {
-      // 무시
+    const ok = await copyToClipboard(code);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+      return;
     }
+    await shareText(code, 'p!ng 그룹 초대 코드');
   }
 
   // 확인 버튼: 성공이면 뒤로가기, 에러면 닫기만

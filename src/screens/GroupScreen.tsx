@@ -23,6 +23,7 @@ import { fetchGroupEntries, leaveGroup, deleteGroup, renameGroup, reportContent,
 import { loadGroupNotifSetting, saveGroupNotifSetting, applyGroupReminderSchedule } from '../data/groupNotif';
 import TimeChipPicker, { timeLabel } from '../components/TimeChipPicker';
 import { notify } from '../notify';
+import { copyToClipboard, shareText } from '../clipboard';
 import { Platform } from 'react-native';
 import { IconUsers, IconUser, IconBell as IconBellLine, IconSprout, IconSparkle, IconPencil, IconTrash, IconCamera, PersonaIcon } from '../components/icons/Line';
 import * as ImagePicker from 'expo-image-picker';
@@ -226,26 +227,22 @@ export default function GroupScreen() {
   const [copied, setCopied] = useState(false);
 
   async function copyText(text: string) {
-    try {
-      if (typeof navigator !== 'undefined' && navigator.clipboard) {
-        await navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 1500);
-        return true;
-      }
-    } catch {}
-    return false;
+    const ok = await copyToClipboard(text);
+    if (ok) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+      return true;
+    }
+    // 클립보드가 안 되는 환경(구형 빌드)에서는 공유 시트로 폴백 — 시트 안의 '복사'를 쓸 수 있다
+    const shared = await shareText(text);
+    if (!shared) notify('복사에 실패했어요.');
+    return shared;
   }
 
   async function shareInviteLink() {
     const msg = `p!ng 그룹 '${groupName}'에 초대해요!\n초대 코드: ${group.invite_code}\nhttps://ping-diary.vercel.app`;
-    try {
-      if (typeof navigator !== 'undefined' && (navigator as any).share) {
-        await (navigator as any).share({ title: 'p!ng 그룹 초대', text: msg });
-        return;
-      }
-    } catch {}
-    const ok = await copyText(msg);
+    if (await shareText(msg, 'p!ng 그룹 초대')) return;
+    const ok = await copyToClipboard(msg);
     notify(ok ? '초대 메시지를 복사했어요. 붙여넣어 공유하세요!' : '공유에 실패했어요.');
   }
 
