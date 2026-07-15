@@ -434,7 +434,7 @@ export default function DiaryDetailScreen() {
             {commentsLoading ? (
               <ActivityIndicator color={accent} style={{ paddingVertical: 12 }} />
             ) : comments.length === 0 ? (
-              <Text style={styles.commentEmpty}>첫 댓글을 남겨보세요</Text>
+              <Text style={styles.commentEmpty}>{isMine ? '아직 댓글이 없어요' : '첫 댓글을 남겨보세요'}</Text>
             ) : (
               comments.map((c) => (
                 <View key={c.id} style={styles.commentRow}>
@@ -458,6 +458,7 @@ export default function DiaryDetailScreen() {
                 </View>
               ))
             )}
+            {!isMine && (
             <View style={styles.commentInputRow}>
               <TextInput
                 style={styles.commentInput}
@@ -478,6 +479,7 @@ export default function DiaryDetailScreen() {
                   : <Text style={styles.commentSendText}>등록</Text>}
               </TouchableOpacity>
             </View>
+            )}
           </View>
         )}
       </ScrollView>
