@@ -10,6 +10,7 @@ import { supabase } from '../supabaseClient';
 import { API_BASE_URL } from '../config';
 import { useTheme } from './ThemeContext';
 import { notify } from '../notify';
+import { unregisterPush } from '../push';
 
 /**
  * 인증 컨텍스트.
@@ -236,6 +237,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /** 로그아웃 */
   function logout() {
+    // 이 기기의 푸시 토큰을 계정에서 해제 (실패해도 진행 — 다음 로그인 시 서버가 정리)
+    unregisterPush().catch(() => {});
     clearToken();
     setTok(null);
     setUserEmail(null);

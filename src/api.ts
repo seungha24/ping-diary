@@ -501,6 +501,11 @@ export async function savePushToken(push_token: string): Promise<void> {
   await request('/auth/push-token', { method: 'PATCH', body: JSON.stringify({ push_token }) });
 }
 
+/** 로그아웃 시 이 기기의 푸시 토큰을 계정에서 해제 */
+export async function removePushToken(push_token: string): Promise<void> {
+  await request('/auth/push-token', { method: 'DELETE', body: JSON.stringify({ push_token }) });
+}
+
 /** 부적절 콘텐츠 신고 (AI 코멘트/그룹 공유글 등) */
 export async function reportContent(type: string, target_id: string | number, reason?: string): Promise<void> {
   await request('/reports', { method: 'POST', body: JSON.stringify({ type, target_id, reason }) });
