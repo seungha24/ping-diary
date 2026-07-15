@@ -49,7 +49,7 @@ function NaverLogo({ size = 16 }: { size?: number }) {
 export default function LoginScreen() {
   const styles = useThemedStyles(lightStyles);
   const { accent } = useTheme();
-  const { login, signup, loginDemo, loginOAuth, resetPassword } = useAuth();
+  const { login, signup, loginOAuth, resetPassword } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup' | 'reset'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -113,18 +113,6 @@ export default function LoginScreen() {
       else await signup(em, password);
     } catch (e: any) {
       setError(e?.message ?? '요청에 실패했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function demo() {
-    setLoading(true);
-    setError(null);
-    try {
-      await loginDemo();
-    } catch (e: any) {
-      setError(e?.message ?? '데모 로그인에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -281,11 +269,6 @@ export default function LoginScreen() {
               <TouchableOpacity style={styles.naverBtn} onPress={naver} disabled={loading} activeOpacity={0.85}>
                 <View style={styles.socialIcon}><NaverLogo size={16} /></View>
                 <Text style={styles.naverText}>네이버로 계속하기</Text>
-              </TouchableOpacity>
-
-              {/* 데모 */}
-              <TouchableOpacity style={styles.demoBtn} onPress={demo} disabled={loading}>
-                <Text style={styles.demoText}>데모 계정으로 둘러보기</Text>
               </TouchableOpacity>
             </>
           )}

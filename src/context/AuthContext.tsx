@@ -16,8 +16,6 @@ import { unregisterPush } from '../push';
  * 인증 컨텍스트.
  * 실제 로그인/회원가입/로그아웃을 지원하며, 빠른 체험용 데모 로그인도 제공한다.
  */
-const DEMO_EMAIL = 'demo@ping-diary.app';
-const DEMO_PASSWORD = 'pingdiary-demo-1234';
 
 interface AuthContextValue {
   ready: boolean;        // 초기 토큰 확인 완료 여부
@@ -26,7 +24,6 @@ interface AuthContextValue {
   email: string | null;  // 로그인한 사용자 이메일
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
-  loginDemo: () => Promise<void>;
   loginOAuth: (provider: OAuthProvider) => Promise<void>;
   logout: () => void;
   recovering: boolean;   // 비밀번호 재설정 링크로 진입한 상태
@@ -45,7 +42,6 @@ const AuthContext = createContext<AuthContextValue>({
   email: null,
   login: async () => {},
   signup: async () => {},
-  loginDemo: async () => {},
   loginOAuth: async () => {},
   logout: () => {},
   recovering: false,
@@ -154,16 +150,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await login(email, password);
   }
 
-  /** 데모 계정으로 로그인 (없으면 생성) */
-  async function loginDemo() {
-    try {
-      await login(DEMO_EMAIL, DEMO_PASSWORD);
-    } catch {
-      await apiSignup(DEMO_EMAIL, DEMO_PASSWORD).catch(() => {});
-      await login(DEMO_EMAIL, DEMO_PASSWORD);
-    }
-  }
-
   /** 소셜 계정으로 로그인 (구글: Supabase OAuth / 카카오·네이버: 서버 커스텀 OAuth) */
   async function loginOAuth(provider: OAuthProvider) {
     // ── 웹: 카카오·네이버는 서버 커스텀 OAuth로 페이지 리디렉트 ──
@@ -270,7 +256,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     <AuthContext.Provider
       value={{
         ready, authed, token, email: userEmail,
-        login, signup, loginDemo, loginOAuth, logout,
+        login, signup, loginOAuth, logout,
         recovering, resetPassword, completeRecovery, cancelRecovery,
       }}
     >
