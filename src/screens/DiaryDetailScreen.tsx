@@ -107,6 +107,7 @@ export default function DiaryDetailScreen() {
   const [commentInput, setCommentInput] = useState('');
   const [commentSending, setCommentSending] = useState(false);
   const [replyTo, setReplyTo] = useState<EntryComment | null>(null); // 답글 대상 (원댓글)
+  const [deleteCommentTarget, setDeleteCommentTarget] = useState<EntryComment | null>(null); // 댓글 삭제 확인
 
   useEffect(() => {
     if (!commentsEnabled) return;
@@ -460,7 +461,7 @@ export default function DiaryDetailScreen() {
                         </TouchableOpacity>
                       </View>
                       {(c.is_me || isMine) && (
-                        <TouchableOpacity onPress={() => removeComment(c)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+                        <TouchableOpacity onPress={() => setDeleteCommentTarget(c)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                           <Text style={styles.commentDelete}>✕</Text>
                         </TouchableOpacity>
                       )}
@@ -612,6 +613,34 @@ export default function DiaryDetailScreen() {
                 );
               })}
             </ScrollView>
+          </View>
+        </SheetWrap>
+      )}
+
+      {/* 댓글 삭제 확인 */}
+      {deleteCommentTarget && (
+        <SheetWrap style={styles.overlayWrap}>
+          <TouchableOpacity style={styles.overlayBg} activeOpacity={1} onPress={() => setDeleteCommentTarget(null)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <View style={styles.deleteContent}>
+              <Text style={styles.deleteTitle}>이 댓글을 삭제할까요?</Text>
+              <Text style={styles.deleteSub} numberOfLines={2}>
+                {deleteCommentTarget.author}: {deleteCommentTarget.content}
+              </Text>
+              {deleteCommentTarget.parent_id == null && (
+                <Text style={styles.deleteSub}>답글이 달려 있으면 답글도 함께 삭제돼요.</Text>
+              )}
+              <TouchableOpacity
+                style={styles.deleteConfirmBtn}
+                onPress={() => { const t = deleteCommentTarget; setDeleteCommentTarget(null); if (t) removeComment(t); }}
+              >
+                <Text style={styles.deleteConfirmText}>삭제</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.deleteCancelBtn} onPress={() => setDeleteCommentTarget(null)}>
+                <Text style={styles.deleteCancelText}>취소</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </SheetWrap>
       )}
