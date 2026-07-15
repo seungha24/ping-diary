@@ -538,7 +538,7 @@ const lightStyles = StyleSheet.create({
   resultList: { gap: 10 },
   resultCard: {
     backgroundColor: '#f9fafb', borderRadius: 12,
-    borderWidth: 1, borderColor: '#f3f4f6', padding: 12, gap: 6,
+    borderWidth: 1, borderColor: '#e5e7eb', padding: 12, gap: 6,
   },
   resultTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   resultTitle: { fontSize: 13, fontWeight: '600', color: '#111827', flex: 1 },
@@ -552,18 +552,18 @@ const lightStyles = StyleSheet.create({
   statsGrid: { flexDirection: 'row', gap: 12 },
   statCard: {
     flex: 1, backgroundColor: '#ffffff', borderRadius: 16, padding: 16,
-    borderWidth: 1, borderColor: '#f3f4f6', alignItems: 'center', gap: 4,
+    borderWidth: 1, borderColor: '#e5e7eb', alignItems: 'center', gap: 4,
   },
   statVal: { fontSize: 24, fontWeight: '700', color: '#374151' },
   statLabel: { fontSize: 12, color: '#9ca3af' },
   statCardSm: {
     flex: 1, backgroundColor: '#ffffff', borderRadius: 16, padding: 14,
-    borderWidth: 1, borderColor: '#f3f4f6', alignItems: 'center', gap: 3,
+    borderWidth: 1, borderColor: '#e5e7eb', alignItems: 'center', gap: 3,
   },
   statValSm: { fontSize: 17, fontWeight: '700', color: '#374151' },
   statChip: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#ffffff', borderRadius: 12, borderWidth: 1, borderColor: '#f3f4f6',
+    backgroundColor: '#ffffff', borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb',
     paddingHorizontal: 12, paddingVertical: 8,
   },
   statChipLabel: { fontSize: 11.5, color: '#9ca3af' },
@@ -606,7 +606,7 @@ const lightStyles = StyleSheet.create({
 
   card: {
     backgroundColor: '#ffffff', borderRadius: 16, padding: 16,
-    borderWidth: 1, borderColor: '#f3f4f6', gap: 12,
+    borderWidth: 1, borderColor: '#e5e7eb', gap: 12,
   },
   cardTitle: { fontSize: 13, fontWeight: '600', color: '#374151' },
 
