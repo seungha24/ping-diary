@@ -60,6 +60,9 @@ function mapGroupEntry(row: any): DiaryEntry {
     avatarUrl: row.author_avatar || null,
     createdAt: row.created_at,
     aiComment: row.ai_comment || undefined,
+    // 그룹 피드의 글은 정의상 전부 '친구 공개' — 상세 화면의 댓글 섹션 표시 조건에 필요
+    visibility: 'friends',
+    sharedGroups: Array.isArray(row.shared_groups) ? row.shared_groups : null,
   };
 }
 
