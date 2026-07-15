@@ -4,13 +4,9 @@ export interface DiaryFolder {
   emoji: string;
 }
 
+// 기본 제공 폴더는 '일상' 하나만 — 나머지는 사용자가 직접 만든다
 export const FOLDERS: DiaryFolder[] = [
-  { id: 'daily',   name: '일상',   emoji: '☁️' },
-  { id: 'travel',  name: '여행',   emoji: '✈️' },
-  { id: 'reading', name: '독서',   emoji: '📚' },
-  { id: 'food',    name: '맛집',   emoji: '🍜' },
-  { id: 'music',   name: '음악',   emoji: '🎵' },
-  { id: 'etc',     name: '기타',   emoji: '📁' },
+  { id: 'daily', name: '일상', emoji: '' },
 ];
 
 export interface DiaryEntry {
