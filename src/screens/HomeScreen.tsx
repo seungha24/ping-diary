@@ -104,6 +104,8 @@ export default function HomeScreen() {
   const swipePan = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, g) =>
+        // 폴더/그룹 드래그 중에는 스와이프 전환 금지 (가로 드래그를 탭 전환으로 오인 방지)
+        dragIdRef.current == null && gDragIdRef.current == null &&
         Math.abs(g.dx) > 28 && Math.abs(g.dx) > Math.abs(g.dy) * 2,
       onPanResponderRelease: (_, g) => {
         if (swipeStateRef.current.selectedFolder) {
@@ -148,6 +150,9 @@ export default function HomeScreen() {
     return m;
   }, [entries]);
 
+  // 드래그 이동량 계산용 터치 시작점 (네이티브: 터치 이벤트 경로, 웹: PanResponder 경로)
+  const touchStartRef = useRef({ x: 0, y: 0 });
+
   // ── 폴더 드래그 재정렬: 길게 눌러 집어서 원하는 위치로 끌어다 놓기 ──
   const [dragId, setDragId] = useState<string | null>(null);
   const [dragPos, setDragPos] = useState({ dx: 0, dy: 0 });
@@ -180,6 +185,7 @@ export default function HomeScreen() {
       setHoverIdx(computeDragTarget(dx, dy));
     },
     release(dx, dy) {
+      if (dragIdRef.current == null) return; // 두 경로(터치/팬)가 모두 발화해도 한 번만 처리
       const from = dragIndexRef.current;
       const target = computeDragTarget(dx, dy);
       dragIdRef.current = null;
@@ -268,6 +274,7 @@ export default function HomeScreen() {
       setGHoverIdx(computeGroupTarget(dx, dy));
     },
     release(dx, dy) {
+      if (gDragIdRef.current == null) return;
       const from = gDragIndexRef.current;
       const target = computeGroupTarget(dx, dy);
       gDragIdRef.current = null;
@@ -667,6 +674,19 @@ export default function HomeScreen() {
               <View
                 style={styles.folderGrid}
                 {...dragPan.panHandlers}
+                // 네이티브에선 꾹 누른 카드가 제스처를 쥐고 있어 PanResponder 가로채기가 안 됨 —
+                // 버블링되는 터치 이벤트로 이동량을 직접 계산한다 (웹 마우스는 PanResponder가 담당)
+                onTouchStart={(e) => { touchStartRef.current = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY }; }}
+                onTouchMove={(e) => {
+                  if (dragIdRef.current != null) {
+                    dragHandlersRef.current.move(e.nativeEvent.pageX - touchStartRef.current.x, e.nativeEvent.pageY - touchStartRef.current.y);
+                  }
+                }}
+                onTouchEnd={(e) => {
+                  if (dragIdRef.current != null) {
+                    dragHandlersRef.current.release(e.nativeEvent.pageX - touchStartRef.current.x, e.nativeEvent.pageY - touchStartRef.current.y);
+                  }
+                }}
                 onLayout={(e) => { gridWRef.current = e.nativeEvent.layout.width; }}
               >
                 {allFolders.map((folder, index) => {
@@ -789,7 +809,21 @@ export default function HomeScreen() {
           {groups.length === 0 && (
             <Text style={styles.groupEmptyHint}>아직 참여 중인 그룹이 없어요.{'\n'}새 그룹을 만들거나 초대 코드로 참여해보세요.</Text>
           )}
-          <View style={styles.folderGrid} {...gDragPan.panHandlers}>
+          <View
+            style={styles.folderGrid}
+            {...gDragPan.panHandlers}
+            onTouchStart={(e) => { touchStartRef.current = { x: e.nativeEvent.pageX, y: e.nativeEvent.pageY }; }}
+            onTouchMove={(e) => {
+              if (gDragIdRef.current != null) {
+                gHandlersRef.current.move(e.nativeEvent.pageX - touchStartRef.current.x, e.nativeEvent.pageY - touchStartRef.current.y);
+              }
+            }}
+            onTouchEnd={(e) => {
+              if (gDragIdRef.current != null) {
+                gHandlersRef.current.release(e.nativeEvent.pageX - touchStartRef.current.x, e.nativeEvent.pageY - touchStartRef.current.y);
+              }
+            }}
+          >
             {orderedGroups.map((group, index) => {
               const cover = group.photo_url ?? groupCovers[group.id];
               const isDragging = gDragId === group.id;
