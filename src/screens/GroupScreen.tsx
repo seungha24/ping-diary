@@ -17,6 +17,8 @@ import IconChev from '../components/icons/IconChev';
 import IconPlus from '../components/icons/IconPlus';
 import { DiaryEntry, entryDateLabel, stripPhotoMarkers } from '../data/types';
 import { sortByNewest } from '../data/entrySort';
+import { warningHaptic } from '../haptics';
+import { joinLinkFor } from '../joinLink';
 import { useTheme, hexToRgba } from '../context/ThemeContext';
 import { useGroups } from '../context/GroupsContext';
 import { useEntries } from '../context/EntriesContext';
@@ -262,7 +264,7 @@ export default function GroupScreen() {
   }
 
   async function shareInviteLink() {
-    const msg = `p!ng 그룹 '${groupName}'에 초대해요!\n초대 코드: ${group.invite_code}\nhttps://ping-diary.vercel.app`;
+    const msg = `p!ng 그룹 '${groupName}'에 초대해요!\n아래 링크를 누르면 바로 참여할 수 있어요 👇\n${joinLinkFor(group.invite_code ?? '')}\n\n(앱에서는 초대 코드로도 참여 가능: ${group.invite_code})`;
     if (await shareText(msg, 'p!ng 그룹 초대')) return;
     const ok = await copyToClipboard(msg);
     notify(ok ? '초대 메시지를 복사했어요. 붙여넣어 공유하세요!' : '공유에 실패했어요.');
@@ -315,6 +317,7 @@ export default function GroupScreen() {
   }
 
   async function doLeave() {
+    warningHaptic();
     setActionBusy(true);
     try {
       await leaveGroup(group.id);
@@ -329,6 +332,7 @@ export default function GroupScreen() {
   }
 
   async function doDelete() {
+    warningHaptic();
     setActionBusy(true);
     try {
       await deleteGroup(group.id);

@@ -16,6 +16,11 @@ import ErrorBoundary from './src/components/ErrorBoundary';
 import { notify } from './src/notify';
 import { registerPush } from './src/push';
 import { POSTHOG_KEY, POSTHOG_HOST } from './src/config';
+import { capturePendingJoinCode } from './src/joinLink';
+
+// 웹: /join/CODE 초대 링크로 들어온 경우 코드를 먼저 붙잡아 둔다
+// (로그인 리다이렉트를 거쳐도 로그인 후 자동 참여되도록)
+if (Platform.OS === 'web') capturePendingJoinCode();
 
 /** 다크 모드에 맞춰 상태바 글자색 전환 */
 function ThemedStatusBar() {

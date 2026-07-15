@@ -4,8 +4,10 @@ import {
 } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator, BottomTabBar } from '@react-navigation/bottom-tabs';
-import { StyleSheet, Platform } from 'react-native';
+import { StyleSheet, Platform, Linking } from 'react-native';
 import { usePostHog } from 'posthog-react-native';
+import { selectionHaptic } from '../haptics';
+import { parseJoinCode, consumePendingJoinCode } from '../joinLink';
 
 import HomeScreen from '../screens/HomeScreen';
 import CalendarScreen from '../screens/CalendarScreen';
@@ -46,7 +48,7 @@ export type RootStackParamList = {
   DiaryWrite: { entry?: DiaryEntry; folder?: string } | undefined;
   DiaryDetail: { entry: DiaryEntry };
   Group: { group: GroupNav };
-  GroupCreate: undefined;
+  GroupCreate: { joinCode?: string } | undefined;
   Notifications: undefined;
   NotifSettings: undefined;
   AccountSettings: undefined;
@@ -73,6 +75,8 @@ function MainTabs() {
       // 비활성 탭을 화면 트리에서 떼어내지 않는다 — detach가 shift 전환과 얽히면
       // 화면이 다시 붙지 않아 빈(회색) 화면으로 남는 버그가 있었음 (특히 통계 탭)
       detachInactiveScreens={false}
+      // 탭 전환 시 가벼운 selection 햅틱
+      screenListeners={{ tabPress: () => { selectionHaptic(); } }}
       tabBar={(props) => (
         <>
           {AD_ROUTES.has(props.state.routes[props.state.index].name) && <AdBanner />}
@@ -171,8 +175,29 @@ export default function RootNavigator() {
       posthog?.screen(name);
     }
   };
+
+  // 초대 링크로 들어온 경우 참여 화면으로 보내 자동 참여시킨다
+  const openJoin = (code: string | null) => {
+    if (code) navRef.navigate('GroupCreate', { joinCode: code });
+  };
+  // 네이티브: 앱이 켜져 있는 동안 pingdiary://join/CODE 링크를 받으면 처리
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    const sub = Linking.addEventListener('url', ({ url }) => openJoin(parseJoinCode(url)));
+    return () => sub.remove();
+  }, []);
+  const onNavReady = () => {
+    trackScreen();
+    if (Platform.OS === 'web') {
+      openJoin(consumePendingJoinCode()); // 웹: /join/CODE로 들어와 보관해 둔 코드
+    } else {
+      // 네이티브: 초대 링크로 앱이 '켜진' 경우 (콜드 스타트)
+      Linking.getInitialURL().then((u) => openJoin(parseJoinCode(u))).catch(() => {});
+    }
+  };
+
   return (
-    <NavigationContainer ref={navRef} theme={navTheme} onReady={trackScreen} onStateChange={trackScreen}>
+    <NavigationContainer ref={navRef} theme={navTheme} onReady={onNavReady} onStateChange={trackScreen}>
       <Stack.Navigator initialRouteName="Main" screenOptions={{ headerShown: false, contentStyle }}>
         <Stack.Screen name="Main" component={MainTabs} />
         <Stack.Screen name="DiaryWrite" component={DiaryWriteScreen} options={{ presentation: 'modal' }} />
