@@ -90,7 +90,7 @@ export default function NotificationScreen() {
               style={[styles.notifCard, !n.read && styles.notifCardUnread]}
               onPress={() => {
                 markRead(n.id);
-                if (n.entry) (navigation as any).navigate('DiaryDetail', { entry: n.entry });
+                if (n.entry) (navigation as any).navigate('DiaryDetail', { entry: n.entry, groupId: n.groupId });
               }}
               activeOpacity={0.7}
             >

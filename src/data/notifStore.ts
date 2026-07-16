@@ -15,6 +15,7 @@ export interface Notif {
   time: string;               // ISO
   read: boolean;
   entry?: DiaryEntry;         // 탭하면 이동할 일기
+  groupId?: number;           // 그룹 새 글 알림이면 그 그룹 id (댓글 그룹 구분용)
 }
 
 let notifs: Notif[] = [];
@@ -139,6 +140,7 @@ export async function refreshNotifs() {
             body: `${g.name} · ${r.title || (r.content || '').slice(0, 24)}`,
             time: r.created_at,
             read: false,
+            groupId: g.id,
             // 그룹 피드 행 → DiaryEntry (GroupScreen과 동일한 매핑)
             entry: {
               id: r.id,
@@ -151,8 +153,13 @@ export async function refreshNotifs() {
               persona: r.persona || '',
               author: r.author || '멤버',
               authorId: r.user_id,
+              avatarUrl: r.author_avatar || null,
               createdAt: r.created_at,
               aiComment: r.ai_comment ?? undefined,
+              commentCount: r.comment_count ?? 0,
+              // 그룹 피드의 글은 전부 '친구 공개' — 상세의 댓글 섹션 표시 조건에 필요
+              visibility: 'friends',
+              sharedGroups: Array.isArray(r.shared_groups) ? r.shared_groups : null,
             },
           }));
       })
