@@ -306,7 +306,22 @@ export default function DiaryDetailScreen() {
 
       <ScrollView ref={scrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} automaticallyAdjustKeyboardInsets keyboardShouldPersistTaps="handled">
         <Text style={styles.date}>{entryDateLabel(entry)}</Text>
-        <Text style={styles.title}>{entry.title}</Text>
+        {/* 남의 글(그룹)이면 제목 옆에 작성자 프사·이름 — 누가 썼는지 한눈에 */}
+        {!isMine ? (
+          <View style={styles.titleRow}>
+            <View style={styles.titleAvatar}>
+              {entry.avatarUrl
+                ? <Image source={{ uri: entry.avatarUrl }} style={styles.titleAvatarImg} />
+                : <Text style={styles.titleAvatarFallback}>{(entry.author || '멤').slice(0, 1)}</Text>}
+            </View>
+            <View style={{ flex: 1, minWidth: 0 }}>
+              <Text style={styles.title}>{entry.title}</Text>
+              <Text style={styles.titleAuthor}>{entry.author || '멤버'}</Text>
+            </View>
+          </View>
+        ) : (
+          <Text style={styles.title}>{entry.title}</Text>
+        )}
 
         {gallery.length > 0 && (
           <>
@@ -731,6 +746,14 @@ const lightStyles = StyleSheet.create({
   content: { padding: 24, gap: 14, paddingBottom: 48 },
   date: { fontSize: 12, color: '#9ca3af' },
   title: { fontSize: 22, fontWeight: '700', color: '#111827', lineHeight: 30, letterSpacing: -0.3 },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  titleAvatar: {
+    width: 34, height: 34, borderRadius: 17, backgroundColor: '#f3f4f6',
+    alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+  },
+  titleAvatarImg: { width: 34, height: 34, borderRadius: 17 },
+  titleAvatarFallback: { fontSize: 14, fontWeight: '700', color: '#9ca3af' },
+  titleAuthor: { fontSize: 12.5, color: '#9ca3af', marginTop: 1 },
   photoWrapper: { borderRadius: 16, overflow: 'hidden' },
   galleryRow: { flexDirection: 'row', gap: 8 },
   galleryThumb: { width: 64, height: 64, borderRadius: 12 },
