@@ -351,7 +351,7 @@ export default function GroupScreen() {
 
   // 내가 이 그룹에 공유한 일기를 로컬(낙관적 저장 포함)에서 합쳐 표시 —
   // 방금 쓴 글이 서버 저장 완료 전이어도 피드에 즉시 보이게
-  const { entries: myEntries } = useEntries();
+  const { entries: myEntries, deleteEntry } = useEntries();
   const displayEntries = React.useMemo(() => {
     const me = getCachedMe();
     const serverIds = new Set(entries.map((e) => e.id));
@@ -408,6 +408,13 @@ export default function GroupScreen() {
 
   // 신고/차단 (앱스토어 UGC 심사 대응)
   const [actionEntry, setActionEntry] = useState<DiaryEntry | null>(null);
+  const [confirmDeleteEntry, setConfirmDeleteEntry] = useState<DiaryEntry | null>(null); // 내 글 삭제 확인
+
+  function deleteMyEntry(entry: DiaryEntry) {
+    setConfirmDeleteEntry(null);
+    deleteEntry(entry.id); // 낙관적 삭제 + 서버 반영 (실패 시 컨텍스트가 복구·안내)
+    setEntries((prev) => prev.filter((e) => e.id !== entry.id)); // 그룹 피드 목록에서도 즉시 제거
+  }
   const [confirmReport, setConfirmReport] = useState<DiaryEntry | null>(null); // 신고 전 확인
 
   async function reportEntry(entry: DiaryEntry) {
@@ -643,14 +650,43 @@ export default function GroupScreen() {
           <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setActionEntry(null)} />
           <View style={styles.sheet}>
             <View style={styles.sheetHandle} />
-            <Text style={styles.actionSheetTitle}>{actionEntry.author} 님의 게시물</Text>
-            <TouchableOpacity style={styles.actionRow} onPress={() => { setActionEntry(null); setConfirmReport(actionEntry); }}>
-              <Text style={styles.actionText}>🚩  이 게시물 신고하기</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.actionRow} onPress={() => blockAuthor(actionEntry)}>
-              <Text style={[styles.actionText, styles.actionDanger]}>🚫  이 사용자 차단하기</Text>
-            </TouchableOpacity>
+            {actionEntry.authorId === getCachedMe()?.id ? (
+              <>
+                <Text style={styles.actionSheetTitle}>내 게시물</Text>
+                <TouchableOpacity style={styles.actionRow} onPress={() => { setActionEntry(null); setConfirmDeleteEntry(actionEntry); }}>
+                  <Text style={[styles.actionText, styles.actionDanger]}>🗑  이 p!ng 삭제하기</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Text style={styles.actionSheetTitle}>{actionEntry.author} 님의 게시물</Text>
+                <TouchableOpacity style={styles.actionRow} onPress={() => { setActionEntry(null); setConfirmReport(actionEntry); }}>
+                  <Text style={styles.actionText}>🚩  이 게시물 신고하기</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionRow} onPress={() => blockAuthor(actionEntry)}>
+                  <Text style={[styles.actionText, styles.actionDanger]}>🚫  이 사용자 차단하기</Text>
+                </TouchableOpacity>
+              </>
+            )}
             <TouchableOpacity style={styles.actionRow} onPress={() => setActionEntry(null)}>
+              <Text style={[styles.actionText, { color: '#9ca3af' }]}>취소</Text>
+            </TouchableOpacity>
+          </View>
+        </SheetWrap>
+      )}
+
+      {/* 내 글 삭제 확인 */}
+      {confirmDeleteEntry && (
+        <SheetWrap style={styles.overlayWrap}>
+          <TouchableOpacity style={styles.modalOverlay} activeOpacity={1} onPress={() => setConfirmDeleteEntry(null)} />
+          <View style={styles.sheet}>
+            <View style={styles.sheetHandle} />
+            <Text style={styles.actionSheetTitle}>이 p!ng을 삭제할까요?</Text>
+            <Text style={styles.confirmMsg}>'{confirmDeleteEntry.title}'이(가) 영구적으로 삭제되고 그룹에서도 사라져요.</Text>
+            <TouchableOpacity style={styles.confirmDangerBtn} onPress={() => deleteMyEntry(confirmDeleteEntry)}>
+              <Text style={styles.confirmDangerText}>삭제하기</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.actionRow} onPress={() => setConfirmDeleteEntry(null)}>
               <Text style={[styles.actionText, { color: '#9ca3af' }]}>취소</Text>
             </TouchableOpacity>
           </View>
