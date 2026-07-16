@@ -46,7 +46,7 @@ export type RootStackParamList = {
   Splash: undefined;
   Main: undefined;
   DiaryWrite: { entry?: DiaryEntry; folder?: string } | undefined;
-  DiaryDetail: { entry: DiaryEntry };
+  DiaryDetail: { entry: DiaryEntry; groupId?: number };
   Group: { group: GroupNav };
   GroupCreate: { joinCode?: string } | undefined;
   Notifications: undefined;
@@ -141,7 +141,7 @@ export default function RootNavigator() {
         } else if (data?.type === 'group_entry' && data.groupId != null) {
           const rows = await fetchGroupEntries(Number(data.groupId));
           const row = rows.find((r) => Number(r.id) === Number(data.entryId));
-          if (row) navRef.navigate('DiaryDetail', { entry: mapGroupEntry(row) });
+          if (row) navRef.navigate('DiaryDetail', { entry: mapGroupEntry(row), groupId: Number(data.groupId) });
         }
       } catch {
         // 로그인 전이거나 글이 삭제된 경우 — 조용히 무시 (앱은 평소처럼 열림)

@@ -64,7 +64,7 @@ function useCountdown(createdAt: string) {
 export default function DiaryDetailScreen() {
   const styles = useThemedStyles(lightStyles);
   const navigation = useNavigation<Nav>();
-  const { entry: routeEntry } = useRoute<Route>().params;
+  const { entry: routeEntry, groupId: routeGroupId } = useRoute<Route>().params;
   const { accent } = useTheme();
   const { deleteEntry, updateLocal, updateEntry, entries } = useEntries();
   // 수정 후 돌아와도 최신 내용이 바로 보이게, 라우트 스냅샷 대신 컨텍스트의 최신 엔트리를 사용
@@ -128,7 +128,7 @@ export default function DiaryDetailScreen() {
     try {
       // 답글의 답글도 같은 스레드(루트)에 붙는다
       const parentId = replyTo ? (replyTo.parent_id ?? replyTo.id) : null;
-      const saved = await addComment(entry.id, text, parentId);
+      const saved = await addComment(entry.id, text, parentId, routeGroupId ?? null);
       setComments((prev) => [...prev, saved]);
       setCommentInput('');
       setReplyTo(null);

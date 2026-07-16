@@ -606,7 +606,7 @@ export default function GroupScreen() {
               isShared={sharedAiComments.has(entry.id)}
               onToggleShare={() => toggleShare(entry.id)}
               onMore={() => setActionEntry(entry)}
-              onOpen={() => navigation.navigate('DiaryDetail', { entry })}
+              onOpen={() => navigation.navigate('DiaryDetail', { entry, groupId: group.id })}
             />
           ))}
         </ScrollView>
@@ -625,7 +625,7 @@ export default function GroupScreen() {
                     isShared={sharedAiComments.has(entry.id)}
                     onToggleShare={() => toggleShare(entry.id)}
                     onMore={() => setActionEntry(entry)}
-                    onOpen={() => navigation.navigate('DiaryDetail', { entry })}
+                    onOpen={() => navigation.navigate('DiaryDetail', { entry, groupId: group.id })}
                   />
                 ))}
               </View>
