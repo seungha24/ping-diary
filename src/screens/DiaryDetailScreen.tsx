@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, SafeAreaView,
   ActivityIndicator, Image, TextInput,
@@ -108,6 +108,12 @@ export default function DiaryDetailScreen() {
   const [commentInput, setCommentInput] = useState('');
   const [commentSending, setCommentSending] = useState(false);
   const [replyTo, setReplyTo] = useState<EntryComment | null>(null); // 답글 대상 (원댓글)
+  const scrollRef = useRef<ScrollView>(null);
+  const commentInputRef = useRef<TextInput>(null);
+  /** 댓글 입력이 시작되면 입력창이 보이도록 맨 아래로 스크롤 (키보드가 올라온 뒤에) */
+  function scrollToCommentInput() {
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 250);
+  }
   const [deleteCommentTarget, setDeleteCommentTarget] = useState<EntryComment | null>(null); // 댓글 삭제 확인
 
   useEffect(() => {
@@ -298,7 +304,7 @@ export default function DiaryDetailScreen() {
         )}
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} automaticallyAdjustKeyboardInsets keyboardShouldPersistTaps="handled">
+      <ScrollView ref={scrollRef} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} automaticallyAdjustKeyboardInsets keyboardShouldPersistTaps="handled">
         <Text style={styles.date}>{entryDateLabel(entry)}</Text>
         <Text style={styles.title}>{entry.title}</Text>
 
@@ -457,7 +463,7 @@ export default function DiaryDetailScreen() {
                           <Text style={styles.commentTime}>{commentTimeLabel(c.created_at)}</Text>
                         </View>
                         <Text style={styles.commentBody}>{c.content}</Text>
-                        <TouchableOpacity onPress={() => setReplyTo(root)} hitSlop={{ top: 6, bottom: 6 }}>
+                        <TouchableOpacity onPress={() => { setReplyTo(root); setTimeout(() => commentInputRef.current?.focus(), 50); }} hitSlop={{ top: 6, bottom: 6 }}>
                           <Text style={[styles.commentReplyBtn, { color: accent }]}>답글</Text>
                         </TouchableOpacity>
                       </View>
@@ -483,9 +489,11 @@ export default function DiaryDetailScreen() {
               )}
             <View style={styles.commentInputRow}>
               <TextInput
+                ref={commentInputRef}
                 style={styles.commentInput}
                 value={commentInput}
                 onChangeText={setCommentInput}
+                onFocus={scrollToCommentInput}
                 placeholder={replyTo ? "답글 쓰기…" : "댓글 쓰기…"}
                 placeholderTextColor="#9ca3af"
                 maxLength={500}
