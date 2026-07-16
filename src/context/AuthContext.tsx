@@ -65,9 +65,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     getMe().then((me) => { if (me.theme) hydrateTheme(me.theme as any); }).catch(() => {});
   }, [authed]);
 
-  // API가 401을 만나면(토큰 만료·무효) 로그인 화면으로 깔끔히 복귀
+  // API가 401을 만나면: 세션 갱신을 한 번 시도하고, 그래도 안 되면 로그인 화면으로.
+  // (앱을 오래 닫아뒀다 열면 복원된 토큰이 만료 상태라, 갱신 없이 바로 로그아웃되던 문제 방지)
   useEffect(() => {
-    setOnUnauthorized(() => logout());
+    let refreshing = false;
+    setOnUnauthorized(() => {
+      if (refreshing) return;
+      refreshing = true;
+      supabase.auth.refreshSession()
+        .then(({ data, error }) => {
+          if (error || !data.session) logout();
+          else adoptSession(data.session); // 새 토큰 저장 — 사용자는 로그인 유지
+        })
+        .catch(() => logout())
+        .finally(() => { refreshing = false; });
+    });
     return () => setOnUnauthorized(null);
   }, []);
 
@@ -126,7 +138,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await hydrateToken();
       try {
         const { data } = await supabase.auth.getSession();
-        if (data.session) adoptSession(data.session);
+        if (data.session) {
+          // 앱을 오래 닫아뒀다 열면 액세스 토큰(수명 1시간)이 이미 만료 —
+          // 만료(임박)면 먼저 갱신해서 첫 요청부터 유효한 토큰으로 시작한다
+          const expMs = (data.session.expires_at ?? 0) * 1000;
+          if (expMs < Date.now() + 60_000) {
+            const r = await supabase.auth.refreshSession().catch(() => null);
+            adoptSession(r?.data?.session ?? data.session);
+          } else {
+            adoptSession(data.session);
+          }
+        }
       } catch {}
       if (!cancelled) {
         setTok(getToken());
