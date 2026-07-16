@@ -97,6 +97,7 @@ function fromServer(row: any): DiaryEntry {
     folder: row.folder ?? undefined,
     createdAt: row.created_at,
     aiComment: row.ai_comment ?? undefined,
+    commentCount: row.comment_count ?? 0,
     visibility: row.visibility === 'friends' ? 'friends' : 'private',
     sharedGroups: row.shared_groups ?? null,
   };

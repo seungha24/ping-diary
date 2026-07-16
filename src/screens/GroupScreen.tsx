@@ -28,7 +28,7 @@ import TimeChipPicker, { timeLabel } from '../components/TimeChipPicker';
 import { notify } from '../notify';
 import { copyToClipboard, shareText } from '../clipboard';
 import { Platform } from 'react-native';
-import { IconUsers, IconUser, IconBell as IconBellLine, IconSprout, IconSparkle, IconPencil, IconTrash, IconCamera, PersonaIcon } from '../components/icons/Line';
+import { IconUsers, IconUser, IconMessage, IconBell as IconBellLine, IconSprout, IconSparkle, IconPencil, IconTrash, IconCamera, PersonaIcon } from '../components/icons/Line';
 import * as ImagePicker from 'expo-image-picker';
 import { useThemedStyles } from '../theme/themed';
 import SheetWrap from '../components/SheetWrap';
@@ -62,6 +62,7 @@ export function mapGroupEntry(row: any): DiaryEntry {
     avatarUrl: row.author_avatar || null,
     createdAt: row.created_at,
     aiComment: row.ai_comment || undefined,
+    commentCount: row.comment_count ?? 0,
     // 그룹 피드의 글은 정의상 전부 '친구 공개' — 상세 화면의 댓글 섹션 표시 조건에 필요
     visibility: 'friends',
     sharedGroups: Array.isArray(row.shared_groups) ? row.shared_groups : null,
@@ -162,6 +163,12 @@ function ListCard({
         </View>
         <View style={styles.tagRow}>
           {entry.tags.map((t) => <Tag key={t} label={t} />)}
+          {!!entry.commentCount && (
+            <View style={styles.commentCountBadge}>
+              <IconMessage size={12} color="#9ca3af" />
+              <Text style={styles.commentCountText}>{entry.commentCount}</Text>
+            </View>
+          )}
         </View>
       </Pressable>
     </View>
@@ -209,7 +216,15 @@ function GridCard({
               <Text key={t} style={styles.gridTag}>#{t}</Text>
             ))}
           </View>
-          <Text style={styles.gridDate}>{entryDateLabel(entry)}</Text>
+          <View style={styles.gridFooterRow}>
+            <Text style={styles.gridDate}>{entryDateLabel(entry)}</Text>
+            {!!entry.commentCount && (
+              <View style={styles.commentCountBadge}>
+                <IconMessage size={11} color="#9ca3af" />
+                <Text style={styles.commentCountText}>{entry.commentCount}</Text>
+              </View>
+            )}
+          </View>
         </Pressable>
       </View>
     </View>
@@ -1074,6 +1089,9 @@ const lightStyles = StyleSheet.create({
   listCardTitle: { fontSize: 14, fontWeight: '600', color: '#111827' },
   listCardPreview: { fontSize: 12, color: '#6b7280', lineHeight: 18 },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 2 },
+  commentCountBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, marginLeft: 'auto' },
+  commentCountText: { fontSize: 11.5, color: '#9ca3af', fontWeight: '600' },
+  gridFooterRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   gridContent: { padding: 12, paddingBottom: 40 },
   gridLayout: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   gridColumn: { flex: 1, gap: 10 },
