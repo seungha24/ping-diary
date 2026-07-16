@@ -463,7 +463,17 @@ export default function DiaryDetailScreen() {
                           <Text style={styles.commentTime}>{commentTimeLabel(c.created_at)}</Text>
                         </View>
                         <Text style={styles.commentBody}>{c.content}</Text>
-                        <TouchableOpacity onPress={() => { setReplyTo(root); setTimeout(() => commentInputRef.current?.focus(), 50); }} hitSlop={{ top: 6, bottom: 6 }}>
+                        <TouchableOpacity
+                          onPress={() => {
+                            setReplyTo(c); // 배너에 '이 댓글' 작성자가 뜨게 (스레드 귀속은 루트로 정규화)
+                            // 답글의 답글이면 누구에게 답하는지 @멘션을 미리 넣어준다
+                            if (c.parent_id != null) {
+                              setCommentInput((prev) => prev.startsWith(`@${c.author} `) ? prev : `@${c.author} ${prev}`);
+                            }
+                            setTimeout(() => commentInputRef.current?.focus(), 50);
+                          }}
+                          hitSlop={{ top: 6, bottom: 6 }}
+                        >
                           <Text style={[styles.commentReplyBtn, { color: accent }]}>답글</Text>
                         </TouchableOpacity>
                       </View>
