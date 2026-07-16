@@ -87,6 +87,15 @@ function IconCamera({ color, size = 16 }: IconProps) {
     </Svg>
   );
 }
+function IconAlbum({ color, size = 16 }: IconProps) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <Rect x="3" y="3" width="18" height="18" rx="3" />
+      <Circle cx="8.5" cy="8.5" r="1.5" />
+      <Path d="M21 15l-5-5L5 21" />
+    </Svg>
+  );
+}
 function IconLock({ color, size = 16 }: IconProps) {
   return (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -443,7 +452,7 @@ export default function DiaryWriteScreen() {
     setTagInput('');
   }
 
-  // 사진 선택(여러 장 가능) → 업로드 → 커서 위치에 고른 순서대로 사진 블록 삽입
+  // 앨범에서 선택(여러 장 가능) → 커서 위치에 삽입
   async function insertPhoto() {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') return;
@@ -455,11 +464,28 @@ export default function DiaryWriteScreen() {
       quality: 0.8,
     });
     if (result.canceled || !result.assets?.length) return;
+    await insertAssets(result.assets);
+  }
+
+  // 카메라로 바로 촬영 → 커서 위치에 삽입
+  async function insertCameraPhoto() {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      notify('카메라 접근을 허용해야 촬영할 수 있어요. 설정 > p!ng에서 켤 수 있어요.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({ quality: 0.8 });
+    if (result.canceled || !result.assets?.length) return;
+    await insertAssets(result.assets);
+  }
+
+  // 공통: 업로드 → 커서 위치에 순서대로 사진 블록 삽입
+  async function insertAssets(assets: { uri: string }[]) {
     setUploading(true);
     try {
       // 고른 순서 보장을 위해 순차 업로드
       const urls: string[] = [];
-      for (const a of result.assets) urls.push(await uploadPhoto(a.uri));
+      for (const a of assets) urls.push(await uploadPhoto(a.uri));
       setBlocks((prev) => {
         const next = prev.map((b) => ({ ...b }));
         // 커서가 있던 텍스트 블록에서 분할 삽입 (없으면 마지막 텍스트 블록 끝에)
@@ -737,17 +763,29 @@ export default function DiaryWriteScreen() {
           )
         )}
 
-        {/* 사진 추가: 커서 위치에 삽입 */}
-        <TouchableOpacity style={styles.inlinePhotoBtn} onPress={insertPhoto} disabled={uploading}>
-          {uploading
-            ? <ActivityIndicator color="#9ca3af" size="small" />
-            : (
-              <>
-                <IconCamera color="#6b7280" size={14} />
-                <Text style={styles.inlinePhotoBtnText}>사진 추가</Text>
-              </>
-            )}
-        </TouchableOpacity>
+        {/* 사진 추가: 촬영 또는 앨범에서 골라 커서 위치에 삽입 */}
+        <View style={styles.photoBtnRow}>
+          <TouchableOpacity style={styles.inlinePhotoBtn} onPress={insertCameraPhoto} disabled={uploading}>
+            {uploading
+              ? <ActivityIndicator color="#9ca3af" size="small" />
+              : (
+                <>
+                  <IconCamera color="#6b7280" size={14} />
+                  <Text style={styles.inlinePhotoBtnText}>촬영</Text>
+                </>
+              )}
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.inlinePhotoBtn} onPress={insertPhoto} disabled={uploading}>
+            {uploading
+              ? <ActivityIndicator color="#9ca3af" size="small" />
+              : (
+                <>
+                  <IconAlbum color="#6b7280" size={14} />
+                  <Text style={styles.inlinePhotoBtnText}>앨범</Text>
+                </>
+              )}
+          </TouchableOpacity>
+        </View>
 
         {/* Visibility */}
         <View style={styles.visRow}>
@@ -1138,6 +1176,7 @@ const lightStyles = StyleSheet.create({
   photoThumbAddPlus: { fontSize: 22, color: '#9ca3af' },
   photoHint: { fontSize: 11.5, color: '#9ca3af', marginTop: 6 },
   blockPhotoWrap: { position: 'relative', borderRadius: 14, overflow: 'hidden', marginVertical: 2 },
+  photoBtnRow: { flexDirection: 'row', gap: 8 },
   inlinePhotoBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     alignSelf: 'flex-start', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 999,
