@@ -186,22 +186,50 @@ export default function DiaryWriteScreen() {
     () => entryToBlocks(editEntry ? { ...editEntry, body: initQ.rest } : undefined)
   );
   // ── 사진 꾹 눌러 드래그로 위치 이동 ──
+  // 끌 때는 사진만 손가락을 따라오고, '놓는 순간' 이동 거리로 목적지를 한 번에 계산한다.
+  // (드래그 중 실시간 자리 교체는 재정렬로 인덱스·높이가 계속 밀려 버벅임·오배치의 원인이었음)
   const blocksRef = useRef<EditorBlock[]>([]);
   const blockHeights = useRef<Record<number, number>>({}); // 블록 index → 측정 높이 (onLayout)
   const dragY = useRef(new RNAnimated.Value(0)).current;   // 드래그 중 사진의 화면상 이동량
-  const drag = useRef({ active: false, url: '', base: 0 }); // base: 스왑으로 이미 소화된 이동량
+  const drag = useRef({ active: false, url: '', dy: 0 });
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const BLOCK_GAP = 12;
 
   function endPhotoDrag() {
     if (holdTimer.current) { clearTimeout(holdTimer.current); holdTimer.current = null; }
     if (!drag.current.active) return;
+    const { url, dy } = drag.current;
     drag.current.active = false;
     setMovingPhotoUrl(null);
-    RNAnimated.spring(dragY, { toValue: 0, useNativeDriver: Platform.OS !== 'web', friction: 8 }).start();
+    dragY.setValue(0); // 재정렬과 동시에 원위치 (스프링을 쓰면 이동 후 위치에 이중 오프셋이 생김)
+
+    // 이동 거리(dy)로 몇 블록을 건너뛰는지 계산해 한 번에 재배치
+    const list = blocksRef.current;
+    const from = list.findIndex((b) => b.type === 'photo' && (b as any).url === url);
+    if (from < 0) return;
+    let remaining = Math.abs(dy);
+    let target = from;
+    const dir = dy < 0 ? -1 : 1;
+    while (true) {
+      const nextIdx = target + dir;
+      if (nextIdx < 0 || nextIdx >= list.length) break;
+      const h = (blockHeights.current[nextIdx] ?? 0) + BLOCK_GAP;
+      if (h <= BLOCK_GAP || remaining < h * 0.6) break; // 다음 블록의 60% 못 넘으면 멈춤
+      remaining -= h;
+      target = nextIdx;
+    }
+    if (target !== from) {
+      setBlocks((prev) => {
+        const next = [...prev];
+        const i = next.findIndex((b) => b.type === 'photo' && (b as any).url === url);
+        if (i < 0) return prev;
+        const [photo] = next.splice(i, 1);
+        next.splice(Math.min(target, next.length), 0, photo);
+        return normalizeBlocks(next);
+      });
+    }
   }
 
-  // 드래그 중 손가락을 따라가다, 옆 블록 높이의 60%를 넘으면 그 블록과 자리를 바꾼다 (실시간 스왑)
   const photoDragPan = useRef(
     PanResponder.create({
       // 드래그 모드가 켜진 뒤의 움직임만 가로챈다 (평소엔 스크롤·탭 그대로)
@@ -209,26 +237,8 @@ export default function DiaryWriteScreen() {
       onPanResponderTerminationRequest: () => !drag.current.active,
       onPanResponderMove: (_, g) => {
         if (!drag.current.active) return;
-        const dy = g.dy - drag.current.base;
-        dragY.setValue(dy);
-        const list = blocksRef.current;
-        const i = list.findIndex((b) => b.type === 'photo' && (b as any).url === drag.current.url);
-        if (i < 0) return;
-        if (dy < 0 && i > 0) {
-          const hUp = (blockHeights.current[i - 1] ?? 0) + BLOCK_GAP;
-          if (hUp > BLOCK_GAP && dy < -hUp * 0.6) {
-            movePhotoByUrl(drag.current.url, -1);
-            drag.current.base -= hUp;
-            dragY.setValue(g.dy - drag.current.base);
-          }
-        } else if (dy > 0 && i < list.length - 1) {
-          const hDown = (blockHeights.current[i + 1] ?? 0) + BLOCK_GAP;
-          if (hDown > BLOCK_GAP && dy > hDown * 0.6) {
-            movePhotoByUrl(drag.current.url, 1);
-            drag.current.base += hDown;
-            dragY.setValue(g.dy - drag.current.base);
-          }
-        }
+        drag.current.dy = g.dy;
+        dragY.setValue(g.dy); // 시각적 이동만 — 재정렬은 놓을 때 한 번
       },
       onPanResponderRelease: () => endPhotoDrag(),
       onPanResponderTerminate: () => endPhotoDrag(),
@@ -239,7 +249,7 @@ export default function DiaryWriteScreen() {
   function startHold(url: string) {
     if (holdTimer.current) clearTimeout(holdTimer.current);
     holdTimer.current = setTimeout(() => {
-      drag.current = { active: true, url, base: 0 };
+      drag.current = { active: true, url, dy: 0 };
       dragY.setValue(0);
       setMovingPhotoUrl(url); // 스크롤 잠금 + 들어올린 스타일
     }, 280);
@@ -253,6 +263,15 @@ export default function DiaryWriteScreen() {
   const [tagInput, setTagInput] = useState('');
   const [persona, setPersona] = useState(editEntry?.persona ?? '선생님');
   const [lightboxPhoto, setLightboxPhoto] = useState<string | null>(null); // 사진 확대
+  // 대표(썸네일)로 지정한 사진. 지정 안 했거나 그 사진이 지워지면 첫 사진이 대표가 된다
+  const [coverPhoto, setCoverPhoto] = useState<string | null>(editEntry?.photo ?? null);
+
+  /** 대표 사진: 지정한 사진이 본문에 남아 있으면 그 사진, 아니면 첫 사진 */
+  function resolveMainPhoto(): string | null {
+    const urls = blocks.filter((b) => b.type === 'photo').map((b: any) => b.url as string);
+    if (coverPhoto && urls.includes(coverPhoto)) return coverPhoto;
+    return urls[0] ?? null;
+  }
   const [uploading, setUploading] = useState(false);
   const [visibility, setVisibility] = useState<'private' | 'friends'>(editEntry?.visibility ?? 'private');
   // 그룹 공개 시 공유할 그룹 선택
@@ -334,7 +353,7 @@ export default function DiaryWriteScreen() {
       notify('내용을 입력한 뒤 임시저장할 수 있어요.');
       return false;
     }
-    const firstPhoto = (blocks.find((b) => b.type === 'photo') as any)?.url ?? null;
+    const firstPhoto = resolveMainPhoto();
     try {
       const saved = await saveDraft({
         id: draftId,
@@ -358,6 +377,19 @@ export default function DiaryWriteScreen() {
 
   // ── 취소 시 임시저장 확인 ──
   const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
+  const allowLeaveRef = useRef(false); // 발행·명시적 나가기 등 '허용된' 이탈 표시
+
+  // 모달 쓸어내리기·뒤로가기 등 어떤 경로로 나가더라도, 쓰던 내용이 있으면 먼저 확인을 띄운다
+  useEffect(() => {
+    const unsub = (navigation as any).addListener('beforeRemove', (e: any) => {
+      if (allowLeaveRef.current || editEntry) return;
+      const hasContent = title.trim().length > 0 || blocksToBody(blocks).trim().length > 0;
+      if (!hasContent || draftSaved) return;
+      e.preventDefault();
+      setExitConfirmOpen(true);
+    });
+    return unsub;
+  }, [navigation, title, blocks, draftSaved, editEntry]);
 
   /** 취소: 새 글에 쓰다 만 내용이 있으면 임시저장 여부를 먼저 묻는다 */
   function handleCancel() {
@@ -373,7 +405,7 @@ export default function DiaryWriteScreen() {
   async function saveDraftAndExit() {
     const ok = await handleSaveDraft();
     setExitConfirmOpen(false);
-    if (ok) navigation.goBack();
+    if (ok) { allowLeaveRef.current = true; navigation.goBack(); }
   }
 
   /** 임시저장함의 초안을 작성 화면으로 불러온다 */
@@ -579,6 +611,7 @@ export default function DiaryWriteScreen() {
                 };
                 updateLocal(updated); // 화면 즉시 반영
                 playPing();
+                allowLeaveRef.current = true;
                 navigation.goBack();
                 try {
                   const saved = await patchEntry(updated); // 내용·페르소나·폴더 저장
@@ -608,6 +641,7 @@ export default function DiaryWriteScreen() {
                 });
                 if (draftId) deleteDraft(draftId).catch(() => {}); // 발행했으니 이 초안만 정리
                 playPing();
+                allowLeaveRef.current = true;
                 navigation.goBack();
               }
             }}
@@ -1046,7 +1080,7 @@ export default function DiaryWriteScreen() {
               <TouchableOpacity style={[styles.exitSaveBtn, { backgroundColor: accent }]} onPress={saveDraftAndExit}>
                 <Text style={styles.exitSaveText}>임시저장하고 나가기</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.exitDiscardBtn} onPress={() => { setExitConfirmOpen(false); navigation.goBack(); }}>
+              <TouchableOpacity style={styles.exitDiscardBtn} onPress={() => { setExitConfirmOpen(false); allowLeaveRef.current = true; navigation.goBack(); }}>
                 <Text style={styles.exitDiscardText}>저장 안 하고 나가기</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.exitKeepBtn} onPress={() => setExitConfirmOpen(false)}>
