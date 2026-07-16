@@ -352,6 +352,12 @@ export async function addComment(entryId: number, content: string, parentId?: nu
 export async function deleteComment(entryId: number, commentId: number): Promise<void> {
   await request(`/entries/${entryId}/comments/${commentId}`, { method: 'DELETE' });
 }
+/** 알림창용: 내 일기에 달린 댓글 + 내 댓글에 달린 답글 (일기 제목 동봉) */
+export type InboxComment = Omit<EntryComment, 'is_me'> & { entry_title: string };
+export async function fetchCommentInbox(): Promise<InboxComment[]> {
+  const rows = await request('/entries/comments/inbox');
+  return Array.isArray(rows) ? rows : [];
+}
 
 /** 그룹 멤버 목록 */
 export interface GroupMember {

@@ -5,7 +5,7 @@ import {
 import TouchableOpacity from '../components/Touchable';
 import { useNavigation } from '@react-navigation/native';
 import IconChev from '../components/icons/IconChev';
-import { IconBellOff, IconPencil, IconSparkle } from '../components/icons/Line';
+import { IconBellOff, IconPencil, IconSparkle, IconMessage } from '../components/icons/Line';
 import { useTheme } from '../context/ThemeContext';
 import { useThemedStyles } from '../theme/themed';
 import FadeIn from '../components/FadeIn';
@@ -17,8 +17,9 @@ import {
 // 알림 종류별 아이콘·색 (이모지 대신 라인 아이콘)
 // 인라인 색이라 다크 자동 매핑을 안 타므로 다크 배경(bgDark)을 함께 정의
 const TYPE_ICON: Record<Notif['type'], { bg: string; bgDark: string; color: string; Icon: React.ComponentType<{ size?: number; color?: string }> }> = {
-  ai:    { bg: '#f3e8ff', bgDark: '#2a2545', color: '#8b5cf6', Icon: IconSparkle },
-  diary: { bg: '#e0f2fe', bgDark: '#1a2a45', color: '#0ea5e9', Icon: IconPencil },
+  ai:      { bg: '#f3e8ff', bgDark: '#2a2545', color: '#8b5cf6', Icon: IconSparkle },
+  diary:   { bg: '#e0f2fe', bgDark: '#1a2a45', color: '#0ea5e9', Icon: IconPencil },
+  comment: { bg: '#dcfce7', bgDark: '#1a3a2a', color: '#22c55e', Icon: IconMessage },
 };
 
 export default function NotificationScreen() {
@@ -76,7 +77,7 @@ export default function NotificationScreen() {
               <>
                 <IconBellOff size={40} color="#d1d5db" />
                 <Text style={styles.emptyText}>알림이 없어요</Text>
-                <Text style={styles.emptySubText}>p0ng이 도착하거나{'\n'}그룹에 새 p!ng가 올라오면 알려드릴게요</Text>
+                <Text style={styles.emptySubText}>p0ng이 도착하거나{'\n'}새 p!ng·댓글이 달리면 알려드릴게요</Text>
               </>
             )}
           </View>

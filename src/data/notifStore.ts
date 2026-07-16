@@ -1,15 +1,16 @@
 // 실제 데이터 기반 알림 스토어.
 // - 내 일기에 AI 코멘트가 달리면 → 'ai' 알림
 // - 그룹 멤버가 새 p!ng를 공유하면 → 'diary' 알림
+// - 내 일기·내 댓글에 멤버가 댓글/답글을 달면 → 'comment' 알림
 // 읽음 상태는 localStorage에 보관해 화면을 나가도 유지된다.
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { fetchEntries, fetchGroups, fetchGroupEntries, getCachedMe, getMe } from '../api';
+import { fetchEntries, fetchGroups, fetchGroupEntries, fetchCommentInbox, getCachedMe, getMe } from '../api';
 import { DiaryEntry } from './types';
 
 export interface Notif {
-  id: string;                 // 'ai-{entryId}' | 'diary-{groupId}-{entryId}'
-  type: 'ai' | 'diary';
+  id: string;                 // 'ai-{entryId}' | 'diary-{groupId}-{entryId}' | 'comment-{commentId}'
+  type: 'ai' | 'diary' | 'comment';
   title: string;
   body: string;
   time: string;               // ISO
@@ -97,9 +98,10 @@ export async function refreshNotifs() {
     const me = getCachedMe() ?? await getMe().catch(() => null);
     const myId = me?.id ?? null;
 
-    const [entries, groups] = await Promise.all([
+    const [entries, groups, inbox] = await Promise.all([
       fetchEntries().catch(() => []),
       fetchGroups().catch(() => []),
+      fetchCommentInbox().catch(() => []),
     ]);
 
     const items: Notif[] = [];
@@ -165,6 +167,26 @@ export async function refreshNotifs() {
       })
     );
     feeds.forEach((list) => items.push(...list));
+
+    // 3) 내 일기에 달린 댓글 + 내 댓글에 달린 답글
+    // 탭하면 이동할 일기: 내 일기면 entries에서, 남의 일기면 그룹 피드에서 찾는다
+    const entryById = new Map<number, DiaryEntry>();
+    for (const e of entries) entryById.set(Number(e.id), e);
+    for (const list of feeds) for (const n of list) if (n.entry) entryById.set(Number(n.entry.id), n.entry);
+    for (const c of inbox) {
+      items.push({
+        id: `comment-${c.id}`,
+        type: 'comment',
+        title: c.parent_id != null
+          ? `${c.author || '멤버'}님이 답글을 남겼어요`
+          : `${c.author || '멤버'}님이 댓글을 남겼어요`,
+        body: `${c.entry_title || '내 p!ng'} · ${c.content.slice(0, 40)}`,
+        time: c.created_at,
+        read: false,
+        groupId: c.group_id ?? undefined,
+        entry: entryById.get(Number(c.entry_id)),
+      });
+    }
 
     // 최신순 정렬 + 상한
     items.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
