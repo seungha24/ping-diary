@@ -70,6 +70,7 @@ import { saveDraft, listDrafts, deleteDraft, DiaryDraft } from '../data/draftSto
 import { notify } from '../notify';
 import { playPing } from '../sound';
 import { selectionHaptic } from '../haptics';
+import { pickMainPhoto } from '../data/photo';
 import { RootStackParamList } from '../navigation/RootNavigator';
 import { useThemedStyles } from '../theme/themed';
 import FadeIn from '../components/FadeIn';
@@ -266,12 +267,8 @@ export default function DiaryWriteScreen() {
   // 대표(썸네일)로 지정한 사진. 지정 안 했거나 그 사진이 지워지면 첫 사진이 대표가 된다
   const [coverPhoto, setCoverPhoto] = useState<string | null>(editEntry?.photo ?? null);
 
-  /** 대표 사진: 지정한 사진이 본문에 남아 있으면 그 사진, 아니면 첫 사진 */
-  function resolveMainPhoto(): string | null {
-    const urls = blocks.filter((b) => b.type === 'photo').map((b: any) => b.url as string);
-    if (coverPhoto && urls.includes(coverPhoto)) return coverPhoto;
-    return urls[0] ?? null;
-  }
+  const resolveMainPhoto = () =>
+    pickMainPhoto(blocks.filter((b) => b.type === 'photo').map((b: any) => b.url as string), coverPhoto);
   const [uploading, setUploading] = useState(false);
   const [visibility, setVisibility] = useState<'private' | 'friends'>(editEntry?.visibility ?? 'private');
   // 그룹 공개 시 공유할 그룹 선택
@@ -414,6 +411,7 @@ export default function DiaryWriteScreen() {
     const dq = extractQuestion(d.body);
     setSelectedPrompt(dq.question);
     setBlocks(entryToBlocks({ body: dq.rest, photo: null, photos: [] }));
+    setCoverPhoto(d.photo ?? null); // 초안이 기억하는 대표 사진 복원
     setTags(d.tags);
     setPersona(d.persona);
     setFolder(d.folder);
@@ -595,8 +593,8 @@ export default function DiaryWriteScreen() {
               // 제목을 안 쓰면 일기 날짜가 제목이 된다 (예: "7 월 14 일의 p!ng")
               const titleDate = new Date(createdAtISO);
               const finalTitle = title.trim() || `${MONTHS[titleDate.getMonth()]} ${titleDate.getDate()} 일의 p!ng`;
-              // 본문 첫 사진이 대표 (목록 썸네일용)
-              const mainPhoto = (blocks.find((b) => b.type === 'photo') as any)?.url ?? null;
+              // 대표로 지정한 사진(없으면 본문 첫 사진)이 목록 썸네일이 된다
+              const mainPhoto = resolveMainPhoto();
 
               if (editEntry) {
                 const personaChanged = editEntry.persona !== persona;
@@ -797,6 +795,21 @@ export default function DiaryWriteScreen() {
                 <TouchableOpacity style={styles.photoRemove} onPress={() => removePhotoBlock(i)}>
                   <Text style={styles.photoRemoveText}>✕</Text>
                 </TouchableOpacity>
+              )}
+              {/* 대표 사진 선택: 사진이 2장 이상일 때만 배지 노출 (1장이면 자동 대표) */}
+              {movingPhotoUrl !== b.url && blocks.filter((x) => x.type === 'photo').length > 1 && (
+                resolveMainPhoto() === b.url ? (
+                  <View style={[styles.mainPhotoBadge, { backgroundColor: accent }]}>
+                    <Text style={styles.mainPhotoBadgeText}>★ 대표</Text>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    style={styles.mainPhotoBadge}
+                    onPress={() => { selectionHaptic(); setCoverPhoto(b.url); }}
+                  >
+                    <Text style={styles.mainPhotoBadgeText}>대표로</Text>
+                  </TouchableOpacity>
+                )
               )}
             </RNAnimated.View>
           )
