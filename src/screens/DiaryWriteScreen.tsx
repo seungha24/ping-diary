@@ -630,13 +630,18 @@ export default function DiaryWriteScreen() {
       >
         {/* 임시저장함 배너 (새 글에서만) */}
         {!editEntry && drafts.length > 0 && (
-          <FadeIn style={[styles.draftBanner, { borderColor: hexToRgba(accent, 0.3), backgroundColor: hexToRgba(accent, 0.07) }]}>
-            <IconPencil size={14} color={accent} />
-            <Text style={styles.draftBannerText} numberOfLines={1}>
-              임시저장함에 {drafts.length} 개의 글이 있어요
-            </Text>
-            <TouchableOpacity onPress={() => { Keyboard.dismiss(); setDraftsOpen(true); }}>
-              <Text style={[styles.draftBannerAction, { color: accent }]}>열기</Text>
+          <FadeIn>
+            {/* 배너 전체가 버튼 — 어디를 눌러도 임시저장함이 열린다 */}
+            <TouchableOpacity
+              style={[styles.draftBanner, { borderColor: hexToRgba(accent, 0.3), backgroundColor: hexToRgba(accent, 0.07) }]}
+              onPress={() => { Keyboard.dismiss(); setDraftsOpen(true); }}
+              activeOpacity={0.8}
+            >
+              <IconPencil size={14} color={accent} />
+              <Text style={styles.draftBannerText} numberOfLines={1}>
+                임시저장함에 {drafts.length} 개의 글이 있어요
+              </Text>
+              <IconChev dir="right" size={14} color={accent} />
             </TouchableOpacity>
           </FadeIn>
         )}
