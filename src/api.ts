@@ -355,7 +355,11 @@ export async function deleteComment(entryId: number, commentId: number): Promise
   await request(`/entries/${entryId}/comments/${commentId}`, { method: 'DELETE' });
 }
 /** 알림창용: 내 일기에 달린 댓글 + 내 댓글에 달린 답글 (일기 제목 동봉) */
-export type InboxComment = Omit<EntryComment, 'is_me'> & { entry_title: string };
+export type InboxComment = Omit<EntryComment, 'is_me'> & {
+  entry_title: string;
+  // 알림 사유: 내 일기 댓글 / 내 댓글의 답글 / 내가 댓글 단 글의 새 댓글 (구서버는 미전송)
+  reason?: 'on_my_entry' | 'reply' | 'thread';
+};
 export async function fetchCommentInbox(): Promise<InboxComment[]> {
   const rows = await request('/entries/comments/inbox');
   return Array.isArray(rows) ? rows : [];

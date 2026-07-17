@@ -177,9 +177,11 @@ export async function refreshNotifs() {
       items.push({
         id: `comment-${c.id}`,
         type: 'comment',
-        title: c.parent_id != null
-          ? `${c.author || '멤버'}님이 답글을 남겼어요`
-          : `${c.author || '멤버'}님이 댓글을 남겼어요`,
+        title: c.reason === 'thread'
+          ? `${c.author || '멤버'}님도 댓글을 남겼어요`
+          : c.parent_id != null
+            ? `${c.author || '멤버'}님이 답글을 남겼어요`
+            : `${c.author || '멤버'}님이 댓글을 남겼어요`,
         body: `${c.entry_title || '내 p!ng'} · ${c.content.slice(0, 40)}`,
         time: c.created_at,
         read: false,
