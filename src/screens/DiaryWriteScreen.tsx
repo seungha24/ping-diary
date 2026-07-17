@@ -807,7 +807,7 @@ export default function DiaryWriteScreen() {
                     style={styles.mainPhotoBadge}
                     onPress={() => { selectionHaptic(); setCoverPhoto(b.url); }}
                   >
-                    <Text style={styles.mainPhotoBadgeText}>대표 변경</Text>
+                    <Text style={styles.mainPhotoBadgeText}>대표</Text>
                   </TouchableOpacity>
                 )
               )}
