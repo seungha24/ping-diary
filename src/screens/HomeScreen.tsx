@@ -30,6 +30,7 @@ import { useThemedStyles } from '../theme/themed';
 import SheetWrap from '../components/SheetWrap';
 import FadeIn from '../components/FadeIn';
 import PopWrap from '../components/PopWrap';
+import { thumbUrl } from '../imageUrl';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -338,6 +339,14 @@ export default function HomeScreen() {
       .catch(() => {});
   }, [token]);
 
+  // 폴더 커버 썸네일을 미리 받아 캐시를 데운다 — 폴더 화면 첫 진입이 즉시 뜨게
+  useEffect(() => {
+    Object.values(folderCovers || {}).forEach((u) => {
+      const t = thumbUrl(u, 480);
+      if (t) Image.prefetch(t).catch(() => {});
+    });
+  }, [folderCovers]);
+
   /** 새 폴더 만들기 → DB(user_metadata) 저장 */
   async function createFolder() {
     const name = newFolderName.trim();
@@ -563,7 +572,7 @@ export default function HomeScreen() {
             <>
               {folderCovers[selectedFolder.id] ? (
                 <View>
-                  <Animated.Image source={{ uri: folderCovers[selectedFolder.id] }} style={[styles.folderCoverBanner, { height: coverHeight }]} />
+                  <Animated.Image source={{ uri: thumbUrl(folderCovers[selectedFolder.id], 960)! }} style={[styles.folderCoverBanner, { height: coverHeight }]} />
                   <LinearGradient
                     colors={['rgba(0,0,0,0.35)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.55)']}
                     locations={[0, 0.45, 1]}
@@ -727,7 +736,7 @@ export default function HomeScreen() {
                         ]}
                       >
                         {cover ? (
-                          <Image source={{ uri: cover }} style={styles.folderCoverImg} />
+                          <Image source={{ uri: thumbUrl(cover, 480)! }} style={styles.folderCoverImg} />
                         ) : (
                           <View style={styles.folderCoverEmpty}>
                             <Text style={styles.folderCoverEmoji}>{folder.emoji}</Text>
@@ -858,7 +867,7 @@ export default function HomeScreen() {
                     ]}
                   >
                     {cover ? (
-                      <Image source={{ uri: cover }} style={styles.folderCoverImg} />
+                      <Image source={{ uri: thumbUrl(cover, 480)! }} style={styles.folderCoverImg} />
                     ) : (
                       <View style={styles.folderCoverEmpty}>
                         <IconUsers size={30} color="#9ca3af" />
@@ -1014,7 +1023,7 @@ export default function HomeScreen() {
             <Text style={styles.folderEmojiLabel}>커버 사진</Text>
             <View style={styles.coverEditRow}>
               {folderCovers[editFolder.id] ? (
-                <Image source={{ uri: folderCovers[editFolder.id] }} style={styles.coverThumb} />
+                <Image source={{ uri: thumbUrl(folderCovers[editFolder.id], 160)! }} style={styles.coverThumb} />
               ) : (
                 <View style={styles.coverThumbEmpty}>
                   <IconCamera size={20} color="#9ca3af" />
