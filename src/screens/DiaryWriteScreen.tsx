@@ -807,7 +807,7 @@ export default function DiaryWriteScreen() {
                     style={styles.mainPhotoBadge}
                     onPress={() => { selectionHaptic(); setCoverPhoto(b.url); }}
                   >
-                    <Text style={styles.mainPhotoBadgeText}>대표로</Text>
+                    <Text style={styles.mainPhotoBadgeText}>대표 변경</Text>
                   </TouchableOpacity>
                 )
               )}
@@ -1204,11 +1204,11 @@ const lightStyles = StyleSheet.create({
   photoRemoveText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   // 사진 위치 이동 바 (꾹 누르면 나타남)
   mainPhotoBadge: {
-    position: 'absolute', top: 8, left: 8,
-    backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 8,
-    paddingHorizontal: 8, paddingVertical: 3,
+    position: 'absolute', top: 10, left: 10,
+    backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 10,
+    paddingHorizontal: 12, paddingVertical: 7,
   },
-  mainPhotoBadgeText: { color: '#fff', fontSize: 10.5, fontWeight: '600' },
+  mainPhotoBadgeText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   photoThumbRow: { flexDirection: 'row', gap: 8, marginTop: 8, alignItems: 'flex-start' },
   photoThumbCol: { alignItems: 'center', gap: 3 },
   photoThumbWrap: { position: 'relative' },
