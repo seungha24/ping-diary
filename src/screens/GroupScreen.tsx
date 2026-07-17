@@ -28,7 +28,7 @@ import TimeChipPicker, { timeLabel } from '../components/TimeChipPicker';
 import { notify } from '../notify';
 import { copyToClipboard, shareText } from '../clipboard';
 import { Platform } from 'react-native';
-import { IconUsers, IconUser, IconMessage, IconBell as IconBellLine, IconSprout, IconSparkle, IconPencil, IconTrash, IconCamera, PersonaIcon } from '../components/icons/Line';
+import { IconUsers, IconUser, IconBell as IconBellLine, IconSprout, IconSparkle, IconPencil, IconTrash, IconCamera, PersonaIcon } from '../components/icons/Line';
 import * as ImagePicker from 'expo-image-picker';
 import { useThemedStyles } from '../theme/themed';
 import SheetWrap from '../components/SheetWrap';
@@ -165,8 +165,7 @@ function ListCard({
           {entry.tags.map((t) => <Tag key={t} label={t} />)}
           {!!entry.commentCount && (
             <View style={styles.commentCountBadge}>
-              <IconMessage size={12} color="#9ca3af" />
-              <Text style={styles.commentCountText}>{entry.commentCount}</Text>
+              <Text style={styles.commentCountText}>댓글 {entry.commentCount}</Text>
             </View>
           )}
         </View>
@@ -220,8 +219,7 @@ function GridCard({
             <Text style={styles.gridDate}>{entryDateLabel(entry)}</Text>
             {!!entry.commentCount && (
               <View style={styles.commentCountBadge}>
-                <IconMessage size={11} color="#9ca3af" />
-                <Text style={styles.commentCountText}>{entry.commentCount}</Text>
+                <Text style={styles.commentCountText}>댓글 {entry.commentCount}</Text>
               </View>
             )}
           </View>
