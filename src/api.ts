@@ -335,6 +335,7 @@ export interface EntryComment {
   created_at: string;
   parent_id: number | null; // 답글이면 원댓글 id (1단계 스레드)
   group_id: number | null;  // 댓글이 달린 그룹 (그 그룹 멤버 + 일기 주인에게만 보임)
+  photo_url: string | null; // 첨부 사진
   author: string;
   author_avatar: string | null;
   is_me: boolean;
@@ -343,10 +344,11 @@ export async function fetchComments(entryId: number): Promise<EntryComment[]> {
   const rows = await request(`/entries/${entryId}/comments`);
   return Array.isArray(rows) ? rows : [];
 }
-export async function addComment(entryId: number, content: string, parentId?: number | null, groupId?: number | null): Promise<EntryComment> {
+export async function addComment(entryId: number, content: string, parentId?: number | null, groupId?: number | null, photoUrl?: string | null): Promise<EntryComment> {
   const body: Record<string, unknown> = { content };
   if (parentId != null) body.parent_id = parentId;
   if (groupId != null) body.group_id = groupId;
+  if (photoUrl) body.photo_url = photoUrl;
   return request(`/entries/${entryId}/comments`, { method: 'POST', body: JSON.stringify(body) });
 }
 export async function deleteComment(entryId: number, commentId: number): Promise<void> {

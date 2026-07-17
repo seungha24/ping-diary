@@ -18,9 +18,9 @@ import { useEntries } from '../context/EntriesContext';
 import { warningHaptic } from '../haptics';
 import { useGroups } from '../context/GroupsContext';
 import { PERSONAS, DiaryFolder, entryDateLabel, mergeFolders, parseBodySegments, extractQuestion } from '../data/types';
-import { generateComment, reportContent, getCachedMe, fetchComments, addComment, deleteComment, EntryComment } from '../api';
+import { generateComment, reportContent, getCachedMe, fetchComments, addComment, deleteComment, uploadPhoto, EntryComment } from '../api';
 import { notify } from '../notify';
-import Svg, { Path, Line } from 'react-native-svg';
+import Svg, { Path, Line, Circle } from 'react-native-svg';
 import { IconLock, IconX, IconSparkle, IconTrash as IconTrashLine, IconFolder, PersonaIcon } from '../components/icons/Line';
 import { useThemedStyles } from '../theme/themed';
 import SheetWrap from '../components/SheetWrap';
@@ -108,6 +108,28 @@ export default function DiaryDetailScreen() {
   const [commentInput, setCommentInput] = useState('');
   const [commentSending, setCommentSending] = useState(false);
   const [replyTo, setReplyTo] = useState<EntryComment | null>(null); // 답글 대상 (원댓글)
+  const [commentPhoto, setCommentPhoto] = useState<string | null>(null); // 첨부 사진 (업로드된 URL)
+  const [commentPhotoUploading, setCommentPhotoUploading] = useState(false);
+
+  async function pickCommentPhoto() {
+    const ImagePicker = await import('expo-image-picker');
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.8,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
+    setCommentPhotoUploading(true);
+    try {
+      setCommentPhoto(await uploadPhoto(result.assets[0].uri));
+    } catch (e: any) {
+      notify(e?.message ?? '사진 업로드에 실패했어요.');
+    } finally {
+      setCommentPhotoUploading(false);
+    }
+  }
+
   const scrollRef = useRef<ScrollView>(null);
   const commentInputRef = useRef<TextInput>(null);
   /** 댓글 입력이 시작되면 입력창이 보이도록 맨 아래로 스크롤 (키보드가 올라온 뒤에) */
@@ -129,14 +151,15 @@ export default function DiaryDetailScreen() {
 
   async function submitComment() {
     const text = commentInput.trim();
-    if (!text || commentSending) return;
+    if ((!text && !commentPhoto) || commentSending) return;
     setCommentSending(true);
     try {
       // 답글의 답글도 같은 스레드(루트)에 붙는다
       const parentId = replyTo ? (replyTo.parent_id ?? replyTo.id) : null;
-      const saved = await addComment(entry.id, text, parentId, routeGroupId ?? null);
+      const saved = await addComment(entry.id, text, parentId, routeGroupId ?? null, commentPhoto);
       setComments((prev) => [...prev, saved]);
       setCommentInput('');
+      setCommentPhoto(null);
       setReplyTo(null);
     } catch (e: any) {
       notify(e?.message ?? '댓글 등록에 실패했어요.');
@@ -477,7 +500,12 @@ export default function DiaryDetailScreen() {
                           <Text style={styles.commentAuthor}>{c.author}</Text>
                           <Text style={styles.commentTime}>{commentTimeLabel(c.created_at)}</Text>
                         </View>
-                        <Text style={styles.commentBody}>{c.content}</Text>
+                        {!!c.content && <Text style={styles.commentBody}>{c.content}</Text>}
+                        {!!c.photo_url && (
+                          <TouchableOpacity activeOpacity={0.9} onPress={() => setLightboxPhoto(c.photo_url!)}>
+                            <Image source={{ uri: c.photo_url }} style={styles.commentPhoto} />
+                          </TouchableOpacity>
+                        )}
                         <TouchableOpacity
                           onPress={() => {
                             setReplyTo(c); // 배너에 '이 댓글' 작성자가 뜨게 (스레드 귀속은 루트로 정규화)
@@ -512,7 +540,20 @@ export default function DiaryDetailScreen() {
                   </TouchableOpacity>
                 </View>
               )}
+            {commentPhoto && (
+              <View style={styles.commentPhotoPreviewWrap}>
+                <Image source={{ uri: commentPhoto }} style={styles.commentPhotoPreview} />
+                <TouchableOpacity style={styles.commentPhotoRemove} onPress={() => setCommentPhoto(null)}>
+                  <Text style={styles.commentPhotoRemoveText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+            )}
             <View style={styles.commentInputRow}>
+              <TouchableOpacity style={styles.commentPhotoBtn} onPress={pickCommentPhoto} disabled={commentPhotoUploading}>
+                {commentPhotoUploading
+                  ? <ActivityIndicator size="small" color="#9ca3af" />
+                  : <IconCameraSmall />}
+              </TouchableOpacity>
               <TextInput
                 ref={commentInputRef}
                 style={styles.commentInput}
@@ -525,9 +566,9 @@ export default function DiaryDetailScreen() {
                 multiline
               />
               <TouchableOpacity
-                style={[styles.commentSendBtn, { backgroundColor: accent }, (!commentInput.trim() || commentSending) && { opacity: 0.4 }]}
+                style={[styles.commentSendBtn, { backgroundColor: accent }, ((!commentInput.trim() && !commentPhoto) || commentSending) && { opacity: 0.4 }]}
                 onPress={submitComment}
-                disabled={!commentInput.trim() || commentSending}
+                disabled={(!commentInput.trim() && !commentPhoto) || commentSending}
               >
                 {commentSending
                   ? <ActivityIndicator color="#fff" size="small" />
@@ -728,6 +769,16 @@ export default function DiaryDetailScreen() {
   );
 }
 
+/** 댓글 입력용 작은 카메라 아이콘 */
+function IconCameraSmall() {
+  return (
+    <Svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <Path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+      <Circle cx="12" cy="13" r="4" />
+    </Svg>
+  );
+}
+
 const lightStyles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
   header: {
@@ -801,6 +852,15 @@ const lightStyles = StyleSheet.create({
   },
   commentSendBtn: { borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 },
   commentSendText: { color: '#ffffff', fontSize: 13, fontWeight: '700' },
+  commentPhoto: { width: 150, height: 150, borderRadius: 10, marginTop: 6, backgroundColor: '#f3f4f6' },
+  commentPhotoBtn: { paddingVertical: 10, paddingRight: 2 },
+  commentPhotoPreviewWrap: { alignSelf: 'flex-start', position: 'relative', marginBottom: 6 },
+  commentPhotoPreview: { width: 64, height: 64, borderRadius: 10, backgroundColor: '#f3f4f6' },
+  commentPhotoRemove: {
+    position: 'absolute', top: -6, right: -6, width: 20, height: 20, borderRadius: 10,
+    backgroundColor: 'rgba(0,0,0,0.6)', alignItems: 'center', justifyContent: 'center',
+  },
+  commentPhotoRemoveText: { color: '#fff', fontSize: 10, fontWeight: '700' },
   aiTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   aiDot: {
     width: 18, height: 18, borderRadius: 9, backgroundColor: '#111827',
