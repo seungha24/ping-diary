@@ -128,6 +128,17 @@ export function IconDumbbell({ color, size }: IconProps) {
   );
 }
 
+/** 미니멀 댓글 아이콘 — 말풍선 꼬리 없이 둥근 카드 + 글줄 두 개 */
+export function IconComment({ color, size }: IconProps) {
+  return (
+    <Base size={size} color={color}>
+      <Rect x="3.5" y="5" width="17" height="14" rx="3.5" />
+      <Line x1="8" y1="10.5" x2="16" y2="10.5" />
+      <Line x1="8" y1="14" x2="12.5" y2="14" />
+    </Base>
+  );
+}
+
 /** 페르소나별 라인 아이콘 */
 export function PersonaIcon({ persona, color, size }: { persona: string; color?: string; size?: number }) {
   switch (persona) {
