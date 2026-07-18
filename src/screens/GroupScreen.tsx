@@ -280,7 +280,18 @@ export default function GroupScreen() {
   }
 
   async function shareInviteLink() {
-    const msg = `p!ng 그룹 '${groupName}'에 초대해요!\n아래 링크를 누르면 바로 참여할 수 있어요 👇\n${joinLinkFor(group.invite_code ?? '')}\n\n(앱에서는 초대 코드로도 참여 가능: ${group.invite_code})`;
+    const myName = getCachedMe()?.display_name || '친구';
+    const msg = [
+      'p!ng — 우리 하루 끝엔 서로 p!ng 하나씩 📔',
+      '',
+      `${myName}님이 '${groupName}'에 초대했어요.`,
+      '서로의 일기에 댓글 달고, AI 페르소나의 답장(p0ng)도 구경해요!',
+      '',
+      '참여 링크 👇',
+      joinLinkFor(group.invite_code ?? ''),
+      '',
+      `(앱에서는 초대 코드 ${group.invite_code} 로도 참여할 수 있어요)`,
+    ].join('\n');
     if (await shareText(msg, 'p!ng 그룹 초대')) return;
     const ok = await copyToClipboard(msg);
     notify(ok ? '초대 메시지를 복사했어요. 붙여넣어 공유하세요!' : '공유에 실패했어요.');
