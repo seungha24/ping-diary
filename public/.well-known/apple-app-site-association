@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "LGJL9B44HU.com.seungha.pingdiary",
+        "paths": ["/join/*"]
+      }
+    ]
+  }
+}

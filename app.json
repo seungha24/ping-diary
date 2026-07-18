@@ -9,6 +9,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.seungha.pingdiary",
+      "associatedDomains": ["applinks:ping-diary.vercel.app"],
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "일기에 사진을 첨부하기 위해 사진 보관함 접근이 필요합니다.",
         "NSCameraUsageDescription": "일기에 사진을 촬영해 첨부하기 위해 카메라 접근이 필요합니다.",
