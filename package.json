@@ -48,7 +48,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "build:web": "expo export --platform web && node scripts/inject-phone-frame.js",
+    "build:web": "expo export --platform web && node scripts/inject-phone-frame.js && cp -R public/.well-known dist/.well-known",
     "test": "jest"
   },
   "private": true,
