@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { fetchGroups, ServerGroup } from '../api';
+import { loadCache, saveCache, CACHE_KEYS } from '../data/listCache';
 
 interface GroupsContextValue {
   groups: ServerGroup[];
@@ -25,8 +26,9 @@ export function GroupsProvider({ children }: { children: React.ReactNode }) {
     try {
       const list = await fetchGroups();
       setGroups(list);
+      saveCache(CACHE_KEYS.groups, list);
     } catch {
-      setGroups([]);
+      // 갱신 실패 시 기존(캐시) 목록 유지
     } finally {
       setLoading(false);
     }
@@ -34,6 +36,12 @@ export function GroupsProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!ready) return;
+    // 캐시 먼저 (0초 표시) → 서버 갱신
+    if (authed) {
+      loadCache<ServerGroup[]>(CACHE_KEYS.groups).then((cached) => {
+        if (cached?.length) { setGroups(cached); setLoading(false); }
+      });
+    }
     refresh();
   }, [ready, authed, refresh]);
 

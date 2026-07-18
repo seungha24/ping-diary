@@ -68,6 +68,9 @@ export function clearToken() {
   storage.remove(TOKEN_KEY);
   storage.remove(EMAIL_KEY);
   clearMeCache();
+  // 목록 로컬 캐시도 비운다 — 같은 폰에서 다른 계정 로그인 시 이전 계정 목록 노출 방지
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  require('./data/listCache').clearListCaches();
 }
 
 /** 앱 시작 시 네이티브 영구 저장소에서 토큰·이메일을 메모리로 복원 */

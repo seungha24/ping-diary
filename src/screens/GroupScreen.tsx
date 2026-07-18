@@ -24,6 +24,7 @@ import { useGroups } from '../context/GroupsContext';
 import { useEntries } from '../context/EntriesContext';
 import { fetchGroupEntries, fetchGroupMembers, GroupMember as GroupMemberInfo, leaveGroup, deleteGroup, renameGroup, reportContent, saveBlockedUsers, saveMutedGroups, getCachedMe, uploadPhoto, updateGroupPhoto } from '../api';
 import { loadGroupNotifSetting, saveGroupNotifSetting, applyGroupReminderSchedule } from '../data/groupNotif';
+import { loadCache, saveCache, CACHE_KEYS } from '../data/listCache';
 import TimeChipPicker, { timeLabel } from '../components/TimeChipPicker';
 import { notify } from '../notify';
 import { copyToClipboard, shareText } from '../clipboard';
@@ -388,9 +389,18 @@ export default function GroupScreen() {
   }
   useEffect(() => {
     let cancelled = false;
+    // 마지막에 본 피드를 먼저 (0초 표시) → 서버 최신으로 교체
+    loadCache<Record<string, any[]>>(CACHE_KEYS.feeds).then((all) => {
+      const cached = all?.[String(group.id)];
+      if (!cancelled && cached?.length) { setEntries(sortByNewest(cached.map(mapGroupEntry))); setLoading(false); }
+    });
     fetchGroupEntries(group.id)
-      .then((rows) => { if (!cancelled) setEntries(sortByNewest(rows.map(mapGroupEntry))); })
-      .catch(() => { if (!cancelled) setEntries([]); })
+      .then(async (rows) => {
+        if (!cancelled) { setEntries(sortByNewest(rows.map(mapGroupEntry))); }
+        const all = (await loadCache<Record<string, any[]>>(CACHE_KEYS.feeds)) ?? {};
+        saveCache(CACHE_KEYS.feeds, { ...all, [String(group.id)]: rows });
+      })
+      .catch(() => {})
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [group.id]);

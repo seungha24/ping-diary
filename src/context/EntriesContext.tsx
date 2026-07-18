@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { DiaryEntry, INITIAL_ENTRIES } from '../data/types';
 import { sortByNewest } from '../data/entrySort';
+import { loadCache, saveCache, CACHE_KEYS } from '../data/listCache';
 import { useAuth } from './AuthContext';
 import { fetchEntries, createEntry, patchEntry, removeEntry } from '../api';
 import { notify } from '../notify';
@@ -41,6 +42,10 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
         if (!cancelled) { setEntries([]); setLoading(false); }
         return;
       }
+      // 캐시된 목록을 먼저 보여주고 (0초), 아래에서 서버 최신으로 교체
+      loadCache<DiaryEntry[]>(CACHE_KEYS.entries).then((cached) => {
+        if (!cancelled && cached?.length) { setEntries(sortByNewest(cached)); setLoading(false); }
+      });
       try {
         let list = await fetchEntries();
         // 예전에 자동 시드됐던 데모 글 정리 (제목+본문이 데모와 정확히 일치하는 것만 삭제)
@@ -53,9 +58,9 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
           await Promise.all(demoIds.map((id) => removeEntry(id).catch(() => {})));
           list = list.filter((e) => !demoIds.includes(e.id));
         }
-        if (!cancelled) { setEntries(sortByNewest(list)); setLoading(false); }
+        if (!cancelled) { setEntries(sortByNewest(list)); setLoading(false); saveCache(CACHE_KEYS.entries, list); }
       } catch {
-        if (!cancelled) { setEntries([]); setLoading(false); }
+        if (!cancelled) setLoading(false); // 갱신 실패 시 캐시 유지 (빈 화면으로 덮지 않음)
       }
     }
 
