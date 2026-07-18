@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, SafeAreaView, ActivityIndicator,
+  View, Text, ScrollView, StyleSheet, SafeAreaView, ActivityIndicator, RefreshControl,
 } from 'react-native';
 import TouchableOpacity from '../components/Touchable';
 import { useNavigation } from '@react-navigation/native';
@@ -28,6 +28,13 @@ export default function NotificationScreen() {
   const { accent, mode } = useTheme();
   const [, forceUpdate] = useState(0);
   const [loading, setLoading] = useState(getNotifs().length === 0);
+  const [refreshing, setRefreshing] = useState(false);
+
+  /** 아래로 당겨서 새로고침 */
+  async function handleRefresh() {
+    setRefreshing(true);
+    try { await refreshNotifs(); } finally { setRefreshing(false); }
+  }
 
   // 공유 스토어 구독 → 어느 화면에서 읽음 처리해도 반영
   useEffect(() => subscribeNotifs(() => forceUpdate((v) => v + 1)), []);
@@ -67,7 +74,11 @@ export default function NotificationScreen() {
         </View>
       )}
 
-      <ScrollView contentContainerStyle={styles.list} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.list}
+        showsVerticalScrollIndicator={false}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#9ca3af" colors={[accent]} />}
+      >
         <FadeIn key={loading ? 'loading' : 'loaded'}>
         {notifs.length === 0 ? (
           <View style={styles.empty}>

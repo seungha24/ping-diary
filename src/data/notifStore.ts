@@ -89,9 +89,16 @@ export function timeAgo(iso: string): string {
   return `${d.getMonth() + 1} 월 ${d.getDate()} 일`;
 }
 
-/** 서버 데이터로 알림 목록 재구성 */
-export async function refreshNotifs() {
-  if (refreshing) return;
+/** 서버 데이터로 알림 목록 재구성. 이미 갱신 중이면 그 갱신을 함께 기다린다 (당겨서 새로고침용) */
+let inflight: Promise<void> | null = null;
+export function refreshNotifs(): Promise<void> {
+  if (!inflight) {
+    inflight = doRefresh().finally(() => { inflight = null; });
+  }
+  return inflight;
+}
+
+async function doRefresh() {
   refreshing = true;
   try {
     await hydrateReadSet(); // 폰: 저장된 읽음 목록 먼저 복원
