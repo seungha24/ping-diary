@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { DiaryEntry, INITIAL_ENTRIES } from '../data/types';
-import { sortByNewest } from '../data/entrySort';
+import { sortByNewest, mergeRefreshed } from '../data/entrySort';
 import { loadCache, saveCache, CACHE_KEYS } from '../data/listCache';
 import { useAuth } from './AuthContext';
 import { fetchEntries, createEntry, patchEntry, removeEntry } from '../api';
@@ -31,6 +31,10 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
   const { ready, authed } = useAuth();
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  // 서버 저장이 진행 중인 낙관적 변경을 추적 — 재조회(refresh)가 중간에 끼어들어도
+  // 아직 서버에 없는 새 글이 사라지거나 방금 지운 글이 되살아나지 않게 한다.
+  const pendingAdd = useRef<Set<number>>(new Set()); // 저장 중인 새 글 id (서버에 아직 없을 수 있음 → 유지)
+  const pendingDel = useRef<Set<number>>(new Set()); // 삭제 중인 글 id (서버에 아직 있을 수 있음 → 제외)
 
   // 인증 완료 후 서버에서 p!ng 로드
   useEffect(() => {
@@ -70,15 +74,18 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
 
   // 낙관적 추가: 화면에 먼저 반영하고 서버 저장 후 실제 엔트리로 교체 (항상 최신순 유지)
   function addEntry(entry: DiaryEntry) {
+    pendingAdd.current.add(entry.id);
     setEntries((prev) => sortByNewest([entry, ...prev]));
     createEntry(entry)
       .then((saved) => {
         setEntries((prev) => sortByNewest(prev.map((e) => (e.id === entry.id ? saved : e))));
+        pendingAdd.current.delete(entry.id);
         notify('p!ng 업로드 완료!');
       })
       .catch(() => {
         // 저장 실패 시 낙관적 항목 롤백
         setEntries((prev) => prev.filter((e) => e.id !== entry.id));
+        pendingAdd.current.delete(entry.id);
         notify('p!ng 저장에 실패했어요. 네트워크를 확인해주세요.');
       });
   }
@@ -107,18 +114,24 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
   function deleteEntry(id: number) {
     // 실패 시 지운 항목만 되살린다 (전체 스냅샷 복원 금지 — updateEntry와 동일한 이유)
     const removed = entries.find((e) => e.id === id);
+    pendingDel.current.add(id);
     setEntries((prev) => prev.filter((e) => e.id !== id));
-    removeEntry(id).catch(() => {
-      if (removed) setEntries((prev) => sortByNewest([removed, ...prev.filter((e) => e.id !== id)]));
-      notify('삭제에 실패했어요.');
-    });
+    removeEntry(id)
+      .then(() => { pendingDel.current.delete(id); })
+      .catch(() => {
+        pendingDel.current.delete(id);
+        if (removed) setEntries((prev) => sortByNewest([removed, ...prev.filter((e) => e.id !== id)]));
+        notify('삭제에 실패했어요.');
+      });
   }
 
   // 당겨서 새로고침 등 수동 재조회 (실패 시 기존 목록 유지)
+  // 서버 저장이 진행 중인 낙관적 변경은 보존한다 — 저장 전 새 글이 사라지거나
+  // 삭제 전 글이 서버 응답으로 되살아나는 것을 막는다.
   async function refresh() {
     try {
       const list = await fetchEntries();
-      setEntries(sortByNewest(list));
+      setEntries((prev) => mergeRefreshed(prev, list, pendingAdd.current, pendingDel.current));
     } catch {}
   }
 

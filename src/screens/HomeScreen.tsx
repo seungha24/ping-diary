@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   View, Text, ScrollView, StyleSheet, SafeAreaView,
   Modal, Pressable, Image, TextInput, PanResponder, InteractionManager, Animated,
@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import TouchableOpacity from '../components/Touchable';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import { RootStackParamList } from '../navigation/RootNavigator';
@@ -65,6 +65,18 @@ export default function HomeScreen() {
   const [, forceNotif] = useState(0);
   useEffect(() => subscribeNotifs(() => forceNotif((v) => v + 1)), []);
   useEffect(() => { refreshNotifs(); }, []); // 실제 알림(AI 코멘트·그룹 새 글) 로드
+
+  // 다른 화면에서 작업하고 홈으로 돌아오면 목록·그룹·알림을 재조회 (서버 집계값 즉시 반영).
+  // 첫 진입(마운트)은 위 로드가 이미 처리하므로 건너뛴다. 결과는 제자리 갱신이라 깜빡임 없음.
+  const firstFocus = useRef(true);
+  useFocusEffect(
+    useCallback(() => {
+      if (firstFocus.current) { firstFocus.current = false; return; }
+      refreshEntries();
+      refreshGroups();
+      refreshNotifs();
+    }, [refreshEntries, refreshGroups])
+  );
 
   // 홈 첫 화면으로 리셋 (홈 탭·로고 클릭 공용)
   function resetToFirstScreen() {
