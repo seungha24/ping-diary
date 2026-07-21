@@ -189,7 +189,8 @@ async function doRefresh() {
           : c.parent_id != null
             ? `${c.author || '멤버'}님이 답글을 남겼어요`
             : `${c.author || '멤버'}님이 댓글을 남겼어요`,
-        body: `${c.entry_title || '내 p!ng'} · ${c.content.slice(0, 40)}`,
+        // 사진만 있는 댓글은 content가 비어 있을 수 있다 — 없으면 '(사진)'으로
+        body: `${c.entry_title || '내 p!ng'} · ${(c.content || '(사진)').slice(0, 40)}`,
         time: c.created_at,
         read: false,
         groupId: c.group_id ?? undefined,
