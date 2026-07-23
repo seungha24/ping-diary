@@ -25,6 +25,7 @@ import { IconLock, IconX, IconSparkle, IconTrash as IconTrashLine, IconFolder, P
 import { useThemedStyles } from '../theme/themed';
 import SheetWrap from '../components/SheetWrap';
 import { animateLayout } from '../anim';
+import { thumbUrl } from '../imageUrl';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -334,7 +335,7 @@ export default function DiaryDetailScreen() {
           <View style={styles.titleRow}>
             <View style={styles.titleAvatar}>
               {entry.avatarUrl
-                ? <Image source={{ uri: entry.avatarUrl }} style={styles.titleAvatarImg} />
+                ? <Image source={{ uri: thumbUrl(entry.avatarUrl, 160) || entry.avatarUrl }} style={styles.titleAvatarImg} />
                 : <Text style={styles.titleAvatarFallback}>{(entry.author || '멤').slice(0, 1)}</Text>}
             </View>
             <View style={{ flex: 1, minWidth: 0 }}>
@@ -348,14 +349,15 @@ export default function DiaryDetailScreen() {
 
         {gallery.length > 0 && (
           <>
+            {/* 표시는 썸네일(빠른 로딩·전환 렉 방지·전송량 절감), 확대는 원본 */}
             <TouchableOpacity style={styles.photoWrapper} activeOpacity={0.9} onPress={() => setLightboxPhoto(gallery[0])}>
-              <AspectPhoto photo={gallery[0]} minRatio={1} />
+              <AspectPhoto photo={thumbUrl(gallery[0], 960) || gallery[0]} minRatio={1} />
             </TouchableOpacity>
             {gallery.length > 1 && (
               <View style={styles.galleryRow}>
                 {gallery.slice(1).map((p) => (
                   <TouchableOpacity key={p} onPress={() => setLightboxPhoto(p)}>
-                    <Image source={{ uri: p }} style={styles.galleryThumb} />
+                    <Image source={{ uri: thumbUrl(p, 160) || p }} style={styles.galleryThumb} />
                   </TouchableOpacity>
                 ))}
               </View>
@@ -389,7 +391,7 @@ export default function DiaryDetailScreen() {
             <Text key={i} style={styles.body} selectable>{seg.text}</Text>
           ) : (
             <TouchableOpacity key={i} style={styles.photoWrapper} activeOpacity={0.9} onPress={() => setLightboxPhoto(seg.url)}>
-              <AspectPhoto photo={seg.url} minRatio={1} />
+              <AspectPhoto photo={thumbUrl(seg.url, 960) || seg.url} minRatio={1} />
             </TouchableOpacity>
           )
         )}
@@ -492,7 +494,7 @@ export default function DiaryDetailScreen() {
                     <View key={c.id} style={[styles.commentRow, i > 0 && styles.commentReplyRow]}>
                       <View style={[styles.commentAvatar, i > 0 && styles.commentAvatarSm]}>
                         {c.author_avatar
-                          ? <Image source={{ uri: c.author_avatar }} style={[styles.commentAvatarImg, i > 0 && styles.commentAvatarImgSm]} />
+                          ? <Image source={{ uri: thumbUrl(c.author_avatar, 160) || c.author_avatar }} style={[styles.commentAvatarImg, i > 0 && styles.commentAvatarImgSm]} />
                           : <Text style={styles.commentAvatarFallback}>{c.author.slice(0, 1)}</Text>}
                       </View>
                       <View style={{ flex: 1, minWidth: 0 }}>
@@ -503,7 +505,7 @@ export default function DiaryDetailScreen() {
                         {!!c.content && <Text style={styles.commentBody}>{c.content}</Text>}
                         {!!c.photo_url && (
                           <TouchableOpacity activeOpacity={0.9} onPress={() => setLightboxPhoto(c.photo_url!)}>
-                            <Image source={{ uri: c.photo_url }} style={styles.commentPhoto} />
+                            <Image source={{ uri: thumbUrl(c.photo_url, 480) || c.photo_url }} style={styles.commentPhoto} />
                           </TouchableOpacity>
                         )}
                         <TouchableOpacity
