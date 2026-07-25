@@ -29,6 +29,9 @@ export interface DiaryEntry {
   commentCount?: number; // 목록 카드 표시용 (서버 집계)
   visibility?: 'private' | 'friends';  // 'friends'면 참여 그룹 피드에 공개
   sharedGroups?: number[] | null;      // 공유할 그룹 id 목록. null이면 모든 그룹(기존 동작)
+  /** 낙관적 추가 시 부여하는 클라이언트 고유 id. 서버 저장으로 id가 바뀌어도
+   *  (임시 id → 실제 id) 화면이 같은 글을 계속 추적하기 위한 다리. */
+  _localId?: number;
 }
 
 export const PHOTO_PLACEHOLDERS = [

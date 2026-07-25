@@ -68,8 +68,19 @@ export default function DiaryDetailScreen() {
   const { entry: routeEntry, groupId: routeGroupId } = useRoute<Route>().params;
   const { accent } = useTheme();
   const { deleteEntry, updateLocal, updateEntry, entries } = useEntries();
-  // 수정 후 돌아와도 최신 내용이 바로 보이게, 라우트 스냅샷 대신 컨텍스트의 최신 엔트리를 사용
-  const entry = entries.find((e) => e.id === routeEntry.id) ?? routeEntry;
+  // 수정 후 돌아와도 최신 내용이 바로 보이게, 라우트 스냅샷 대신 컨텍스트의 최신 엔트리를 사용.
+  // 방금 쓴 글은 임시 id로 열릴 수 있어, 서버 저장으로 id가 바뀌어도 _localId로 같은 글을 찾는다.
+  const resolved = entries.find(
+    (e) => e.id === routeEntry.id || (routeEntry._localId != null && e._localId === routeEntry._localId)
+  );
+  const entry = resolved ?? routeEntry;
+  // 임시 id가 실제 id로 승격되면 라우트 파라미터도 실제 id 글로 교체 —
+  // 이후 서버 호출(p0ng 미리받기·삭제 등)이 항상 실제 id를 쓰게 한다.
+  useEffect(() => {
+    if (resolved && resolved.id !== routeEntry.id) {
+      navigation.setParams({ entry: resolved } as any);
+    }
+  }, [resolved?.id]);
   const remaining = useCountdown(entry.createdAt);
   const isUnlocked = remaining <= 0;
   const { groups } = useGroups();

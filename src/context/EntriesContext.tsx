@@ -74,18 +74,23 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
 
   // 낙관적 추가: 화면에 먼저 반영하고 서버 저장 후 실제 엔트리로 교체 (항상 최신순 유지)
   function addEntry(entry: DiaryEntry) {
-    pendingAdd.current.add(entry.id);
-    setEntries((prev) => sortByNewest([entry, ...prev]));
+    // 임시 id를 _localId로 박아둔다 — 서버 저장으로 id가 실제 값으로 바뀌어도
+    // 이 글을 열어둔 상세 화면이 같은 글을 계속 추적할 수 있게 하는 다리.
+    const localId = entry.id;
+    const optimistic = { ...entry, _localId: localId };
+    pendingAdd.current.add(localId);
+    setEntries((prev) => sortByNewest([optimistic, ...prev]));
     createEntry(entry)
       .then((saved) => {
-        setEntries((prev) => sortByNewest(prev.map((e) => (e.id === entry.id ? saved : e))));
-        pendingAdd.current.delete(entry.id);
+        // 서버 id로 교체하되 _localId는 유지 (열려 있는 상세가 이 값으로 승격됨)
+        setEntries((prev) => sortByNewest(prev.map((e) => (e._localId === localId ? { ...saved, _localId: localId } : e))));
+        pendingAdd.current.delete(localId);
         notify('p!ng 업로드 완료!');
       })
       .catch(() => {
         // 저장 실패 시 낙관적 항목 롤백
-        setEntries((prev) => prev.filter((e) => e.id !== entry.id));
-        pendingAdd.current.delete(entry.id);
+        setEntries((prev) => prev.filter((e) => e._localId !== localId));
+        pendingAdd.current.delete(localId);
         notify('p!ng 저장에 실패했어요. 네트워크를 확인해주세요.');
       });
   }
