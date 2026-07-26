@@ -26,6 +26,7 @@ import { useThemedStyles } from '../theme/themed';
 import SheetWrap from '../components/SheetWrap';
 import { animateLayout } from '../anim';
 import { thumbUrl } from '../imageUrl';
+import PongArrival from '../components/PongArrival';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -107,6 +108,16 @@ export default function DiaryDetailScreen() {
   });
   const [aiComment, setAiComment] = useState<string | undefined>(entry.aiComment);
   const [aiOpen, setAiOpen] = useState(true); // AI 코멘트 접기/펼치기
+  // p0ng 도착 연출: 이 화면에서 코멘트가 '새로' 도착하면 탁구공 연출 후 보러가기로 공개.
+  // 이미 코멘트가 있던 글은 바로 보여준다(연출 없음).
+  const [pongRevealed, setPongRevealed] = useState<boolean>(!!entry.aiComment);
+  const hadCommentRef = useRef<boolean>(!!entry.aiComment);
+  useEffect(() => {
+    const has = !!aiComment;
+    if (has && !hadCommentRef.current) setPongRevealed(false); // 방금 도착 → 연출 시작
+    if (!has) setPongRevealed(false);
+    hadCommentRef.current = has;
+  }, [aiComment]);
   const [persona, setPersona] = useState(entry.persona);
   const [personaOpen, setPersonaOpen] = useState(false);
   const [genLoading, setGenLoading] = useState(false);
@@ -451,7 +462,16 @@ export default function DiaryDetailScreen() {
             )}
           </View>
 
-          {aiComment ? (
+          {aiComment && !pongRevealed ? (
+            // 방금 도착 → 탁구공 연출 위에 살짝 흐려진 안착 카드
+            <View style={{ position: 'relative' }}>
+              <View style={[styles.aiLockedBox, { opacity: 0.4 }]}>
+                <IconSparkle size={26} color={accent} />
+                <Text style={styles.aiLockedText}>p0ng이 도착했어요</Text>
+              </View>
+              <PongArrival accent={accent} onView={() => { animateLayout(); setPongRevealed(true); }} />
+            </View>
+          ) : aiComment ? (
             aiOpen &&
             <View style={styles.aiCommentBox}>
               {genLoading ? (
