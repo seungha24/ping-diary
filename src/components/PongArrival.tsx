@@ -79,8 +79,8 @@ function Paddle() {
 const K = 26;
 const dur = (h: number) => Math.round(K * Math.sqrt(h));
 const LAUNCH_H = 130;
-// 딱딱한 '통통' 바운스 — 너무 오래 튀지 않게 4번으로 짧게 감쇠
-const BOUNCES = [64, 32, 14, 5];
+// 딱딱한 '통통' 바운스 — 잔여 튐 줄여 3번으로 짧게 감쇠
+const BOUNCES = [62, 28, 10];
 // 탁구채 타이밍
 const APPROACH = 520, HOLD = 180, SWING = 170, RETREAT = 440;
 const HIT_AT = APPROACH + HOLD + SWING; // 공을 치는 시각
