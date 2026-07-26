@@ -76,11 +76,11 @@ function Paddle() {
 }
 
 // ── 물리 파라미터 ──
-const K = 27;
+const K = 26;
 const dur = (h: number) => Math.round(K * Math.sqrt(h));
 const LAUNCH_H = 130;
-// 탁구공은 딱딱해서 눌리지 않고 '통통' 여러 번 짧게 튄다 (감쇠, 뒤로 갈수록 촘촘)
-const BOUNCES = [72, 44, 26, 15, 8, 4];
+// 딱딱한 '통통' 바운스 — 너무 오래 튀지 않게 4번으로 짧게 감쇠
+const BOUNCES = [64, 32, 14, 5];
 // 탁구채 타이밍
 const APPROACH = 520, HOLD = 180, SWING = 170, RETREAT = 440;
 const HIT_AT = APPROACH + HOLD + SWING; // 공을 치는 시각
