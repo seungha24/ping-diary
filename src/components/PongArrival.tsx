@@ -35,6 +35,24 @@ function PingPongBall() {
   );
 }
 
+const SHADOW_W = 56, SHADOW_H = 20;
+
+/** 바닥 그림자 — 가운데 진하고 가장자리로 투명하게 번지는 소프트 타원(하드엣지 X). */
+function GroundShadow() {
+  return (
+    <Svg width={SHADOW_W} height={SHADOW_H}>
+      <Defs>
+        <RadialGradient id="gsh" cx="50%" cy="50%" r="50%">
+          <Stop offset="0" stopColor="#1e1b16" stopOpacity="0.5" />
+          <Stop offset="0.55" stopColor="#1e1b16" stopOpacity="0.2" />
+          <Stop offset="1" stopColor="#1e1b16" stopOpacity="0" />
+        </RadialGradient>
+      </Defs>
+      <Ellipse cx={SHADOW_W / 2} cy={SHADOW_H / 2} rx={SHADOW_W / 2} ry={SHADOW_H / 2} fill="url(#gsh)" />
+    </Svg>
+  );
+}
+
 const PW = 82, PH = 136; // 탁구채 SVG 크기
 
 /** 탁구채 — 심플 플랫(이모지풍). 로즈 블레이드 + 그레이시 우드 손잡이·throat.
@@ -172,11 +190,11 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
   // 바닥 그림자: 공의 X를 따라가고 바닥 높이(Y_FLOOR)에 고정.
   // 공이 높이 뜰수록 작고 옅게, 착지할수록 크고 진하게.
   const shadowStyle = useAnimatedStyle(() => {
-    const k = interpolate(bY.value, [-LAUNCH_H, 0], [0.45, 1], Extrapolation.CLAMP);
-    const o = interpolate(bY.value, [-LAUNCH_H, 0], [0.05, 0.2], Extrapolation.CLAMP);
+    const k = interpolate(bY.value, [-LAUNCH_H, 0], [0.5, 1.05], Extrapolation.CLAMP);
+    const o = interpolate(bY.value, [-LAUNCH_H, 0], [0.35, 1], Extrapolation.CLAMP);
     return {
       opacity: bOpacity.value * o,
-      transform: [{ translateX: bX.value }, { translateY: BALL / 2 + 4 }, { scaleX: k }, { scaleY: k }],
+      transform: [{ translateX: bX.value }, { translateY: BALL / 2 + 3 }, { scaleX: k }, { scaleY: k }],
     };
   });
   const ballStyle = useAnimatedStyle(() => ({
@@ -203,7 +221,9 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
         </>
       )}
       {/* 바닥 그림자 — 공 밑, 공보다 뒤에 렌더 */}
-      <Animated.View style={[styles.shadow, shadowStyle]} pointerEvents="none" />
+      <Animated.View style={[styles.shadow, shadowStyle]} pointerEvents="none">
+        <GroundShadow />
+      </Animated.View>
       {/* 공은 항상 마운트 — 팝업으로 오므라드는 연결 연출이 보이도록 opacity로만 제어 */}
       <Animated.View style={[styles.ball, ballStyle]} pointerEvents="none">
         <PingPongBall />
@@ -233,9 +253,8 @@ const styles = StyleSheet.create({
   ball: { position: 'absolute', width: BALL, height: BALL },
   shadow: {
     position: 'absolute',
-    width: BALL * 0.82, height: 11,
-    borderRadius: 999,
-    backgroundColor: '#2a2620',
+    width: SHADOW_W, height: SHADOW_H,
+    alignItems: 'center', justifyContent: 'center',
   },
   paddle: { position: 'absolute', width: PW, height: PH },
   flash: {
