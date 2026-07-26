@@ -469,7 +469,7 @@ export default function DiaryDetailScreen() {
                 <IconSparkle size={26} color={accent} />
                 <Text style={styles.aiLockedText}>p0ng이 도착했어요</Text>
               </View>
-              <PongArrival accent={accent} onView={() => { animateLayout(); setPongRevealed(true); }} />
+              <PongArrival accent={accent} onView={() => setPongRevealed(true)} />
             </View>
           ) : aiComment ? (
             aiOpen &&

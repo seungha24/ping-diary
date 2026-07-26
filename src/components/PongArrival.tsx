@@ -112,10 +112,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ball: {
+    // 그림자는 SVG 안에서 그린다 — View에 shadow를 주면 웹에서 사각형 box-shadow(네모 테두리)가 생김
     position: 'absolute',
     width: BALL, height: BALL,
-    shadowColor: '#1e2836', shadowOpacity: 0.32, shadowRadius: 11, shadowOffset: { width: 0, height: 9 },
-    elevation: 6,
   },
   pill: {
     alignItems: 'center', gap: 12,
