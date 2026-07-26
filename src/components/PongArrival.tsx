@@ -40,12 +40,14 @@ function PingPongBall() {
   );
 }
 
-// 편지봉투 이미지 (닫힘 900x640 / 열림 800x960) — 표시 크기
+// 편지봉투 이미지 (닫힘 900x640 / 열림 800x960 / 앞주머니 800x372) — 표시 크기
 const EW = 188;            // 공통 가로
 const EH_CLOSED = 134;     // 닫힘 세로 (188 * 640/900)
 const EH_OPEN = 226;       // 열림 세로 (188 * 960/800)
+const EH_POCKET = 88;      // 앞주머니 세로 (188 * 372/800)
 const ENVELOPE_CLOSED_IMG = require('../../assets/envelope.png');
 const ENVELOPE_OPEN_IMG = require('../../assets/envelope_open.png');
+const ENVELOPE_POCKET_IMG = require('../../assets/envelope_pocket.png');
 
 const SHADOW_W = 56, SHADOW_H = 20;
 
@@ -113,7 +115,7 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
   const closedOp = useSharedValue(1); // 닫힘 이미지 ↔ 열림 이미지 크로스페이드
   const openOp = useSharedValue(0);
   // 편지(팝업) = 봉투 속 종이. 카드 자리에 종이처럼 꽂혀 있다가 위로 올라온다.
-  const CARD_Y = -28;          // 열린 봉투 속 종이(카드) 위치
+  const CARD_Y = -14;          // 열린 봉투 속 종이(카드) 위치 — 아랫부분이 주머니에 꽂힘
   const CARD_SCALE = 0.64;     // 카드 크기(봉투 입구 폭에 맞춤)
   const pillOpacity = useSharedValue(0);
   const pillScale = useSharedValue(CARD_SCALE);
@@ -123,24 +125,24 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
   useEffect(() => {
     const OUT = Easing.out(Easing.cubic);
     const INOUT = Easing.inOut(Easing.quad);
-    eOpacity.value = withTiming(1, { duration: 200 });
-    eScale.value = withTiming(1, { duration: 1120, easing: OUT }); // 앞으로 나오며 커짐
-    // X: 오른쪽 → 왼쪽으로 살짝 지나쳤다(‹ 꼭짓점) → 중앙
+    eOpacity.value = withTiming(1, { duration: 320 });
+    eScale.value = withTiming(1, { duration: 1900, easing: Easing.out(Easing.quad) }); // 앞으로 나오며 커짐
+    // X: 오른쪽 → 왼쪽으로 부드럽게 지나쳤다(‹ 꼭짓점) → 중앙 (천천히)
     eX.value = withSequence(
-      withTiming(-34, { duration: 780, easing: OUT }),
-      withTiming(0, { duration: 440, easing: INOUT }),
+      withTiming(-26, { duration: 1300, easing: Easing.inOut(Easing.sin) }),
+      withTiming(0, { duration: 620, easing: INOUT }),
     );
     // Y: 포물선 배(아래로) → 안착
     eY.value = withSequence(
-      withTiming(ENV_REST + 52, { duration: 760, easing: INOUT }),
-      withTiming(ENV_REST, { duration: 460, easing: Easing.out(Easing.quad) }, (finished) => {
+      withTiming(ENV_REST + 46, { duration: 1280, easing: Easing.inOut(Easing.sin) }),
+      withTiming(ENV_REST, { duration: 640, easing: Easing.out(Easing.quad) }, (finished) => {
         'worklet';
         if (finished) runOnJS(setShowPill)(true);
       }),
     );
     eRot.value = withSequence(
-      withTiming(-3, { duration: 780, easing: OUT }),
-      withTiming(0, { duration: 440, easing: INOUT }),
+      withTiming(-3, { duration: 1300, easing: Easing.inOut(Easing.sin) }),
+      withTiming(0, { duration: 620, easing: INOUT }),
     );
   }, []);
 
@@ -182,6 +184,16 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
   }));
   const closedStyle = useAnimatedStyle(() => ({ opacity: closedOp.value }));
   const openStyle = useAnimatedStyle(() => ({ opacity: openOp.value }));
+  // 앞주머니 조각 — 팝업 위에 겹쳐 팝업이 '주머니 뒤(봉투 속)'에서 올라오게 가림
+  const pocketStyle = useAnimatedStyle(() => ({
+    opacity: openOp.value * eOpacity.value,
+    transform: [
+      { translateX: eX.value },
+      { translateY: eY.value },
+      { rotate: `${eRot.value}deg` },
+      { scale: eScale.value },
+    ],
+  }));
   const pillStyle = useAnimatedStyle(() => ({
     opacity: pillOpacity.value,
     transform: [{ translateY: pillShift.value }, { scale: pillScale.value }],
@@ -197,7 +209,11 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
         <Animated.Image source={ENVELOPE_OPEN_IMG} style={[styles.envOpen, openStyle]} resizeMode="contain" />
         <Animated.Image source={ENVELOPE_CLOSED_IMG} style={[styles.envClosed, closedStyle]} resizeMode="contain" />
       </Animated.View>
+      {/* 팝업(종이) — 뒤: 봉투 전체 / 앞: 앞주머니 조각 → 주머니 속에서 올라오는 구조 */}
       {showPill && <ArrivalPill accent={accent} onView={onView} style={pillStyle} />}
+      <Animated.View style={[styles.envelope, pocketStyle]} pointerEvents="none">
+        <Image source={ENVELOPE_POCKET_IMG} style={styles.envPocket} resizeMode="contain" />
+      </Animated.View>
     </View>
   );
 }
@@ -354,6 +370,7 @@ const styles = StyleSheet.create({
   // 닫힘/열림 이미지는 아랫변 정렬로 겹침
   envClosed: { position: 'absolute', left: 0, bottom: 0, width: EW, height: EH_CLOSED },
   envOpen: { position: 'absolute', left: 0, bottom: 0, width: EW, height: EH_OPEN },
+  envPocket: { position: 'absolute', left: 0, bottom: 0, width: EW, height: EH_POCKET },
   shadow: {
     position: 'absolute',
     width: SHADOW_W, height: SHADOW_H,
