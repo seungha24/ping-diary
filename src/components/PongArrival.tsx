@@ -37,14 +37,18 @@ function PingPongBall() {
 
 const PW = 60, PH = 100; // 탁구채 SVG 크기
 
-/** 탁구채 — 앱 아이콘 톤에 맞춘 플랫 실루엣(단색, 그라데이션·음영 없음). */
-function Paddle({ color }: { color: string }) {
+/** 탁구채 — 빨간 러버 + 흰 테두리 + 흰 손잡이의 플랫 아이콘(음영·그라데이션 없음). */
+function Paddle() {
+  const RED = '#e5322a';
+  const EDGE = '#c9ced6';
   return (
     <Svg width={PW} height={PH}>
-      {/* 손잡이 */}
-      <Rect x={22} y={56} width={16} height={38} rx={7} fill={color} />
-      {/* 블레이드 */}
-      <Circle cx={30} cy={32} r={27} fill={color} />
+      {/* 손잡이(흰색) */}
+      <Rect x={22} y={54} width={16} height={40} rx={7.5} fill="#ffffff" stroke={EDGE} strokeWidth={1.6} />
+      {/* 블레이드 흰 테두리 */}
+      <Circle cx={30} cy={32} r={28} fill="#ffffff" stroke={EDGE} strokeWidth={1.6} />
+      {/* 러버(빨강) */}
+      <Circle cx={30} cy={32} r={23} fill={RED} />
     </Svg>
   );
 }
@@ -203,7 +207,7 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
       {!showPill && (
         <>
           <Animated.View style={[styles.paddle, paddleStyle]} pointerEvents="none">
-            <Paddle color={accent} />
+            <Paddle />
           </Animated.View>
           <Animated.View style={[styles.flash, { borderColor: accent }, flashStyle]} pointerEvents="none" />
           <Animated.View style={[styles.ball, ballStyle]} pointerEvents="none">
