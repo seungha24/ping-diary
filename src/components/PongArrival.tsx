@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, {
-  Defs, RadialGradient, Stop, Circle, Ellipse, Rect, Path,
+  Defs, RadialGradient, Stop, Circle, Ellipse, Rect, Path, ClipPath,
 } from 'react-native-svg';
 import TouchableOpacity from './Touchable';
 import Animated, {
@@ -35,30 +35,24 @@ function PingPongBall() {
   );
 }
 
-const PW = 82, PH = 150; // 탁구채 SVG 크기
+const PW = 82, PH = 136; // 탁구채 SVG 크기
 
-/** 탁구채 — 실물 구조: 채도 있는 매트 러버 면 + 아래로 드러나는 나무 숄더(연결고리)
- *  + 오목한 넥 → 슬림한 그립 + 손잡이 가운데 베니어 줄무늬. */
+/** 탁구채 — 심플 플랫(이모지풍). 로즈 블레이드 + 그레이시 우드 손잡이·throat.
+ *  채도만 또렷하게 올린 버전. */
 function Paddle() {
+  const ROSE = '#db6f7c';
+  const WOOD = '#cbb79a';
   return (
     <Svg width={PW} height={PH}>
       <Defs>
-        <RadialGradient id="rub" cx="50%" cy="42%" r="60%">
-          <Stop offset="0" stopColor="#da5b62" />
-          <Stop offset="0.72" stopColor="#d24e57" />
-          <Stop offset="1" stopColor="#bf3a44" />
-        </RadialGradient>
+        <ClipPath id="blade"><Circle cx={41} cy={40} r={37} /></ClipPath>
       </Defs>
-      {/* 넥 + 손잡이 — 오목한 숄더에서 슬림한 스트레이트 그립으로 */}
-      <Path d="M27 63 C26 82 34 80 34 104 L34 142 Q34 149 41 149 Q48 149 48 142 L48 104 C48 80 56 82 55 63 Z" fill="#ddc59d" />
-      {/* 손잡이 가운데 어두운 베니어 줄무늬 */}
-      <Rect x={38.5} y={108} width={5} height={36} rx={2.5} fill="#4a4038" opacity={0.82} />
-      {/* 블레이드 나무(러버 밑) — 아래로 나무 숄더가 드러남 */}
-      <Ellipse cx={41} cy={37} rx={34} ry={34} fill="#ddc59d" />
-      {/* 러버 면 */}
-      <Ellipse cx={41} cy={33} rx={31.5} ry={31} fill="url(#rub)" />
-      {/* 러버 하단 옅은 그림자 */}
-      <Path d="M15 52 A31.5 31 0 0 0 67 52" fill="none" stroke="#a83039" strokeWidth={2} opacity={0.22} />
+      {/* 손잡이(나무) — 블레이드 뒤로 들어가 아래로 뻗음 */}
+      <Rect x={30} y={71} width={22} height={60} rx={11} fill={WOOD} />
+      {/* 블레이드 */}
+      <Circle cx={41} cy={40} r={37} fill={ROSE} />
+      {/* 나무 throat — 블레이드 좌하단으로 대각선으로 파고듦 */}
+      <Path d="M0 34 L55 77 L60 93 L0 93 Z" fill={WOOD} clipPath="url(#blade)" />
     </Svg>
   );
 }
