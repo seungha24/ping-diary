@@ -87,11 +87,13 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
         pendingAdd.current.delete(localId);
         notify('p!ng 업로드 완료!');
       })
-      .catch(() => {
+      .catch((err) => {
         // 저장 실패 시 낙관적 항목 롤백
         setEntries((prev) => prev.filter((e) => e._localId !== localId));
         pendingAdd.current.delete(localId);
-        notify('p!ng 저장에 실패했어요. 네트워크를 확인해주세요.');
+        // 진짜 원인을 함께 보여준다 — "Load failed"(네트워크), "요청 실패 (401)"(세션 만료) 등 구분용
+        const reason = err?.message ? String(err.message) : '';
+        notify(reason ? `p!ng 저장 실패: ${reason}` : 'p!ng 저장에 실패했어요. 네트워크를 확인해주세요.');
       });
   }
 

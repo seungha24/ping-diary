@@ -113,9 +113,22 @@ export function setOnUnauthorized(fn: (() => void) | null) {
   onUnauthorized = fn;
 }
 
+/** fetch — 네트워크 레벨로 튕기면(서버에 도달 못 한 경우) 한 번만 재시도한다.
+ *  fetch가 reject되면 응답을 받기 전이라 서버가 요청을 처리하지 않았으므로
+ *  POST여도 중복 저장 위험이 없다. HTTP 에러(4xx/5xx)는 여기서 재시도하지 않는다. */
+async function fetchWithRetry(url: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(url, init);
+  } catch (e) {
+    // 모바일 사파리의 일시적 "Load failed" 등 — 잠깐 쉬고 한 번 더
+    await new Promise((r) => setTimeout(r, 700));
+    return await fetch(url, init);
+  }
+}
+
 async function request(path: string, options: RequestInit = {}) {
   const token = getToken();
-  const res = await fetch(`${API_BASE_URL}${path}`, {
+  const res = await fetchWithRetry(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
