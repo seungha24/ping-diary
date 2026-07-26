@@ -4,14 +4,14 @@ import Svg, { Defs, RadialGradient, Stop, Circle, Ellipse } from 'react-native-s
 import TouchableOpacity from './Touchable';
 import Animated, {
   useSharedValue, useAnimatedStyle, withSequence, withTiming, withDelay,
-  Easing, runOnJS,
+  Easing, runOnJS, interpolate, Extrapolation,
 } from 'react-native-reanimated';
 
 const BALL = 60;
+const R = BALL / 2;
 
 /** 탁구공 — 부드러운 구 음영(라디얼) + 반사 하이라이트. 하드 테두리·심선 없음. */
 function PingPongBall() {
-  const r = BALL / 2;
   return (
     <Svg width={BALL} height={BALL}>
       <Defs>
@@ -29,66 +29,131 @@ function PingPongBall() {
           <Stop offset="1" stopColor="#ffffff" stopOpacity="0" />
         </RadialGradient>
       </Defs>
-      <Circle cx={r} cy={r} r={r} fill="url(#sphere)" />
+      <Circle cx={R} cy={R} r={R} fill="url(#sphere)" />
       {/* 좌상단 하이라이트 */}
-      <Ellipse cx={r * 0.62} cy={r * 0.54} rx={r * 0.34} ry={r * 0.26} fill="url(#spec)" />
+      <Ellipse cx={R * 0.62} cy={R * 0.54} rx={R * 0.34} ry={R * 0.26} fill="url(#spec)" />
     </Svg>
   );
 }
 
+// ── 바운스 물리 파라미터 ──
+const PEAKS = [104, 60, 33, 17, 7]; // 각 튐의 최고 높이(px), 감쇠
+const ENTRY_H = 92;                 // 화면에 들어올 때의 시작 높이
+const K = 29;                       // 높이→시간 계수 (낙하시간 ∝ √높이)
+const CONTACT = 66;                 // 바닥 접촉(눌림) 시간
+const SQUASH_DROP = 6;              // 눌릴 때 무게중심이 내려가는 양(바닥에 붙어보이게)
+const dur = (h: number) => Math.round(K * Math.sqrt(h));
+
+const FLOOR_TOP = -104;             // 그림자 보간 기준(가장 높이 뜬 지점)
+
 /**
  * p0ng 도착 연출 — 탁구공이 왼쪽에서 통통 튀어 안착 → "p0ng이 도착했어요 / 보러가기" 팝업.
+ * 착지 눌림(squash&stretch) + 높이에 따라 커지는 바닥 그림자 + 감쇠 포물선으로 실제 탁구공처럼.
  * 보러가기를 누르면 onView. 순수 연출이라 실패해도 데이터엔 영향 없음.
  */
 export default function PongArrival({ accent, onView }: { accent: string; onView: () => void }) {
-  const tx = useSharedValue(-150);
-  const ty = useSharedValue(-70);
+  const tx = useSharedValue(-170);
+  const ty = useSharedValue(-ENTRY_H);
+  const sx = useSharedValue(1);
+  const sy = useSharedValue(1);
   const ballOpacity = useSharedValue(0);
   const pillOpacity = useSharedValue(0);
-  const pillScale = useSharedValue(0.94);
+  const pillScale = useSharedValue(0.96);
+  const pillShift = useSharedValue(14);
   const [showPill, setShowPill] = useState(false);
 
   useEffect(() => {
-    const up = Easing.out(Easing.quad);
-    const down = Easing.in(Easing.quad);
-    ballOpacity.value = withTiming(1, { duration: 120 });
-    tx.value = withTiming(0, { duration: 1900, easing: Easing.bezier(0.26, 0.55, 0.3, 1) });
-    ty.value = withSequence(
-      withTiming(0, { duration: 300, easing: down }),
-      withTiming(-100, { duration: 300, easing: up }),
-      withTiming(0, { duration: 300, easing: down }),
-      withTiming(-56, { duration: 240, easing: up }),
-      withTiming(0, { duration: 240, easing: down }),
-      withTiming(-28, { duration: 190, easing: up }),
-      withTiming(0, { duration: 190, easing: down }),
-      withTiming(-11, { duration: 130, easing: up }),
-      withTiming(0, { duration: 130, easing: down }, (finished) => {
-        if (finished) runOnJS(setShowPill)(true);
-      }),
-    );
+    const EASE_FALL = Easing.in(Easing.quad);   // 낙하 = 가속
+    const EASE_RISE = Easing.out(Easing.quad);  // 상승 = 감속
+    const SQ = { x: 1.18, y: 0.8 };             // 착지 눌림
+    const ST = { x: 0.95, y: 1.06 };            // 정점 늘어남(살짝)
+
+    const tyA: any[] = [];
+    const sxA: any[] = [];
+    const syA: any[] = [];
+    let total = 0;
+
+    // 등장: 첫 낙하 (구른 자세 유지)
+    const d0 = dur(ENTRY_H); total += d0;
+    tyA.push(withTiming(0, { duration: d0, easing: EASE_FALL }));
+    sxA.push(withTiming(1, { duration: d0 }));
+    syA.push(withTiming(1, { duration: d0 }));
+
+    PEAKS.forEach((h, i) => {
+      const last = i === PEAKS.length - 1;
+      const half = CONTACT / 2;
+      const d = dur(h);
+      total += CONTACT + d * 2;
+
+      // 접촉: 눌림(무게중심 살짝 내려가 바닥에 붙음) → 반발
+      tyA.push(withTiming(SQUASH_DROP, { duration: half, easing: Easing.out(Easing.quad) }));
+      sxA.push(withTiming(SQ.x, { duration: half, easing: Easing.out(Easing.quad) }));
+      syA.push(withTiming(SQ.y, { duration: half, easing: Easing.out(Easing.quad) }));
+      tyA.push(withTiming(0, { duration: half, easing: Easing.in(Easing.quad) }));
+      sxA.push(withTiming(1, { duration: half, easing: Easing.in(Easing.quad) }));
+      syA.push(withTiming(1, { duration: half, easing: Easing.in(Easing.quad) }));
+
+      // 상승(정점서 살짝 늘어남)
+      tyA.push(withTiming(-h, { duration: d, easing: EASE_RISE }));
+      sxA.push(withTiming(ST.x, { duration: d }));
+      syA.push(withTiming(ST.y, { duration: d }));
+
+      // 낙하(다시 둥글게) — 마지막이면 완료 콜백으로 팝업 트리거
+      tyA.push(
+        withTiming(0, { duration: d, easing: EASE_FALL }, last ? (finished) => {
+          'worklet';
+          if (finished) runOnJS(setShowPill)(true);
+        } : undefined),
+      );
+      sxA.push(withTiming(1, { duration: d }));
+      syA.push(withTiming(1, { duration: d }));
+    });
+
+    ballOpacity.value = withTiming(1, { duration: 110 });
+    tx.value = withTiming(0, { duration: total, easing: Easing.bezier(0.16, 0.5, 0.3, 1) });
+    ty.value = withSequence(...tyA);
+    sx.value = withSequence(...sxA);
+    sy.value = withSequence(...syA);
   }, []);
 
   useEffect(() => {
     if (!showPill) return;
-    ballOpacity.value = withTiming(0, { duration: 200 });
-    pillOpacity.value = withDelay(80, withTiming(1, { duration: 280 }));
-    pillScale.value = withDelay(80, withTiming(1, { duration: 320, easing: Easing.out(Easing.back(1.3)) }));
+    ballOpacity.value = withTiming(0, { duration: 220 });
+    pillOpacity.value = withDelay(90, withTiming(1, { duration: 260 }));
+    pillScale.value = withDelay(90, withTiming(1, { duration: 320, easing: Easing.out(Easing.back(1.4)) }));
+    pillShift.value = withDelay(90, withTiming(0, { duration: 320, easing: Easing.out(Easing.back(1.4)) }));
   }, [showPill]);
 
   const ballStyle = useAnimatedStyle(() => ({
     opacity: ballOpacity.value,
-    transform: [{ translateX: tx.value }, { translateY: ty.value }],
+    transform: [
+      { translateX: tx.value },
+      { translateY: ty.value },
+      { scaleX: sx.value },
+      { scaleY: sy.value },
+    ],
   }));
+  // 바닥 그림자: 바닥에 고정, 공이 높을수록 작고 옅게 / 낮을수록 크고 진하게
+  const shadowStyle = useAnimatedStyle(() => {
+    const s = interpolate(ty.value, [FLOOR_TOP, SQUASH_DROP], [0.5, 1.05], Extrapolation.CLAMP);
+    const o = interpolate(ty.value, [FLOOR_TOP, SQUASH_DROP], [0.05, 0.22], Extrapolation.CLAMP);
+    return { opacity: o, transform: [{ translateY: R - 2 }, { scaleX: s }, { scaleY: s }] };
+  });
   const pillStyle = useAnimatedStyle(() => ({
     opacity: pillOpacity.value,
-    transform: [{ scale: pillScale.value }],
+    transform: [{ translateY: pillShift.value }, { scale: pillScale.value }],
   }));
 
   return (
     <View style={styles.overlay} pointerEvents="box-none">
-      <Animated.View style={[styles.ball, ballStyle]} pointerEvents="none">
-        <PingPongBall />
-      </Animated.View>
+      {!showPill && (
+        <>
+          <Animated.View style={[styles.shadow, shadowStyle]} pointerEvents="none" />
+          <Animated.View style={[styles.ball, ballStyle]} pointerEvents="none">
+            <PingPongBall />
+          </Animated.View>
+        </>
+      )}
 
       {showPill && (
         <Animated.View style={[styles.pill, pillStyle]}>
@@ -112,9 +177,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ball: {
-    // 그림자는 SVG 안에서 그린다 — View에 shadow를 주면 웹에서 사각형 box-shadow(네모 테두리)가 생김
+    // 그림자는 아래 shadow(타원)로 그린다 — View에 shadow를 주면 웹에서 사각형 box-shadow가 생김
     position: 'absolute',
     width: BALL, height: BALL,
+  },
+  shadow: {
+    position: 'absolute',
+    width: BALL * 0.78, height: 12,
+    borderRadius: 999,
+    backgroundColor: '#0e1524',
   },
   pill: {
     alignItems: 'center', gap: 12,
