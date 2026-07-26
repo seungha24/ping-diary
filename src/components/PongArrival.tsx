@@ -6,7 +6,7 @@ import Svg, {
 import TouchableOpacity from './Touchable';
 import Animated, {
   useSharedValue, useAnimatedStyle, withSequence, withTiming, withDelay,
-  Easing, runOnJS,
+  Easing, runOnJS, interpolate, Extrapolation,
 } from 'react-native-reanimated';
 
 const BALL = 56;
@@ -169,6 +169,16 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
     opacity: fOpacity.value,
     transform: [{ translateX: -98 }, { translateY: -10 }, { scale: fScale.value }],
   }));
+  // 바닥 그림자: 공의 X를 따라가고 바닥 높이(Y_FLOOR)에 고정.
+  // 공이 높이 뜰수록 작고 옅게, 착지할수록 크고 진하게.
+  const shadowStyle = useAnimatedStyle(() => {
+    const k = interpolate(bY.value, [-LAUNCH_H, 0], [0.45, 1], Extrapolation.CLAMP);
+    const o = interpolate(bY.value, [-LAUNCH_H, 0], [0.05, 0.2], Extrapolation.CLAMP);
+    return {
+      opacity: bOpacity.value * o,
+      transform: [{ translateX: bX.value }, { translateY: BALL / 2 + 4 }, { scaleX: k }, { scaleY: k }],
+    };
+  });
   const ballStyle = useAnimatedStyle(() => ({
     opacity: bOpacity.value,
     transform: [
@@ -192,6 +202,8 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
           <Animated.View style={[styles.flash, flashStyle]} pointerEvents="none" />
         </>
       )}
+      {/* 바닥 그림자 — 공 밑, 공보다 뒤에 렌더 */}
+      <Animated.View style={[styles.shadow, shadowStyle]} pointerEvents="none" />
       {/* 공은 항상 마운트 — 팝업으로 오므라드는 연결 연출이 보이도록 opacity로만 제어 */}
       <Animated.View style={[styles.ball, ballStyle]} pointerEvents="none">
         <PingPongBall />
@@ -219,6 +231,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ball: { position: 'absolute', width: BALL, height: BALL },
+  shadow: {
+    position: 'absolute',
+    width: BALL * 0.82, height: 11,
+    borderRadius: 999,
+    backgroundColor: '#2a2620',
+  },
   paddle: { position: 'absolute', width: PW, height: PH },
   flash: {
     position: 'absolute',
