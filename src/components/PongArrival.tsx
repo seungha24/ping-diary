@@ -42,11 +42,21 @@ function PingPongBall() {
 
 const EW = 210, EHH = 132; // 열린 편지봉투 크기
 
-/** 열린 봉투 뒷벽 — 편지 뒤. 윗변이 위로 뾰족(오픈 립). */
+/** 봉투 뒷벽(사각) — 편지 뒤. 위 뾰족은 플랩이 열리며 만들어진다. */
 function EnvelopeBack() {
   return (
     <Svg width={EW} height={EHH}>
-      <Path d="M0 56 L105 0 L210 56 L210 124 L0 124 Z" fill="#f0efe9" stroke="#dcd8cc" strokeWidth={2.5} strokeLinejoin="round" />
+      <Path d="M0 56 L210 56 L210 124 L0 124 Z" fill="#f0efe9" stroke="#dcd8cc" strokeWidth={2.5} strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+/** 봉투 플랩 — 닫힘: 앞주머니 입구(v)를 딱 덮는 아래 뾰족 삼각형.
+ *  윗변(y=56) 힌지로 rotateX -180° 젖혀지면 위 뾰족(열린 봉투의 peak)이 된다. */
+function EnvelopeFlap() {
+  return (
+    <Svg width={EW} height={58}>
+      <Path d="M2 0 L105 56 L208 0 Z" fill="#f0eee7" stroke="#dcd8cc" strokeWidth={2.5} strokeLinejoin="round" />
     </Svg>
   );
 }
@@ -123,6 +133,7 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
   const eRot = useSharedValue(12);
   const eScale = useSharedValue(0.5);
   const eOpacity = useSharedValue(0);
+  const flapRot = useSharedValue(0); // 0=닫힘, -180=뒤로 젖혀져 위 뾰족
   // 편지(팝업): 봉투 앞주머니 뒤에서 위로 올라옴
   const pillOpacity = useSharedValue(0);
   const pillScale = useSharedValue(0.6);
@@ -155,10 +166,12 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
 
   useEffect(() => {
     if (!showPill) return;
-    // 편지가 열린 봉투 안에서 위로 올라와 나옴 (봉투는 그대로 남아 편지를 담고 있음)
-    pillOpacity.value = withDelay(200, withTiming(1, { duration: 260 }));
-    pillShift.value = withDelay(240, withTiming(-23, { duration: 720, easing: Easing.out(Easing.cubic) })); // 위로 올라옴
-    pillScale.value = withDelay(340, withTiming(1, { duration: 640, easing: Easing.out(Easing.cubic) }));   // 나오며 커짐
+    // 안착 후: 플랩이 뒤로 젖혀지며 봉투가 열리고 → 편지가 안에서 위로 올라와 나옴
+    // (봉투는 그대로 남아 편지를 담고 있음)
+    flapRot.value = withDelay(150, withTiming(-180, { duration: 560, easing: Easing.inOut(Easing.cubic) }));
+    pillOpacity.value = withDelay(560, withTiming(1, { duration: 260 }));
+    pillShift.value = withDelay(620, withTiming(-23, { duration: 760, easing: Easing.out(Easing.cubic) })); // 위로 올라옴
+    pillScale.value = withDelay(720, withTiming(1, { duration: 680, easing: Easing.out(Easing.cubic) }));   // 나오며 커짐
   }, [showPill]);
 
   const shadowStyle = useAnimatedStyle(() => {
@@ -178,6 +191,9 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
       { scale: eScale.value },
     ],
   }));
+  const flapStyle = useAnimatedStyle(() => ({
+    transform: [{ perspective: 700 }, { rotateX: `${flapRot.value}deg` }],
+  }));
   const pillStyle = useAnimatedStyle(() => ({
     opacity: pillOpacity.value,
     transform: [{ translateY: pillShift.value }, { scale: pillScale.value }],
@@ -188,8 +204,13 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
       <Animated.View style={[styles.shadow, shadowStyle]} pointerEvents="none">
         <GroundShadow />
       </Animated.View>
-      {/* 뒷벽 → 편지(팝업) → 앞주머니 순으로 쌓아 편지가 봉투 안에 꽂힌 형태 */}
-      <Animated.View style={[styles.envelope, envStyle]} pointerEvents="none"><EnvelopeBack /></Animated.View>
+      {/* 쌓기: 뒷벽+플랩 → 편지(팝업) → 앞주머니.
+          플랩은 편지 뒤라, 닫혔을 땐 앞주머니의 투명한 입구(v)로 보이고
+          열리면 뒤로 젖혀져 위 뾰족이 되며 편지가 그 앞으로 올라온다. */}
+      <Animated.View style={[styles.envelope, envStyle]} pointerEvents="none">
+        <EnvelopeBack />
+        <Animated.View style={[styles.envFlap, flapStyle]}><EnvelopeFlap /></Animated.View>
+      </Animated.View>
       {showPill && <ArrivalPill accent={accent} onView={onView} style={pillStyle} />}
       <Animated.View style={[styles.envelope, envStyle]} pointerEvents="none"><EnvelopeFront /></Animated.View>
     </View>
@@ -345,6 +366,10 @@ const styles = StyleSheet.create({
   },
   ball: { position: 'absolute', width: BALL, height: BALL },
   envelope: { position: 'absolute', width: EW, height: EHH },
+  envFlap: {
+    position: 'absolute', top: 56, left: 0, width: EW, height: 58,
+    transformOrigin: 'center top', // 윗변(y=56)을 힌지로 젖혀짐
+  },
   shadow: {
     position: 'absolute',
     width: SHADOW_W, height: SHADOW_H,
