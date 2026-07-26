@@ -464,7 +464,7 @@ export default function DiaryDetailScreen() {
 
           {aiComment && !pongRevealed ? (
             // 방금 도착 → 탁구채 연출만 (뒷배경 박스 없이 투명 무대)
-            <View style={{ height: 150 }}>
+            <View style={{ height: 190 }}>
               <PongArrival accent={accent} onView={() => setPongRevealed(true)} />
             </View>
           ) : aiComment ? (

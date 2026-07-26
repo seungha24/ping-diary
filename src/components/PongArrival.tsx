@@ -51,7 +51,8 @@ function EnvelopeBody() {
         d="M3 22 L137 22 L137 86 Q137 94 129 94 L11 94 Q3 94 3 86 Z"
         fill="#fdfdfb" stroke="#e4e1d8" strokeWidth={2} strokeLinejoin="round"
       />
-      <Path d="M6 92 L70 56 L134 92" fill="none" stroke="#ece9e1" strokeWidth={2} />
+      {/* 아래 접힘선 'v' — 위 모서리에서 아래 중앙으로 모임 */}
+      <Path d="M3 24 L70 88 L137 24" fill="none" stroke="#ece9e1" strokeWidth={2} />
     </Svg>
   );
 }
@@ -127,10 +128,10 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
   const eScale = useSharedValue(0.5);
   const eOpacity = useSharedValue(0);
   const flapRot = useSharedValue(0);   // 플랩 열림(rotateX)
-  // 팝업: 봉투 뒤에서 작게 시작해 위로 올라오며 나옴
+  // 팝업: 봉투 뒤에서 작게 시작해 위로 올라오며 입구로 나옴
   const pillOpacity = useSharedValue(0);
   const pillScale = useSharedValue(0.5);
-  const pillShift = useSharedValue(26);
+  const pillShift = useSharedValue(20);
   const [showPill, setShowPill] = useState(false);
 
   useEffect(() => {
@@ -161,12 +162,12 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
   useEffect(() => {
     if (!showPill) return;
     // 봉투가 살짝 확대되며 플랩이 열림 → 봉투 뒤의 팝업이 위로 올라와 입구로 나옴 → 봉투 페이드
-    eScale.value = withTiming(1.14, { duration: 480, easing: Easing.out(Easing.cubic) }); // 살짝 zoom
-    flapRot.value = withTiming(-162, { duration: 420, easing: Easing.out(Easing.quad) });
-    pillOpacity.value = withDelay(220, withTiming(1, { duration: 220 }));
-    pillShift.value = withDelay(280, withTiming(-14, { duration: 640, easing: Easing.out(Easing.cubic) })); // 위로 올라옴
-    pillScale.value = withDelay(500, withTiming(1, { duration: 540, easing: Easing.out(Easing.cubic) }));   // 나오면서 커짐
-    eOpacity.value = withDelay(620, withTiming(0, { duration: 440 }));
+    eScale.value = withTiming(1.12, { duration: 480, easing: Easing.out(Easing.cubic) }); // 살짝 zoom
+    flapRot.value = withTiming(-155, { duration: 420, easing: Easing.out(Easing.quad) });
+    pillOpacity.value = withDelay(240, withTiming(1, { duration: 220 }));
+    pillShift.value = withDelay(300, withTiming(-22, { duration: 700, easing: Easing.out(Easing.cubic) })); // 위로 올라옴
+    pillScale.value = withDelay(560, withTiming(1, { duration: 560, easing: Easing.out(Easing.cubic) }));   // 나오면서 커짐
+    eOpacity.value = withDelay(660, withTiming(0, { duration: 460 }));
   }, [showPill]);
 
   const shadowStyle = useAnimatedStyle(() => {
