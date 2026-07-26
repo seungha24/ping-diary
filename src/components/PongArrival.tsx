@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, {
-  Defs, RadialGradient, LinearGradient, Stop, Circle, Ellipse, Path,
+  Defs, RadialGradient, Stop, Circle, Ellipse, Rect,
 } from 'react-native-svg';
 import TouchableOpacity from './Touchable';
 import Animated, {
@@ -37,37 +37,14 @@ function PingPongBall() {
 
 const PW = 60, PH = 100; // 탁구채 SVG 크기
 
-/** 탁구채 — 빨간 러버 블레이드 + 크림 테두리 + 나무 손잡이. */
-function Paddle() {
+/** 탁구채 — 앱 아이콘 톤에 맞춘 플랫 실루엣(단색, 그라데이션·음영 없음). */
+function Paddle({ color }: { color: string }) {
   return (
     <Svg width={PW} height={PH}>
-      <Defs>
-        <RadialGradient id="rubber" cx="38%" cy="30%" r="80%">
-          <Stop offset="0" stopColor="#ef6a5e" />
-          <Stop offset="0.55" stopColor="#dd4136" />
-          <Stop offset="1" stopColor="#b5271e" />
-        </RadialGradient>
-        <LinearGradient id="wood" x1="0" y1="0" x2="1" y2="0">
-          <Stop offset="0" stopColor="#e2bd83" />
-          <Stop offset="0.5" stopColor="#c2914f" />
-          <Stop offset="1" stopColor="#9c6c37" />
-        </LinearGradient>
-        <RadialGradient id="pspec" cx="50%" cy="50%" r="50%">
-          <Stop offset="0" stopColor="#ffffff" stopOpacity="0.55" />
-          <Stop offset="1" stopColor="#ffffff" stopOpacity="0" />
-        </RadialGradient>
-      </Defs>
-      {/* 손잡이(나무) — 살짝 잘록한 그립 */}
-      <Path
-        d="M23 60 C22 66 22 68 22 72 L22 88 Q22 94 30 94 Q38 94 38 88 L38 72 C38 68 38 66 37 60 Z"
-        fill="url(#wood)" stroke="#87602f" strokeWidth={0.8}
-      />
-      {/* 블레이드 크림 테두리 */}
-      <Ellipse cx={30} cy={32} rx={29} ry={32} fill="#f3ecdf" />
-      {/* 러버 */}
-      <Ellipse cx={30} cy={32} rx={26} ry={29} fill="url(#rubber)" stroke="#a02620" strokeWidth={0.6} />
-      {/* 하이라이트 */}
-      <Ellipse cx={22} cy={20} rx={11} ry={8} fill="url(#pspec)" />
+      {/* 손잡이 */}
+      <Rect x={22} y={56} width={16} height={38} rx={7} fill={color} />
+      {/* 블레이드 */}
+      <Circle cx={30} cy={32} r={27} fill={color} />
     </Svg>
   );
 }
@@ -226,7 +203,7 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
       {!showPill && (
         <>
           <Animated.View style={[styles.paddle, paddleStyle]} pointerEvents="none">
-            <Paddle />
+            <Paddle color={accent} />
           </Animated.View>
           <Animated.View style={[styles.flash, { borderColor: accent }, flashStyle]} pointerEvents="none" />
           <Animated.View style={[styles.ball, ballStyle]} pointerEvents="none">
