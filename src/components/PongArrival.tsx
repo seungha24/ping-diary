@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, {
-  Defs, RadialGradient, Stop, Circle, Ellipse, Rect,
+  Defs, RadialGradient, Stop, Circle, Ellipse, Rect, Path, ClipPath,
 } from 'react-native-svg';
 import TouchableOpacity from './Touchable';
 import Animated, {
@@ -37,17 +37,24 @@ function PingPongBall() {
 
 const PW = 60, PH = 100; // 탁구채 SVG 크기
 
-/** 탁구채 — 플랫 스티커 스타일(굵은 남색 아웃라인 + 빨간 블레이드 + 나무색 손잡이). */
+/** 탁구채 — 이모지풍 플랫(아웃라인 없음): 탁한 로즈 블레이드 + 나무색 손잡이·throat. */
 function Paddle() {
-  const NAVY = '#2c2f4a';
-  const RED = '#ec5566';
-  const WOOD = '#ecca9a';
+  const ROSE = '#bf4d60';
+  const WOOD = '#c4a56b';
+  const WOOD_DK = '#b2934f';
   return (
     <Svg width={PW} height={PH}>
-      {/* 손잡이(나무색) — 블레이드 뒤로 들어가 아래로 뻗음 */}
-      <Rect x={21.5} y={50} width={17} height={46} rx={8} fill={WOOD} stroke={NAVY} strokeWidth={3} strokeLinejoin="round" />
-      {/* 블레이드(빨강) */}
-      <Circle cx={30} cy={29} r={26} fill={RED} stroke={NAVY} strokeWidth={3} />
+      <Defs>
+        <ClipPath id="blade"><Circle cx={30} cy={29} r={27} /></ClipPath>
+      </Defs>
+      {/* 손잡이(나무) — 블레이드 뒤로 들어가 아래로 뻗음 */}
+      <Rect x={22} y={52} width={16} height={44} rx={8} fill={WOOD} />
+      {/* 손잡이 그립 음영 */}
+      <Rect x={26} y={62} width={8} height={26} rx={4} fill={WOOD_DK} />
+      {/* 블레이드 로즈 */}
+      <Circle cx={30} cy={29} r={27} fill={ROSE} />
+      {/* 나무 throat — 블레이드 좌하단으로 대각선으로 파고듦 */}
+      <Path d="M0 25 L40 56 L44 68 L0 68 Z" fill={WOOD} clipPath="url(#blade)" />
     </Svg>
   );
 }

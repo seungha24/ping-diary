@@ -463,12 +463,8 @@ export default function DiaryDetailScreen() {
           </View>
 
           {aiComment && !pongRevealed ? (
-            // 방금 도착 → 탁구공 연출 위에 살짝 흐려진 안착 카드
-            <View style={{ position: 'relative' }}>
-              <View style={[styles.aiLockedBox, { opacity: 0.4 }]}>
-                <IconSparkle size={26} color={accent} />
-                <Text style={styles.aiLockedText}>p0ng이 도착했어요</Text>
-              </View>
+            // 방금 도착 → 탁구채 연출만 (뒷배경 박스 없이 투명 무대)
+            <View style={{ height: 150 }}>
               <PongArrival accent={accent} onView={() => setPongRevealed(true)} />
             </View>
           ) : aiComment ? (
