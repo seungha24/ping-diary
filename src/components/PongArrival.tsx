@@ -41,26 +41,26 @@ function PingPongBall() {
 }
 
 const EW = 140, EH = 100; // 편지 봉투 크기
-const FLAP_TOP = 20;      // 플랩 힌지(윗변) y
+const FLAP_TOP = 22;      // 플랩 힌지(윗변) y — 몸통 윗변과 일치
 
-/** 봉투 몸통 — 화이트 종이 + 아래 접힘선(X자) + 안쪽(플랩 열리면 보임). */
+/** 봉투 몸통 — 화이트 종이(윗변 각짐·아랫변 둥금) + 아래 접힘선(X자). */
 function EnvelopeBody() {
   return (
     <Svg width={EW} height={EH}>
-      <Rect x={3} y={FLAP_TOP} width={134} height={76} rx={12} fill="#fdfdfb" stroke="#e4e1d8" strokeWidth={2} />
-      {/* 안쪽 */}
-      <Rect x={7} y={FLAP_TOP + 2} width={126} height={38} rx={4} fill="#f6f4ef" />
-      {/* 아래 접힘선 */}
-      <Path d="M5 93 L70 56 L135 93" fill="none" stroke="#ece9e1" strokeWidth={2} />
+      <Path
+        d="M3 22 L137 22 L137 86 Q137 94 129 94 L11 94 Q3 94 3 86 Z"
+        fill="#fdfdfb" stroke="#e4e1d8" strokeWidth={2} strokeLinejoin="round"
+      />
+      <Path d="M6 92 L70 56 L134 92" fill="none" stroke="#ece9e1" strokeWidth={2} />
     </Svg>
   );
 }
 
-/** 봉투 플랩(삼각형) — 윗변을 힌지로 위로 열린다. */
+/** 봉투 플랩(삼각형) — 윗변(x3~137)을 힌지로 위로 열린다. 몸통 윗변과 딱 맞음. */
 function EnvelopeFlap() {
   return (
-    <Svg width={EW} height={46}>
-      <Path d="M3 0 L70 42 L137 0 Z" fill="#f0eee7" stroke="#e4e1d8" strokeWidth={2} strokeLinejoin="round" />
+    <Svg width={EW} height={44}>
+      <Path d="M3 0 L70 40 L137 0 Z" fill="#f0eee7" stroke="#e4e1d8" strokeWidth={2} strokeLinejoin="round" />
     </Svg>
   );
 }
@@ -127,10 +127,10 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
   const eScale = useSharedValue(0.5);
   const eOpacity = useSharedValue(0);
   const flapRot = useSharedValue(0);   // 플랩 열림(rotateX)
-  // 팝업: 봉투 안에서 위로 나옴
+  // 팝업: 봉투 뒤에서 작게 시작해 위로 올라오며 나옴
   const pillOpacity = useSharedValue(0);
   const pillScale = useSharedValue(0.5);
-  const pillShift = useSharedValue(30);
+  const pillShift = useSharedValue(26);
   const [showPill, setShowPill] = useState(false);
 
   useEffect(() => {
@@ -160,13 +160,13 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
 
   useEffect(() => {
     if (!showPill) return;
-    // 봉투가 살짝 확대되며 플랩이 열리고 → 그 안에서 팝업이 위로 올라오며 등장 → 봉투는 사라짐
+    // 봉투가 살짝 확대되며 플랩이 열림 → 봉투 뒤의 팝업이 위로 올라와 입구로 나옴 → 봉투 페이드
     eScale.value = withTiming(1.14, { duration: 480, easing: Easing.out(Easing.cubic) }); // 살짝 zoom
-    flapRot.value = withTiming(-160, { duration: 420, easing: Easing.out(Easing.quad) });
-    pillShift.value = withDelay(320, withTiming(-10, { duration: 560, easing: Easing.out(Easing.cubic) }));
-    pillScale.value = withDelay(320, withTiming(1, { duration: 560, easing: Easing.out(Easing.cubic) }));
-    pillOpacity.value = withDelay(340, withTiming(1, { duration: 420 }));
-    eOpacity.value = withDelay(600, withTiming(0, { duration: 420 }));
+    flapRot.value = withTiming(-162, { duration: 420, easing: Easing.out(Easing.quad) });
+    pillOpacity.value = withDelay(220, withTiming(1, { duration: 220 }));
+    pillShift.value = withDelay(280, withTiming(-14, { duration: 640, easing: Easing.out(Easing.cubic) })); // 위로 올라옴
+    pillScale.value = withDelay(500, withTiming(1, { duration: 540, easing: Easing.out(Easing.cubic) }));   // 나오면서 커짐
+    eOpacity.value = withDelay(620, withTiming(0, { duration: 440 }));
   }, [showPill]);
 
   const shadowStyle = useAnimatedStyle(() => {
@@ -199,11 +199,12 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
       <Animated.View style={[styles.shadow, shadowStyle]} pointerEvents="none">
         <GroundShadow />
       </Animated.View>
+      {/* 팝업은 봉투보다 먼저(뒤에) 렌더 — 봉투 몸통이 아랫부분을 가려 '안에서' 나오는 느낌 */}
+      {showPill && <ArrivalPill accent={accent} onView={onView} style={pillStyle} />}
       <Animated.View style={[styles.envelope, envStyle]} pointerEvents="none">
         <View style={styles.envBody}><EnvelopeBody /></View>
         <Animated.View style={[styles.envFlap, flapStyle]}><EnvelopeFlap /></Animated.View>
       </Animated.View>
-      {showPill && <ArrivalPill accent={accent} onView={onView} style={pillStyle} />}
     </View>
   );
 }
