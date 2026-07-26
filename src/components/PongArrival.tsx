@@ -40,24 +40,16 @@ function PingPongBall() {
   );
 }
 
-const EW = 94, EH = 70; // 편지 봉투 크기
+const EW = 126, EH = 92; // 편지 봉투 크기 (키움)
 
-/** 편지 봉투 — 크림색 종이 + 소프트 테두리 + 빨간 하트 왁스 씰. */
+/** 편지 봉투 — 심플 플랫: 크림색 몸통 + 살짝 진한 크림 플랩(투톤) + 소프트 테두리. */
 function Envelope() {
   return (
     <Svg width={EW} height={EH}>
-      {/* 봉투 몸통 */}
-      <Rect x={4} y={11} width={86} height={50} rx={8} fill="#fdf8ee" stroke="#e7dfcc" strokeWidth={1.6} />
-      {/* 아래쪽 접힘선 힌트 */}
-      <Path d="M5 59 L47 34 L89 59" fill="none" stroke="#ece3d0" strokeWidth={1.4} />
-      {/* 닫힌 윗 플랩 */}
-      <Path d="M5 13 L47 41 L89 13 Z" fill="#f5edd9" stroke="#e7dfcc" strokeWidth={1.6} strokeLinejoin="round" />
-      {/* 왁스 씰(하트) */}
-      <Circle cx={47} cy={39} r={7} fill="#d75a63" />
-      <Path
-        d="M47 42.4 C45.6 40.8 43.7 40 43.7 38.2 C43.7 37.1 44.6 36.4 45.5 36.4 C46.2 36.4 46.7 36.8 47 37.3 C47.3 36.8 47.8 36.4 48.5 36.4 C49.4 36.4 50.3 37.1 50.3 38.2 C50.3 40 48.4 40.8 47 42.4 Z"
-        fill="#ffffff" opacity={0.92}
-      />
+      {/* 몸통 */}
+      <Rect x={3} y={16} width={120} height={72} rx={11} fill="#fdf8ee" stroke="#e2dac6" strokeWidth={2} />
+      {/* 플랩(투톤) */}
+      <Path d="M5 20 L63 58 L121 20 Z" fill="#f3ead3" stroke="#e2dac6" strokeWidth={2} strokeLinejoin="round" />
     </Svg>
   );
 }
@@ -116,12 +108,12 @@ function ArrivalPill({ accent, onView, style }: { accent: string; onView: () => 
 // ══════════════════════════════════════════════════════════════
 //  편지 버전 — 봉투가 위에서 떠내려와 살랑이며 안착 → 팝업
 // ══════════════════════════════════════════════════════════════
-const E_DROP = -170;
+const E_FROM_X = -240, E_FROM_Y = -60; // 왼쪽 위에서 날아 들어옴
 
 function LetterArrival({ accent, onView }: { accent: string; onView: () => void }) {
-  const eY = useSharedValue(E_DROP);
-  const eX = useSharedValue(0);
-  const eRot = useSharedValue(-7);
+  const eY = useSharedValue(E_FROM_Y);
+  const eX = useSharedValue(E_FROM_X);
+  const eRot = useSharedValue(-24);
   const eScale = useSharedValue(1);
   const eOpacity = useSharedValue(0);
   const pillOpacity = useSharedValue(0);
@@ -129,28 +121,22 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
   const [showPill, setShowPill] = useState(false);
 
   useEffect(() => {
-    const SWAY = Easing.inOut(Easing.quad);
-    eOpacity.value = withTiming(1, { duration: 260 });
-    // 떠내려오듯 아래로(감속) → 살짝 안착
+    const GLIDE = Easing.out(Easing.cubic);
+    eOpacity.value = withTiming(1, { duration: 220 });
+    // 왼쪽 위에서 대각선으로 날아 들어와(감속) 안착
+    eX.value = withTiming(0, { duration: 1080, easing: GLIDE });
     eY.value = withSequence(
-      withTiming(0, { duration: 1050, easing: Easing.out(Easing.cubic) }),
-      withTiming(7, { duration: 150, easing: Easing.out(Easing.quad) }),
-      withTiming(0, { duration: 230, easing: Easing.inOut(Easing.quad) }, (finished) => {
+      withTiming(0, { duration: 1080, easing: GLIDE }),
+      withTiming(-7, { duration: 150, easing: Easing.out(Easing.quad) }), // 살짝 떠올랐다
+      withTiming(0, { duration: 220, easing: Easing.inOut(Easing.quad) }, (finished) => { // 안착
         'worklet';
         if (finished) runOnJS(setShowPill)(true);
       }),
     );
-    // 좌우로 살랑(감쇠)
-    eX.value = withSequence(
-      withTiming(10, { duration: 460, easing: SWAY }),
-      withTiming(-6, { duration: 440, easing: SWAY }),
-      withTiming(0, { duration: 530, easing: SWAY }),
-    );
-    // 기울기 살랑(감쇠)
+    // 비행 중 기울었다가 수평으로(살짝 오버슈트)
     eRot.value = withSequence(
-      withTiming(7, { duration: 460, easing: SWAY }),
-      withTiming(-4, { duration: 440, easing: SWAY }),
-      withTiming(0, { duration: 530, easing: SWAY }),
+      withTiming(3, { duration: 1080, easing: GLIDE }),
+      withTiming(0, { duration: 370, easing: Easing.inOut(Easing.quad) }),
     );
   }, []);
 
@@ -164,11 +150,11 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
   }, [showPill]);
 
   const shadowStyle = useAnimatedStyle(() => {
-    const k = interpolate(eY.value, [E_DROP, 0], [0.5, 1.05], Extrapolation.CLAMP);
-    const o = interpolate(eY.value, [E_DROP, 0], [0.3, 1], Extrapolation.CLAMP);
+    const k = interpolate(eY.value, [E_FROM_Y, 0], [0.62, 1.05], Extrapolation.CLAMP);
+    const o = interpolate(eY.value, [E_FROM_Y, 0], [0.35, 1], Extrapolation.CLAMP);
     return {
       opacity: eOpacity.value * o * 0.9,
-      transform: [{ translateX: eX.value }, { translateY: EH / 2 + 6 }, { scaleX: k * 1.5 }, { scaleY: k * 0.9 }],
+      transform: [{ translateX: eX.value }, { translateY: EH / 2 + 2 }, { scaleX: k * 1.9 }, { scaleY: k * 0.95 }],
     };
   });
   const envStyle = useAnimatedStyle(() => ({
