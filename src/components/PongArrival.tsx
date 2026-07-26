@@ -175,8 +175,8 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
     // 짧은 텀 뒤 팝업이 같은 지점에서 천천히 부드럽게 커지며 등장(급한 튕김 없이).
     bScale.value = withTiming(0.25, { duration: 240, easing: Easing.in(Easing.quad) });
     bOpacity.value = withTiming(0, { duration: 240 });
-    pillOpacity.value = withDelay(170, withTiming(1, { duration: 440 }));
-    pillScale.value = withDelay(170, withTiming(1, { duration: 560, easing: Easing.out(Easing.cubic) }));
+    pillOpacity.value = withDelay(460, withTiming(1, { duration: 440 }));
+    pillScale.value = withDelay(460, withTiming(1, { duration: 560, easing: Easing.out(Easing.cubic) }));
   }, [showPill]);
 
   const paddleStyle = useAnimatedStyle(() => ({
