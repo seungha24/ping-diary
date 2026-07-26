@@ -1,10 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import Svg, { Defs, RadialGradient, Stop, Circle, Ellipse } from 'react-native-svg';
 import TouchableOpacity from './Touchable';
 import Animated, {
   useSharedValue, useAnimatedStyle, withSequence, withTiming, withDelay,
   Easing, runOnJS,
 } from 'react-native-reanimated';
+
+const BALL = 60; // 공 크기
+
+/** 진짜 탁구공처럼 보이는 공 (SVG 라디얼 그라데이션 + 심선 + 하이라이트) */
+function PingPongBall() {
+  const r = BALL / 2;
+  return (
+    <Svg width={BALL} height={BALL}>
+      <Defs>
+        <RadialGradient id="pp" cx="37%" cy="30%" r="72%">
+          <Stop offset="0" stopColor="#ffffff" />
+          <Stop offset="0.45" stopColor="#fbfbf6" />
+          <Stop offset="0.78" stopColor="#ecefe3" />
+          <Stop offset="1" stopColor="#cfd5c3" />
+        </RadialGradient>
+      </Defs>
+      <Circle cx={r} cy={r} r={r - 1} fill="url(#pp)" stroke="rgba(0,0,0,0.10)" strokeWidth={1} />
+      {/* 심선 (탁구공 이음새) */}
+      <Ellipse cx={r} cy={r} rx={r - 2} ry={r * 0.32} fill="none" stroke="rgba(0,0,0,0.06)" strokeWidth={1} />
+      {/* 반사 하이라이트 */}
+      <Ellipse cx={r * 0.68} cy={r * 0.6} rx={r * 0.22} ry={r * 0.15} fill="rgba(255,255,255,0.9)" />
+    </Svg>
+  );
+}
 
 /**
  * p0ng 도착 연출 — 탁구공이 왼쪽에서 통통 튀어 잠금 카드에 안착한 뒤
@@ -12,29 +37,27 @@ import Animated, {
  * 순수 연출 컴포넌트라 실패해도 데이터엔 영향 없다.
  */
 export default function PongArrival({ accent, onView }: { accent: string; onView: () => void }) {
-  const tx = useSharedValue(-150);   // 가로: 왼쪽 밖 → 중앙
-  const ty = useSharedValue(-64);    // 세로: 0 = 카드 위 안착점, 음수 = 위로 튐
+  const tx = useSharedValue(-150);
+  const ty = useSharedValue(-70);
   const ballOpacity = useSharedValue(0);
   const pillOpacity = useSharedValue(0);
   const pillScale = useSharedValue(0.94);
   const [showPill, setShowPill] = useState(false);
 
   useEffect(() => {
-    const up = Easing.out(Easing.quad);   // 올라갈 땐 감속
-    const down = Easing.in(Easing.quad);  // 내려올 땐 가속(중력)
+    const up = Easing.out(Easing.quad);
+    const down = Easing.in(Easing.quad);
     ballOpacity.value = withTiming(1, { duration: 120 });
-    // 가로: 2초에 걸쳐 감속하며 중앙으로
     tx.value = withTiming(0, { duration: 1900, easing: Easing.bezier(0.26, 0.55, 0.3, 1) });
-    // 세로: 감쇠 바운스 (점점 낮게 4번 튀고 안착)
     ty.value = withSequence(
       withTiming(0, { duration: 300, easing: down }),
-      withTiming(-96, { duration: 300, easing: up }),
+      withTiming(-100, { duration: 300, easing: up }),
       withTiming(0, { duration: 300, easing: down }),
-      withTiming(-54, { duration: 240, easing: up }),
+      withTiming(-56, { duration: 240, easing: up }),
       withTiming(0, { duration: 240, easing: down }),
-      withTiming(-26, { duration: 190, easing: up }),
+      withTiming(-28, { duration: 190, easing: up }),
       withTiming(0, { duration: 190, easing: down }),
-      withTiming(-10, { duration: 130, easing: up }),
+      withTiming(-11, { duration: 130, easing: up }),
       withTiming(0, { duration: 130, easing: down }, (finished) => {
         if (finished) runOnJS(setShowPill)(true);
       }),
@@ -59,15 +82,13 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
 
   return (
     <View style={styles.overlay} pointerEvents="box-none">
-      {/* 탁구공 */}
       <Animated.View style={[styles.ball, ballStyle]} pointerEvents="none">
-        <View style={styles.ballHi} />
+        <PingPongBall />
       </Animated.View>
 
-      {/* 도착 팝업 */}
       {showPill && (
         <Animated.View style={[styles.pill, pillStyle]}>
-          <View style={styles.pillBall} />
+          <Text style={[styles.pillSpark, { color: accent }]}>✦</Text>
           <Text style={styles.pillText}>p0ng이 도착했어요</Text>
           <TouchableOpacity style={[styles.pillBtn, { backgroundColor: accent }]} onPress={onView}>
             <Text style={styles.pillBtnText}>보러가기</Text>
@@ -86,29 +107,20 @@ const styles = StyleSheet.create({
   },
   ball: {
     position: 'absolute',
-    width: 52, height: 52, borderRadius: 26,
-    backgroundColor: '#ffffff',
-    borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)',
-    shadowColor: '#1e2836', shadowOpacity: 0.35, shadowRadius: 10, shadowOffset: { width: 0, height: 8 },
+    width: BALL, height: BALL,
+    shadowColor: '#1e2836', shadowOpacity: 0.35, shadowRadius: 11, shadowOffset: { width: 0, height: 9 },
     elevation: 6,
   },
-  ballHi: {
-    position: 'absolute', left: 13, top: 10, width: 14, height: 11, borderRadius: 7,
-    backgroundColor: 'rgba(255,255,255,0.9)',
-  },
   pill: {
-    flexDirection: 'row', alignItems: 'center', gap: 9,
+    flexDirection: 'row', alignItems: 'center', gap: 11,
     backgroundColor: '#ffffff',
-    borderWidth: 1, borderColor: '#eef0f2', borderRadius: 16,
-    paddingVertical: 8, paddingLeft: 10, paddingRight: 8,
-    shadowColor: '#1e325a', shadowOpacity: 0.28, shadowRadius: 18, shadowOffset: { width: 0, height: 12 },
-    elevation: 10,
+    borderWidth: 1, borderColor: '#eef0f2', borderRadius: 20,
+    paddingVertical: 12, paddingLeft: 16, paddingRight: 11,
+    shadowColor: '#1e325a', shadowOpacity: 0.3, shadowRadius: 22, shadowOffset: { width: 0, height: 14 },
+    elevation: 12,
   },
-  pillBall: {
-    width: 24, height: 24, borderRadius: 12,
-    backgroundColor: '#ffffff', borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)',
-  },
-  pillText: { fontSize: 13.5, fontWeight: '700', color: '#1a1c20' },
-  pillBtn: { borderRadius: 999, paddingVertical: 6, paddingHorizontal: 13 },
-  pillBtnText: { color: '#fff', fontSize: 12.5, fontWeight: '700' },
+  pillSpark: { fontSize: 17, fontWeight: '800' },
+  pillText: { fontSize: 15.5, fontWeight: '700', color: '#1a1c20' },
+  pillBtn: { borderRadius: 999, paddingVertical: 9, paddingHorizontal: 17 },
+  pillBtnText: { color: '#fff', fontSize: 14, fontWeight: '700' },
 });
