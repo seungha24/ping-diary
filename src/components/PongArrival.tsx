@@ -9,6 +9,11 @@ import Animated, {
   Easing, runOnJS, interpolate, Extrapolation,
 } from 'react-native-reanimated';
 
+// ── 도착 연출 스타일 토글 ─────────────────────────────────────
+// 'letter' = 편지 봉투가 떠내려와 안착 / 'paddle' = 탁구채로 공을 쳐서 날아옴.
+// 나중에 탁구채로 되돌리려면 이 값만 'paddle'로 바꾸면 된다.
+const ARRIVAL_STYLE: 'letter' | 'paddle' = 'letter';
+
 const BALL = 56;
 const R = BALL / 2;
 
@@ -35,6 +40,28 @@ function PingPongBall() {
   );
 }
 
+const EW = 94, EH = 70; // 편지 봉투 크기
+
+/** 편지 봉투 — 크림색 종이 + 소프트 테두리 + 빨간 하트 왁스 씰. */
+function Envelope() {
+  return (
+    <Svg width={EW} height={EH}>
+      {/* 봉투 몸통 */}
+      <Rect x={4} y={11} width={86} height={50} rx={8} fill="#fdf8ee" stroke="#e7dfcc" strokeWidth={1.6} />
+      {/* 아래쪽 접힘선 힌트 */}
+      <Path d="M5 59 L47 34 L89 59" fill="none" stroke="#ece3d0" strokeWidth={1.4} />
+      {/* 닫힌 윗 플랩 */}
+      <Path d="M5 13 L47 41 L89 13 Z" fill="#f5edd9" stroke="#e7dfcc" strokeWidth={1.6} strokeLinejoin="round" />
+      {/* 왁스 씰(하트) */}
+      <Circle cx={47} cy={39} r={7} fill="#d75a63" />
+      <Path
+        d="M47 42.4 C45.6 40.8 43.7 40 43.7 38.2 C43.7 37.1 44.6 36.4 45.5 36.4 C46.2 36.4 46.7 36.8 47 37.3 C47.3 36.8 47.8 36.4 48.5 36.4 C49.4 36.4 50.3 37.1 50.3 38.2 C50.3 40 48.4 40.8 47 42.4 Z"
+        fill="#ffffff" opacity={0.92}
+      />
+    </Svg>
+  );
+}
+
 const SHADOW_W = 56, SHADOW_H = 20;
 
 /** 바닥 그림자 — 가운데 진하고 가장자리로 투명하게 번지는 소프트 타원(하드엣지 X). */
@@ -55,8 +82,7 @@ function GroundShadow() {
 
 const PW = 82, PH = 136; // 탁구채 SVG 크기
 
-/** 탁구채 — 심플 플랫(이모지풍). 로즈 블레이드 + 그레이시 우드 손잡이·throat.
- *  채도만 또렷하게 올린 버전. */
+/** 탁구채 — 심플 플랫(이모지풍). 로즈 블레이드 + 그레이시 우드 손잡이·throat. */
 function Paddle() {
   const ROSE = '#db6f7c';
   const WOOD = '#cbb79a';
@@ -65,46 +91,134 @@ function Paddle() {
       <Defs>
         <ClipPath id="blade"><Circle cx={41} cy={40} r={37} /></ClipPath>
       </Defs>
-      {/* 손잡이(나무) — 블레이드 뒤로 들어가 아래로 뻗음 */}
       <Rect x={30} y={71} width={22} height={60} rx={11} fill={WOOD} />
-      {/* 블레이드 */}
       <Circle cx={41} cy={40} r={37} fill={ROSE} />
-      {/* 나무 throat — 블레이드 좌하단으로 대각선으로 파고듦 */}
       <Path d="M0 34 L55 77 L60 93 L0 93 Z" fill={WOOD} clipPath="url(#blade)" />
     </Svg>
   );
 }
 
-// ── 물리 파라미터 ──
+/** 두 버전이 공유하는 팝업(배너). */
+function ArrivalPill({ accent, onView, style }: { accent: string; onView: () => void; style: any }) {
+  return (
+    <Animated.View style={[styles.pill, style]}>
+      <View style={styles.pillTop}>
+        <Text style={[styles.pillSpark, { color: accent }]}>✦</Text>
+        <Text style={styles.pillText}>p0ng이 도착했어요</Text>
+      </View>
+      <TouchableOpacity style={[styles.pillBtn, { backgroundColor: accent }]} onPress={onView}>
+        <Text style={styles.pillBtnText}>보러가기</Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+//  편지 버전 — 봉투가 위에서 떠내려와 살랑이며 안착 → 팝업
+// ══════════════════════════════════════════════════════════════
+const E_DROP = -170;
+
+function LetterArrival({ accent, onView }: { accent: string; onView: () => void }) {
+  const eY = useSharedValue(E_DROP);
+  const eX = useSharedValue(0);
+  const eRot = useSharedValue(-7);
+  const eScale = useSharedValue(1);
+  const eOpacity = useSharedValue(0);
+  const pillOpacity = useSharedValue(0);
+  const pillScale = useSharedValue(0.4);
+  const [showPill, setShowPill] = useState(false);
+
+  useEffect(() => {
+    const SWAY = Easing.inOut(Easing.quad);
+    eOpacity.value = withTiming(1, { duration: 260 });
+    // 떠내려오듯 아래로(감속) → 살짝 안착
+    eY.value = withSequence(
+      withTiming(0, { duration: 1050, easing: Easing.out(Easing.cubic) }),
+      withTiming(7, { duration: 150, easing: Easing.out(Easing.quad) }),
+      withTiming(0, { duration: 230, easing: Easing.inOut(Easing.quad) }, (finished) => {
+        'worklet';
+        if (finished) runOnJS(setShowPill)(true);
+      }),
+    );
+    // 좌우로 살랑(감쇠)
+    eX.value = withSequence(
+      withTiming(10, { duration: 460, easing: SWAY }),
+      withTiming(-6, { duration: 440, easing: SWAY }),
+      withTiming(0, { duration: 530, easing: SWAY }),
+    );
+    // 기울기 살랑(감쇠)
+    eRot.value = withSequence(
+      withTiming(7, { duration: 460, easing: SWAY }),
+      withTiming(-4, { duration: 440, easing: SWAY }),
+      withTiming(0, { duration: 530, easing: SWAY }),
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!showPill) return;
+    // 봉투가 안착한 자리에서 팝업이 피어나듯 연결(급한 튕김 없이 천천히)
+    eScale.value = withTiming(0.3, { duration: 260, easing: Easing.in(Easing.quad) });
+    eOpacity.value = withTiming(0, { duration: 260 });
+    pillOpacity.value = withDelay(480, withTiming(1, { duration: 440 }));
+    pillScale.value = withDelay(480, withTiming(1, { duration: 560, easing: Easing.out(Easing.cubic) }));
+  }, [showPill]);
+
+  const shadowStyle = useAnimatedStyle(() => {
+    const k = interpolate(eY.value, [E_DROP, 0], [0.5, 1.05], Extrapolation.CLAMP);
+    const o = interpolate(eY.value, [E_DROP, 0], [0.3, 1], Extrapolation.CLAMP);
+    return {
+      opacity: eOpacity.value * o * 0.9,
+      transform: [{ translateX: eX.value }, { translateY: EH / 2 + 6 }, { scaleX: k * 1.5 }, { scaleY: k * 0.9 }],
+    };
+  });
+  const envStyle = useAnimatedStyle(() => ({
+    opacity: eOpacity.value,
+    transform: [
+      { translateX: eX.value },
+      { translateY: eY.value },
+      { rotate: `${eRot.value}deg` },
+      { scale: eScale.value },
+    ],
+  }));
+  const pillStyle = useAnimatedStyle(() => ({
+    opacity: pillOpacity.value,
+    transform: [{ scale: pillScale.value }],
+  }));
+
+  return (
+    <View style={styles.overlay} pointerEvents="box-none">
+      <Animated.View style={[styles.shadow, shadowStyle]} pointerEvents="none">
+        <GroundShadow />
+      </Animated.View>
+      <Animated.View style={[styles.envelope, envStyle]} pointerEvents="none">
+        <Envelope />
+      </Animated.View>
+      {showPill && <ArrivalPill accent={accent} onView={onView} style={pillStyle} />}
+    </View>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+//  탁구채 버전 — 탁구채가 스윙해 공을 치면 날아와 통통 튀며 안착 → 팝업
+// ══════════════════════════════════════════════════════════════
 const K = 26;
 const dur = (h: number) => Math.round(K * Math.sqrt(h));
 const LAUNCH_H = 130;
-// 딱딱한 '통통' 바운스 — 잔여 튐 줄여 3번으로 짧게 감쇠
 const BOUNCES = [62, 28, 10];
-// 탁구채 타이밍
 const APPROACH = 520, HOLD = 180, SWING = 170, RETREAT = 440;
-const HIT_AT = APPROACH + HOLD + SWING; // 공을 치는 시각
+const HIT_AT = APPROACH + HOLD + SWING;
 
-/**
- * p0ng 도착 연출 — 탁구채가 들어와 준비자세로 잠깐 멈췄다가 스윙해서 공을 친다.
- * 타격 순간 임팩트가 반짝이고, 공이 큰 포물선으로 천천히 날아와 통통 튀며 안착 →
- * "p0ng이 도착했어요 / 보러가기" 팝업. 순수 연출이라 실패해도 데이터엔 영향 없음.
- */
-export default function PongArrival({ accent, onView }: { accent: string; onView: () => void }) {
-  // 탁구채
+function PaddleArrival({ accent, onView }: { accent: string; onView: () => void }) {
   const pX = useSharedValue(-220);
   const pY = useSharedValue(42);
   const pRot = useSharedValue(-30);
   const pOpacity = useSharedValue(0);
-  // 임팩트 반짝임
   const fScale = useSharedValue(0.3);
   const fOpacity = useSharedValue(0);
-  // 공
   const bX = useSharedValue(-92);
   const bY = useSharedValue(-8);
   const bScale = useSharedValue(1);
   const bOpacity = useSharedValue(0);
-  // 팝업
   const pillOpacity = useSharedValue(0);
   const pillScale = useSharedValue(0.4);
   const [showPill, setShowPill] = useState(false);
@@ -113,7 +227,6 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
     const OUT = Easing.out(Easing.quad);
     const IN = Easing.in(Easing.quad);
 
-    // ── 탁구채: 접근 → 준비자세 유지(HOLD) → 스윙(타격) → 팔로우스루 후 퇴장 ──
     pOpacity.value = withSequence(
       withTiming(1, { duration: 160 }),
       withTiming(1, { duration: HIT_AT - 160 }),
@@ -132,47 +245,40 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
       withTiming(-54, { duration: RETREAT, easing: IN }),
     );
     pRot.value = withSequence(
-      withTiming(-46, { duration: APPROACH, easing: OUT }),  // 뒤로 감기
-      withTiming(-46, { duration: HOLD }),                   // 준비자세 유지
-      withTiming(28, { duration: SWING, easing: IN }),       // 휘둘러 타격
-      withTiming(52, { duration: RETREAT, easing: OUT }),    // 팔로우스루
+      withTiming(-46, { duration: APPROACH, easing: OUT }),
+      withTiming(-46, { duration: HOLD }),
+      withTiming(28, { duration: SWING, easing: IN }),
+      withTiming(52, { duration: RETREAT, easing: OUT }),
     );
 
-    // ── 임팩트 반짝임(타격 순간) ──
     fOpacity.value = withDelay(HIT_AT, withSequence(
       withTiming(0.9, { duration: 60 }),
       withTiming(0, { duration: 220, easing: OUT }),
     ));
     fScale.value = withDelay(HIT_AT, withTiming(1.6, { duration: 280, easing: OUT }));
 
-    // ── 공: 타격 순간 등장 → 포물선 비행 → 딱딱한 '통통' 바운스(눌림 없음) ──
     bOpacity.value = withDelay(HIT_AT, withTiming(1, { duration: 70 }));
     bX.value = withDelay(HIT_AT, withTiming(0, { duration: 1150, easing: Easing.bezier(0.17, 0.55, 0.3, 1) }));
 
     const tyA: any[] = [];
-    // 발사 상승 → 첫 낙하
     tyA.push(withTiming(-LAUNCH_H, { duration: 470, easing: OUT }));
     tyA.push(withTiming(0, { duration: 450, easing: IN }));
-    // 바닥에서 즉시 반전하는 딱딱한 바운스(V자) — 눌림/머무름 없음
     BOUNCES.forEach((h, i) => {
       const last = i === BOUNCES.length - 1;
       const d = dur(h);
-      tyA.push(withTiming(-h, { duration: d, easing: OUT }));   // 튀어오름(감속)
+      tyA.push(withTiming(-h, { duration: d, easing: OUT }));
       tyA.push(
-        withTiming(0, { duration: d, easing: IN }, last ? (finished) => { // 떨어짐(가속)
+        withTiming(0, { duration: d, easing: IN }, last ? (finished) => {
           'worklet';
           if (finished) runOnJS(setShowPill)(true);
         } : undefined),
       );
     });
-
     bY.value = withDelay(HIT_AT, withSequence(...tyA));
   }, []);
 
   useEffect(() => {
     if (!showPill) return;
-    // 공이 안착한 그 자리에서 팝업이 피어나듯 연결 — 공은 오므라들며 사라지고,
-    // 짧은 텀 뒤 팝업이 같은 지점에서 천천히 부드럽게 커지며 등장(급한 튕김 없이).
     bScale.value = withTiming(0.25, { duration: 240, easing: Easing.in(Easing.quad) });
     bOpacity.value = withTiming(0, { duration: 240 });
     pillOpacity.value = withDelay(460, withTiming(1, { duration: 440 }));
@@ -187,8 +293,6 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
     opacity: fOpacity.value,
     transform: [{ translateX: -98 }, { translateY: -10 }, { scale: fScale.value }],
   }));
-  // 바닥 그림자: 공의 X를 따라가고 바닥 높이(Y_FLOOR)에 고정.
-  // 공이 높이 뜰수록 작고 옅게, 착지할수록 크고 진하게.
   const shadowStyle = useAnimatedStyle(() => {
     const k = interpolate(bY.value, [-LAUNCH_H, 0], [0.5, 1.05], Extrapolation.CLAMP);
     const o = interpolate(bY.value, [-LAUNCH_H, 0], [0.35, 1], Extrapolation.CLAMP);
@@ -199,11 +303,7 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
   });
   const ballStyle = useAnimatedStyle(() => ({
     opacity: bOpacity.value,
-    transform: [
-      { translateX: bX.value },
-      { translateY: bY.value },
-      { scale: bScale.value },
-    ],
+    transform: [{ translateX: bX.value }, { translateY: bY.value }, { scale: bScale.value }],
   }));
   const pillStyle = useAnimatedStyle(() => ({
     opacity: pillOpacity.value,
@@ -220,28 +320,23 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
           <Animated.View style={[styles.flash, flashStyle]} pointerEvents="none" />
         </>
       )}
-      {/* 바닥 그림자 — 공 밑, 공보다 뒤에 렌더 */}
       <Animated.View style={[styles.shadow, shadowStyle]} pointerEvents="none">
         <GroundShadow />
       </Animated.View>
-      {/* 공은 항상 마운트 — 팝업으로 오므라드는 연결 연출이 보이도록 opacity로만 제어 */}
       <Animated.View style={[styles.ball, ballStyle]} pointerEvents="none">
         <PingPongBall />
       </Animated.View>
-
-      {showPill && (
-        <Animated.View style={[styles.pill, pillStyle]}>
-          <View style={styles.pillTop}>
-            <Text style={[styles.pillSpark, { color: accent }]}>✦</Text>
-            <Text style={styles.pillText}>p0ng이 도착했어요</Text>
-          </View>
-          <TouchableOpacity style={[styles.pillBtn, { backgroundColor: accent }]} onPress={onView}>
-            <Text style={styles.pillBtnText}>보러가기</Text>
-          </TouchableOpacity>
-        </Animated.View>
-      )}
+      {showPill && <ArrivalPill accent={accent} onView={onView} style={pillStyle} />}
     </View>
   );
+}
+
+/**
+ * p0ng 도착 연출. ARRIVAL_STYLE 상수로 편지/탁구채 버전 전환.
+ * 순수 연출이라 실패해도 데이터엔 영향 없음.
+ */
+export default function PongArrival(props: { accent: string; onView: () => void }) {
+  return ARRIVAL_STYLE === 'letter' ? <LetterArrival {...props} /> : <PaddleArrival {...props} />;
 }
 
 const styles = StyleSheet.create({
@@ -251,6 +346,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ball: { position: 'absolute', width: BALL, height: BALL },
+  envelope: { position: 'absolute', width: EW, height: EH },
   shadow: {
     position: 'absolute',
     width: SHADOW_W, height: SHADOW_H,
