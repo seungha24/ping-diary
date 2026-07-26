@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, {
-  Defs, RadialGradient, LinearGradient, Stop, Circle, Ellipse, Rect,
+  Defs, RadialGradient, LinearGradient, Stop, Circle, Ellipse, Path,
 } from 'react-native-svg';
 import TouchableOpacity from './Touchable';
 import Animated, {
@@ -35,63 +35,71 @@ function PingPongBall() {
   );
 }
 
-const PW = 62, PH = 92; // 탁구채 SVG 크기
+const PW = 60, PH = 100; // 탁구채 SVG 크기
 
 /** 탁구채 — 빨간 러버 블레이드 + 크림 테두리 + 나무 손잡이. */
 function Paddle() {
   return (
     <Svg width={PW} height={PH}>
       <Defs>
-        <RadialGradient id="rubber" cx="40%" cy="32%" r="75%">
-          <Stop offset="0" stopColor="#e85c50" />
-          <Stop offset="0.6" stopColor="#d23a30" />
-          <Stop offset="1" stopColor="#b3271f" />
+        <RadialGradient id="rubber" cx="38%" cy="30%" r="80%">
+          <Stop offset="0" stopColor="#ef6a5e" />
+          <Stop offset="0.55" stopColor="#dd4136" />
+          <Stop offset="1" stopColor="#b5271e" />
         </RadialGradient>
         <LinearGradient id="wood" x1="0" y1="0" x2="1" y2="0">
-          <Stop offset="0" stopColor="#d2a86e" />
-          <Stop offset="0.5" stopColor="#b9884d" />
+          <Stop offset="0" stopColor="#e2bd83" />
+          <Stop offset="0.5" stopColor="#c2914f" />
           <Stop offset="1" stopColor="#9c6c37" />
         </LinearGradient>
         <RadialGradient id="pspec" cx="50%" cy="50%" r="50%">
-          <Stop offset="0" stopColor="#ffffff" stopOpacity="0.5" />
+          <Stop offset="0" stopColor="#ffffff" stopOpacity="0.55" />
           <Stop offset="1" stopColor="#ffffff" stopOpacity="0" />
         </RadialGradient>
       </Defs>
-      {/* 손잡이(나무) */}
-      <Rect x={PW / 2 - 6.5} y={54} width={13} height={34} rx={5.5} fill="url(#wood)" />
+      {/* 손잡이(나무) — 살짝 잘록한 그립 */}
+      <Path
+        d="M23 60 C22 66 22 68 22 72 L22 88 Q22 94 30 94 Q38 94 38 88 L38 72 C38 68 38 66 37 60 Z"
+        fill="url(#wood)" stroke="#87602f" strokeWidth={0.8}
+      />
       {/* 블레이드 크림 테두리 */}
-      <Ellipse cx={PW / 2} cy={33} rx={30} ry={33} fill="#efe7d8" />
+      <Ellipse cx={30} cy={32} rx={29} ry={32} fill="#f3ecdf" />
       {/* 러버 */}
-      <Ellipse cx={PW / 2} cy={33} rx={27} ry={30} fill="url(#rubber)" />
+      <Ellipse cx={30} cy={32} rx={26} ry={29} fill="url(#rubber)" stroke="#a02620" strokeWidth={0.6} />
       {/* 하이라이트 */}
-      <Ellipse cx={PW / 2 - 8} cy={22} rx={12} ry={9} fill="url(#pspec)" />
+      <Ellipse cx={22} cy={20} rx={11} ry={8} fill="url(#pspec)" />
     </Svg>
   );
 }
 
 // ── 물리 파라미터 ──
-const K = 29;
+const K = 34;
 const dur = (h: number) => Math.round(K * Math.sqrt(h));
-const CONTACT = 66;      // 바닥 접촉(눌림) 시간
-const SQUASH_DROP = 5;   // 눌릴 때 무게중심이 내려가는 양
-const HIT_AT = 380;      // 탁구채가 공을 치는 시각(ms)
-const LAUNCH_H = 120;    // 맞고 날아오르는 최고 높이
-const BOUNCES = [58, 25, 10]; // 착지 후 감쇠 바운스
+const CONTACT = 70;
+const SQUASH_DROP = 5;
+const LAUNCH_H = 130;
+const BOUNCES = [66, 30, 12];
+// 탁구채 타이밍
+const APPROACH = 520, HOLD = 180, SWING = 170, RETREAT = 440;
+const HIT_AT = APPROACH + HOLD + SWING; // 공을 치는 시각
 
 /**
- * p0ng 도착 연출 — 탁구채가 스윙해서 공을 치면, 공이 포물선으로 날아와
- * 통통 튀다 안착 → "p0ng이 도착했어요 / 보러가기" 팝업.
- * 순수 연출이라 실패해도 데이터엔 영향 없음.
+ * p0ng 도착 연출 — 탁구채가 들어와 준비자세로 잠깐 멈췄다가 스윙해서 공을 친다.
+ * 타격 순간 임팩트가 반짝이고, 공이 큰 포물선으로 천천히 날아와 통통 튀며 안착 →
+ * "p0ng이 도착했어요 / 보러가기" 팝업. 순수 연출이라 실패해도 데이터엔 영향 없음.
  */
 export default function PongArrival({ accent, onView }: { accent: string; onView: () => void }) {
   // 탁구채
-  const pX = useSharedValue(-215);
-  const pY = useSharedValue(34);
-  const pRot = useSharedValue(-38);
+  const pX = useSharedValue(-220);
+  const pY = useSharedValue(42);
+  const pRot = useSharedValue(-30);
   const pOpacity = useSharedValue(0);
+  // 임팩트 반짝임
+  const fScale = useSharedValue(0.3);
+  const fOpacity = useSharedValue(0);
   // 공
-  const bX = useSharedValue(-96);
-  const bY = useSharedValue(-6);
+  const bX = useSharedValue(-92);
+  const bY = useSharedValue(-8);
   const bSX = useSharedValue(1);
   const bSY = useSharedValue(1);
   const bOpacity = useSharedValue(0);
@@ -107,60 +115,67 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
     const ST = { x: 0.95, y: 1.06 };  // 정점 늘어남
     const SQ = { x: 1.18, y: 0.8 };   // 착지 눌림
 
-    // ── 탁구채: 접근(와인드업) → 스윙(타격) → 팔로우스루 후 퇴장 ──
+    // ── 탁구채: 접근 → 준비자세 유지(HOLD) → 스윙(타격) → 팔로우스루 후 퇴장 ──
     pOpacity.value = withSequence(
-      withTiming(1, { duration: 120 }),
-      withTiming(1, { duration: 260 }),
-      withTiming(0, { duration: 380, easing: IN }),
+      withTiming(1, { duration: 160 }),
+      withTiming(1, { duration: HIT_AT - 160 }),
+      withTiming(0, { duration: RETREAT, easing: IN }),
     );
     pX.value = withSequence(
-      withTiming(-120, { duration: 260, easing: OUT }),
-      withTiming(-104, { duration: 120, easing: IN }),
-      withTiming(-240, { duration: 380, easing: IN }),
+      withTiming(-122, { duration: APPROACH, easing: OUT }),
+      withTiming(-122, { duration: HOLD }),
+      withTiming(-104, { duration: SWING, easing: IN }),
+      withTiming(-250, { duration: RETREAT, easing: IN }),
     );
     pY.value = withSequence(
-      withTiming(8, { duration: 260, easing: OUT }),
-      withTiming(-8, { duration: 120, easing: IN }),
-      withTiming(-46, { duration: 380, easing: IN }),
+      withTiming(6, { duration: APPROACH, easing: OUT }),
+      withTiming(6, { duration: HOLD }),
+      withTiming(-10, { duration: SWING, easing: IN }),
+      withTiming(-54, { duration: RETREAT, easing: IN }),
     );
     pRot.value = withSequence(
-      withTiming(-44, { duration: 260, easing: OUT }),  // 뒤로 감기
-      withTiming(26, { duration: 120, easing: IN }),    // 휘둘러 타격
-      withTiming(46, { duration: 380, easing: OUT }),   // 팔로우스루
+      withTiming(-46, { duration: APPROACH, easing: OUT }),  // 뒤로 감기
+      withTiming(-46, { duration: HOLD }),                   // 준비자세 유지
+      withTiming(28, { duration: SWING, easing: IN }),       // 휘둘러 타격
+      withTiming(52, { duration: RETREAT, easing: OUT }),    // 팔로우스루
     );
 
-    // ── 공: 타격 순간 등장 → 포물선 비행 → 감쇠 바운스 ──
+    // ── 임팩트 반짝임(타격 순간) ──
+    fOpacity.value = withDelay(HIT_AT, withSequence(
+      withTiming(0.9, { duration: 60 }),
+      withTiming(0, { duration: 220, easing: OUT }),
+    ));
+    fScale.value = withDelay(HIT_AT, withTiming(1.6, { duration: 280, easing: OUT }));
+
+    // ── 공: 타격 순간 등장 → 큰 포물선 비행 → 감쇠 바운스 ──
     bOpacity.value = withDelay(HIT_AT, withTiming(1, { duration: 70 }));
-    bX.value = withDelay(HIT_AT, withTiming(0, { duration: 940, easing: Easing.bezier(0.17, 0.55, 0.3, 1) }));
+    bX.value = withDelay(HIT_AT, withTiming(0, { duration: 1200, easing: Easing.bezier(0.17, 0.55, 0.3, 1) }));
 
     const tyA: any[] = [];
     const sxA: any[] = [];
     const syA: any[] = [];
     // 발사 상승
-    tyA.push(withTiming(-LAUNCH_H, { duration: 360, easing: OUT }));
-    sxA.push(withTiming(ST.x, { duration: 360 }));
-    syA.push(withTiming(ST.y, { duration: 360 }));
+    tyA.push(withTiming(-LAUNCH_H, { duration: 480, easing: OUT }));
+    sxA.push(withTiming(ST.x, { duration: 480 }));
+    syA.push(withTiming(ST.y, { duration: 480 }));
     // 첫 낙하
-    tyA.push(withTiming(0, { duration: 360, easing: IN }));
-    sxA.push(withTiming(1, { duration: 360 }));
-    syA.push(withTiming(1, { duration: 360 }));
+    tyA.push(withTiming(0, { duration: 460, easing: IN }));
+    sxA.push(withTiming(1, { duration: 460 }));
+    syA.push(withTiming(1, { duration: 460 }));
 
     BOUNCES.forEach((h, i) => {
       const last = i === BOUNCES.length - 1;
       const half = CONTACT / 2;
       const d = dur(h);
-      // 접촉: 눌림 → 반발
       tyA.push(withTiming(SQUASH_DROP, { duration: half, easing: OUT }));
       sxA.push(withTiming(SQ.x, { duration: half, easing: OUT }));
       syA.push(withTiming(SQ.y, { duration: half, easing: OUT }));
       tyA.push(withTiming(0, { duration: half, easing: IN }));
       sxA.push(withTiming(1, { duration: half, easing: IN }));
       syA.push(withTiming(1, { duration: half, easing: IN }));
-      // 상승
       tyA.push(withTiming(-h, { duration: d, easing: OUT }));
       sxA.push(withTiming(ST.x, { duration: d }));
       syA.push(withTiming(ST.y, { duration: d }));
-      // 낙하 (마지막이면 팝업 트리거)
       tyA.push(
         withTiming(0, { duration: d, easing: IN }, last ? (finished) => {
           'worklet';
@@ -188,6 +203,10 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
     opacity: pOpacity.value,
     transform: [{ translateX: pX.value }, { translateY: pY.value }, { rotate: `${pRot.value}deg` }],
   }));
+  const flashStyle = useAnimatedStyle(() => ({
+    opacity: fOpacity.value,
+    transform: [{ translateX: -98 }, { translateY: -10 }, { scale: fScale.value }],
+  }));
   const ballStyle = useAnimatedStyle(() => ({
     opacity: bOpacity.value,
     transform: [
@@ -209,6 +228,7 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
           <Animated.View style={[styles.paddle, paddleStyle]} pointerEvents="none">
             <Paddle />
           </Animated.View>
+          <Animated.View style={[styles.flash, { borderColor: accent }, flashStyle]} pointerEvents="none" />
           <Animated.View style={[styles.ball, ballStyle]} pointerEvents="none">
             <PingPongBall />
           </Animated.View>
@@ -238,6 +258,11 @@ const styles = StyleSheet.create({
   },
   ball: { position: 'absolute', width: BALL, height: BALL },
   paddle: { position: 'absolute', width: PW, height: PH },
+  flash: {
+    position: 'absolute',
+    width: 34, height: 34, borderRadius: 999,
+    borderWidth: 3,
+  },
   pill: {
     alignItems: 'center', gap: 12,
     backgroundColor: '#ffffff',
