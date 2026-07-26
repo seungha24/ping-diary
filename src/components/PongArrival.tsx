@@ -35,7 +35,7 @@ function PingPongBall() {
   );
 }
 
-const PW = 60, PH = 100; // 탁구채 SVG 크기
+const PW = 82, PH = 136; // 탁구채 SVG 크기 (키움)
 
 /** 탁구채 — 이모지풍 플랫(아웃라인 없음). 앱의 차분한 톤에 맞춰 채도를 낮춘
  *  더스티 로즈 블레이드 + 그레이시 우드 손잡이·throat. */
@@ -45,25 +45,24 @@ function Paddle() {
   return (
     <Svg width={PW} height={PH}>
       <Defs>
-        <ClipPath id="blade"><Circle cx={30} cy={29} r={27} /></ClipPath>
+        <ClipPath id="blade"><Circle cx={41} cy={40} r={37} /></ClipPath>
       </Defs>
       {/* 손잡이(나무) — 블레이드 뒤로 들어가 아래로 뻗음 */}
-      <Rect x={22} y={52} width={16} height={44} rx={8} fill={WOOD} />
+      <Rect x={30} y={71} width={22} height={60} rx={11} fill={WOOD} />
       {/* 블레이드 */}
-      <Circle cx={30} cy={29} r={27} fill={ROSE} />
+      <Circle cx={41} cy={40} r={37} fill={ROSE} />
       {/* 나무 throat — 블레이드 좌하단으로 대각선으로 파고듦 */}
-      <Path d="M0 25 L40 56 L44 68 L0 68 Z" fill={WOOD} clipPath="url(#blade)" />
+      <Path d="M0 34 L55 77 L60 93 L0 93 Z" fill={WOOD} clipPath="url(#blade)" />
     </Svg>
   );
 }
 
 // ── 물리 파라미터 ──
-const K = 34;
+const K = 27;
 const dur = (h: number) => Math.round(K * Math.sqrt(h));
-const CONTACT = 70;
-const SQUASH_DROP = 5;
 const LAUNCH_H = 130;
-const BOUNCES = [66, 30, 12];
+// 탁구공은 딱딱해서 눌리지 않고 '통통' 여러 번 짧게 튄다 (감쇠, 뒤로 갈수록 촘촘)
+const BOUNCES = [72, 44, 26, 15, 8, 4];
 // 탁구채 타이밍
 const APPROACH = 520, HOLD = 180, SWING = 170, RETREAT = 440;
 const HIT_AT = APPROACH + HOLD + SWING; // 공을 치는 시각
@@ -85,8 +84,6 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
   // 공
   const bX = useSharedValue(-92);
   const bY = useSharedValue(-8);
-  const bSX = useSharedValue(1);
-  const bSY = useSharedValue(1);
   const bOpacity = useSharedValue(0);
   // 팝업
   const pillOpacity = useSharedValue(0);
@@ -97,8 +94,6 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
   useEffect(() => {
     const OUT = Easing.out(Easing.quad);
     const IN = Easing.in(Easing.quad);
-    const ST = { x: 0.95, y: 1.06 };  // 정점 늘어남
-    const SQ = { x: 1.18, y: 0.8 };   // 착지 눌림
 
     // ── 탁구채: 접근 → 준비자세 유지(HOLD) → 스윙(타격) → 팔로우스루 후 퇴장 ──
     pOpacity.value = withSequence(
@@ -132,48 +127,28 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
     ));
     fScale.value = withDelay(HIT_AT, withTiming(1.6, { duration: 280, easing: OUT }));
 
-    // ── 공: 타격 순간 등장 → 큰 포물선 비행 → 감쇠 바운스 ──
+    // ── 공: 타격 순간 등장 → 포물선 비행 → 딱딱한 '통통' 바운스(눌림 없음) ──
     bOpacity.value = withDelay(HIT_AT, withTiming(1, { duration: 70 }));
-    bX.value = withDelay(HIT_AT, withTiming(0, { duration: 1200, easing: Easing.bezier(0.17, 0.55, 0.3, 1) }));
+    bX.value = withDelay(HIT_AT, withTiming(0, { duration: 1150, easing: Easing.bezier(0.17, 0.55, 0.3, 1) }));
 
     const tyA: any[] = [];
-    const sxA: any[] = [];
-    const syA: any[] = [];
-    // 발사 상승
-    tyA.push(withTiming(-LAUNCH_H, { duration: 480, easing: OUT }));
-    sxA.push(withTiming(ST.x, { duration: 480 }));
-    syA.push(withTiming(ST.y, { duration: 480 }));
-    // 첫 낙하
-    tyA.push(withTiming(0, { duration: 460, easing: IN }));
-    sxA.push(withTiming(1, { duration: 460 }));
-    syA.push(withTiming(1, { duration: 460 }));
-
+    // 발사 상승 → 첫 낙하
+    tyA.push(withTiming(-LAUNCH_H, { duration: 470, easing: OUT }));
+    tyA.push(withTiming(0, { duration: 450, easing: IN }));
+    // 바닥에서 즉시 반전하는 딱딱한 바운스(V자) — 눌림/머무름 없음
     BOUNCES.forEach((h, i) => {
       const last = i === BOUNCES.length - 1;
-      const half = CONTACT / 2;
       const d = dur(h);
-      tyA.push(withTiming(SQUASH_DROP, { duration: half, easing: OUT }));
-      sxA.push(withTiming(SQ.x, { duration: half, easing: OUT }));
-      syA.push(withTiming(SQ.y, { duration: half, easing: OUT }));
-      tyA.push(withTiming(0, { duration: half, easing: IN }));
-      sxA.push(withTiming(1, { duration: half, easing: IN }));
-      syA.push(withTiming(1, { duration: half, easing: IN }));
-      tyA.push(withTiming(-h, { duration: d, easing: OUT }));
-      sxA.push(withTiming(ST.x, { duration: d }));
-      syA.push(withTiming(ST.y, { duration: d }));
+      tyA.push(withTiming(-h, { duration: d, easing: OUT }));   // 튀어오름(감속)
       tyA.push(
-        withTiming(0, { duration: d, easing: IN }, last ? (finished) => {
+        withTiming(0, { duration: d, easing: IN }, last ? (finished) => { // 떨어짐(가속)
           'worklet';
           if (finished) runOnJS(setShowPill)(true);
         } : undefined),
       );
-      sxA.push(withTiming(1, { duration: d }));
-      syA.push(withTiming(1, { duration: d }));
     });
 
     bY.value = withDelay(HIT_AT, withSequence(...tyA));
-    bSX.value = withDelay(HIT_AT, withSequence(...sxA));
-    bSY.value = withDelay(HIT_AT, withSequence(...syA));
   }, []);
 
   useEffect(() => {
@@ -197,8 +172,6 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
     transform: [
       { translateX: bX.value },
       { translateY: bY.value },
-      { scaleX: bSX.value },
-      { scaleY: bSY.value },
     ],
   }));
   const pillStyle = useAnimatedStyle(() => ({
