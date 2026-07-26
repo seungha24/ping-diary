@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, {
-  Defs, RadialGradient, LinearGradient, Stop, Circle, Ellipse, Rect, Path, ClipPath,
+  Defs, RadialGradient, Stop, Circle, Ellipse, Path, ClipPath,
 } from 'react-native-svg';
 import TouchableOpacity from './Touchable';
 import Animated, {
@@ -37,35 +37,33 @@ function PingPongBall() {
 
 const PW = 82, PH = 136; // 탁구채 SVG 크기 (키움)
 
-/** 탁구채 — 더스티 로즈 블레이드 + 그레이시 우드 손잡이·throat.
- *  공과 결을 맞추려 은은한 라디얼 음영 + 하이라이트로 입체감을 준다(과하지 않게). */
+/** 탁구채 — 실물에 가깝게: 매트한 러버 면 + 얇은 나무 테두리(엣지) +
+ *  플레어 넥·나무결 있는 손잡이. 광택 없이 구조로 사실감을 준다. */
 function Paddle() {
   return (
     <Svg width={PW} height={PH}>
       <Defs>
-        <RadialGradient id="pblade" cx="38%" cy="30%" r="80%">
-          <Stop offset="0" stopColor="#e2a3ab" />
-          <Stop offset="0.55" stopColor="#d18a94" />
-          <Stop offset="1" stopColor="#bc757f" />
+        {/* 러버 — 매트(가장자리로 아주 살짝 어두워지는 정도) */}
+        <RadialGradient id="rub" cx="50%" cy="44%" r="58%">
+          <Stop offset="0" stopColor="#d38f98" />
+          <Stop offset="0.72" stopColor="#cd858f" />
+          <Stop offset="1" stopColor="#bd7580" />
         </RadialGradient>
-        <LinearGradient id="pwood" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor="#d8c7ab" />
-          <Stop offset="1" stopColor="#bca380" />
-        </LinearGradient>
-        <RadialGradient id="phi" cx="50%" cy="50%" r="50%">
-          <Stop offset="0" stopColor="#ffffff" stopOpacity="0.48" />
-          <Stop offset="1" stopColor="#ffffff" stopOpacity="0" />
-        </RadialGradient>
-        <ClipPath id="blade"><Circle cx={41} cy={40} r={37} /></ClipPath>
+        <ClipPath id="blade"><Circle cx={41} cy={40} r={36} /></ClipPath>
       </Defs>
-      {/* 손잡이(나무) — 블레이드 뒤로 들어가 아래로 뻗음 */}
-      <Rect x={30} y={71} width={22} height={60} rx={11} fill="url(#pwood)" />
-      {/* 블레이드 */}
-      <Circle cx={41} cy={40} r={37} fill="url(#pblade)" />
-      {/* 나무 throat — 블레이드 좌하단으로 대각선으로 파고듦 */}
-      <Path d="M0 34 L55 77 L60 93 L0 93 Z" fill="url(#pwood)" clipPath="url(#blade)" />
-      {/* 좌상단 하이라이트 */}
-      <Ellipse cx={30} cy={24} rx={14} ry={10} fill="url(#phi)" />
+      {/* 손잡이(나무) — 플레어 넥 + 그립 */}
+      <Path
+        d="M30 72 C29 80 33 84 34 90 L34 120 Q34 129 41 129 Q48 129 48 120 L48 90 C49 84 53 80 52 72 Z"
+        fill="#c6b195"
+      />
+      {/* 나무 결 */}
+      <Path d="M38 94 L38 118 M44 94 L44 118" stroke="#ab976f" strokeWidth={1} strokeLinecap="round" opacity={0.5} />
+      {/* 나무 테두리(엣지) */}
+      <Circle cx={41} cy={40} r={38.5} fill="#d3c2a3" />
+      {/* 러버 면 */}
+      <Circle cx={41} cy={40} r={36} fill="url(#rub)" />
+      {/* 러버가 나무에 앉은 옅은 하단 그림자 */}
+      <Path d="M18 68 A36 36 0 0 0 64 68" fill="none" stroke="#b06d78" strokeWidth={2} opacity={0.25} clipPath="url(#blade)" />
     </Svg>
   );
 }
