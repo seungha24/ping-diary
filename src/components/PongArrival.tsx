@@ -40,23 +40,24 @@ function PingPongBall() {
   );
 }
 
-const EW = 210, EHH = 132; // 열린 편지봉투 크기
+const EW = 176, EHH = 144;   // 편지봉투 크기 (가로 폭 축소, 세로 비율 업)
+const FLAP_HINGE = 52;       // 플랩 힌지(몸통 윗변) y
 
 /** 봉투 뒷벽(사각) — 편지 뒤. 위 뾰족은 플랩이 열리며 만들어진다. */
 function EnvelopeBack() {
   return (
     <Svg width={EW} height={EHH}>
-      <Path d="M0 56 L210 56 L210 124 L0 124 Z" fill="#f0efe9" stroke="#dcd8cc" strokeWidth={2.5} strokeLinejoin="round" />
+      <Path d="M0 52 L176 52 L176 136 L0 136 Z" fill="#f0efe9" stroke="#dcd8cc" strokeWidth={2.5} strokeLinejoin="round" />
     </Svg>
   );
 }
 
 /** 봉투 플랩 — 닫힘: 앞주머니 입구(v)를 딱 덮는 아래 뾰족 삼각형.
- *  윗변(y=56) 힌지로 rotateX -180° 젖혀지면 위 뾰족(열린 봉투의 peak)이 된다. */
+ *  윗변(y=52) 힌지로 rotateX -180° 젖혀지면 위 뾰족(열린 봉투의 peak)이 된다. */
 function EnvelopeFlap() {
   return (
-    <Svg width={EW} height={58}>
-      <Path d="M2 0 L105 56 L208 0 Z" fill="#f0eee7" stroke="#dcd8cc" strokeWidth={2.5} strokeLinejoin="round" />
+    <Svg width={EW} height={66}>
+      <Path d="M2 0 L88 64 L174 0 Z" fill="#f0eee7" stroke="#dcd8cc" strokeWidth={2.5} strokeLinejoin="round" />
     </Svg>
   );
 }
@@ -65,7 +66,7 @@ function EnvelopeFlap() {
 function EnvelopeFront() {
   return (
     <Svg width={EW} height={EHH}>
-      <Path d="M0 56 L105 112 L210 56 L210 124 Q210 132 202 132 L8 132 Q0 132 0 124 Z" fill="#fbfaf6" stroke="#dcd8cc" strokeWidth={2.5} strokeLinejoin="round" />
+      <Path d="M0 52 L88 116 L176 52 L176 128 Q176 136 168 136 L8 136 Q0 136 0 128 Z" fill="#fbfaf6" stroke="#dcd8cc" strokeWidth={2.5} strokeLinejoin="round" />
     </Svg>
   );
 }
@@ -367,8 +368,8 @@ const styles = StyleSheet.create({
   ball: { position: 'absolute', width: BALL, height: BALL },
   envelope: { position: 'absolute', width: EW, height: EHH },
   envFlap: {
-    position: 'absolute', top: 56, left: 0, width: EW, height: 58,
-    transformOrigin: 'center top', // 윗변(y=56)을 힌지로 젖혀짐
+    position: 'absolute', top: FLAP_HINGE, left: 0, width: EW, height: 66,
+    transformOrigin: 'center top', // 윗변을 힌지로 젖혀짐
   },
   shadow: {
     position: 'absolute',
