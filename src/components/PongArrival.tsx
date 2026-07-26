@@ -172,11 +172,11 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
   useEffect(() => {
     if (!showPill) return;
     // 공이 안착한 그 자리에서 팝업이 피어나듯 연결 — 공은 오므라들며 사라지고,
-    // 팝업이 같은 지점에서 작게 시작해 살짝 튕기며(back) 커진다.
-    bScale.value = withTiming(0.2, { duration: 200, easing: Easing.in(Easing.quad) });
-    bOpacity.value = withTiming(0, { duration: 200 });
-    pillOpacity.value = withTiming(1, { duration: 220 });
-    pillScale.value = withTiming(1, { duration: 380, easing: Easing.out(Easing.back(1.5)) });
+    // 짧은 텀 뒤 팝업이 같은 지점에서 천천히 부드럽게 커지며 등장(급한 튕김 없이).
+    bScale.value = withTiming(0.25, { duration: 240, easing: Easing.in(Easing.quad) });
+    bOpacity.value = withTiming(0, { duration: 240 });
+    pillOpacity.value = withDelay(170, withTiming(1, { duration: 440 }));
+    pillScale.value = withDelay(170, withTiming(1, { duration: 560, easing: Easing.out(Easing.cubic) }));
   }, [showPill]);
 
   const paddleStyle = useAnimatedStyle(() => ({
