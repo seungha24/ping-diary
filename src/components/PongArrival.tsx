@@ -37,11 +37,11 @@ function PingPongBall() {
 
 const PW = 60, PH = 100; // 탁구채 SVG 크기
 
-/** 탁구채 — 이모지풍 플랫(아웃라인 없음): 탁한 로즈 블레이드 + 나무색 손잡이·throat. */
+/** 탁구채 — 이모지풍 플랫(아웃라인 없음). 앱의 차분한 톤에 맞춰 채도를 낮춘
+ *  더스티 로즈 블레이드 + 그레이시 우드 손잡이·throat. */
 function Paddle() {
-  const ROSE = '#bf4d60';
-  const WOOD = '#c4a56b';
-  const WOOD_DK = '#b2934f';
+  const ROSE = '#cf8790';
+  const WOOD = '#cbb79a';
   return (
     <Svg width={PW} height={PH}>
       <Defs>
@@ -49,9 +49,7 @@ function Paddle() {
       </Defs>
       {/* 손잡이(나무) — 블레이드 뒤로 들어가 아래로 뻗음 */}
       <Rect x={22} y={52} width={16} height={44} rx={8} fill={WOOD} />
-      {/* 손잡이 그립 음영 */}
-      <Rect x={26} y={62} width={8} height={26} rx={4} fill={WOOD_DK} />
-      {/* 블레이드 로즈 */}
+      {/* 블레이드 */}
       <Circle cx={30} cy={29} r={27} fill={ROSE} />
       {/* 나무 throat — 블레이드 좌하단으로 대각선으로 파고듦 */}
       <Path d="M0 25 L40 56 L44 68 L0 68 Z" fill={WOOD} clipPath="url(#blade)" />
@@ -215,7 +213,7 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
           <Animated.View style={[styles.paddle, paddleStyle]} pointerEvents="none">
             <Paddle />
           </Animated.View>
-          <Animated.View style={[styles.flash, { borderColor: accent }, flashStyle]} pointerEvents="none" />
+          <Animated.View style={[styles.flash, flashStyle]} pointerEvents="none" />
           <Animated.View style={[styles.ball, ballStyle]} pointerEvents="none">
             <PingPongBall />
           </Animated.View>
@@ -248,7 +246,7 @@ const styles = StyleSheet.create({
   flash: {
     position: 'absolute',
     width: 34, height: 34, borderRadius: 999,
-    borderWidth: 3,
+    borderWidth: 3, borderColor: '#cf8790',
   },
   pill: {
     alignItems: 'center', gap: 12,
