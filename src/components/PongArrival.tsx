@@ -40,28 +40,22 @@ function PingPongBall() {
   );
 }
 
-const EW = 140, EH = 100; // 편지 봉투 크기
-const FLAP_TOP = 22;      // 플랩 힌지(윗변) y — 몸통 윗변과 일치
+const EW = 210, EHH = 132; // 열린 편지봉투 크기
 
-/** 봉투 몸통 — 화이트 종이(윗변 각짐·아랫변 둥금) + 아래 접힘선(X자). */
-function EnvelopeBody() {
+/** 열린 봉투 뒷벽 — 편지 뒤. 윗변이 위로 뾰족(오픈 립). */
+function EnvelopeBack() {
   return (
-    <Svg width={EW} height={EH}>
-      <Path
-        d="M3 22 L137 22 L137 86 Q137 94 129 94 L11 94 Q3 94 3 86 Z"
-        fill="#fdfdfb" stroke="#e4e1d8" strokeWidth={2} strokeLinejoin="round"
-      />
-      {/* 아래 접힘선 'v' — 위 모서리에서 아래 중앙으로 모임 */}
-      <Path d="M3 24 L70 88 L137 24" fill="none" stroke="#ece9e1" strokeWidth={2} />
+    <Svg width={EW} height={EHH}>
+      <Path d="M0 56 L105 0 L210 56 L210 124 L0 124 Z" fill="#f0efe9" stroke="#dcd8cc" strokeWidth={2.5} strokeLinejoin="round" />
     </Svg>
   );
 }
 
-/** 봉투 플랩(삼각형) — 윗변(x3~137)을 힌지로 위로 열린다. 몸통 윗변과 딱 맞음. */
-function EnvelopeFlap() {
+/** 열린 봉투 앞주머니 — 편지 앞(아랫부분 가림). 윗변이 'v'(아래 중앙으로). */
+function EnvelopeFront() {
   return (
-    <Svg width={EW} height={44}>
-      <Path d="M3 0 L70 40 L137 0 Z" fill="#f0eee7" stroke="#e4e1d8" strokeWidth={2} strokeLinejoin="round" />
+    <Svg width={EW} height={EHH}>
+      <Path d="M0 56 L105 112 L210 56 L210 124 Q210 132 202 132 L8 132 Q0 132 0 124 Z" fill="#fbfaf6" stroke="#dcd8cc" strokeWidth={2.5} strokeLinejoin="round" />
     </Svg>
   );
 }
@@ -118,64 +112,61 @@ function ArrivalPill({ accent, onView, style }: { accent: string; onView: () => 
 }
 
 // ══════════════════════════════════════════════════════════════
-//  편지 버전 — 봉투가 위에서 떠내려와 살랑이며 안착 → 팝업
+//  편지 버전 — 열린 봉투가 날아와 안착 → 편지(팝업)가 봉투에서 위로 올라옴
 // ══════════════════════════════════════════════════════════════
+const ENV_REST = 26; // 봉투 안착 y (아래쪽)
+
 function LetterArrival({ accent, onView }: { accent: string; onView: () => void }) {
   // 비행: 오른쪽 뒤에서 '‹' 포물선을 그리며 앞으로(커지며) 날아옴
   const eX = useSharedValue(200);
-  const eY = useSharedValue(-30);
-  const eRot = useSharedValue(14);
+  const eY = useSharedValue(-24);
+  const eRot = useSharedValue(12);
   const eScale = useSharedValue(0.5);
   const eOpacity = useSharedValue(0);
-  const flapRot = useSharedValue(0);   // 플랩 열림(rotateX)
-  // 팝업: 봉투 뒤에서 작게 시작해 위로 올라오며 입구로 나옴
+  // 편지(팝업): 봉투 앞주머니 뒤에서 위로 올라옴
   const pillOpacity = useSharedValue(0);
-  const pillScale = useSharedValue(0.5);
-  const pillShift = useSharedValue(20);
+  const pillScale = useSharedValue(0.6);
+  const pillShift = useSharedValue(30);
   const [showPill, setShowPill] = useState(false);
 
   useEffect(() => {
     const OUT = Easing.out(Easing.cubic);
     const INOUT = Easing.inOut(Easing.quad);
     eOpacity.value = withTiming(1, { duration: 240 });
-    eScale.value = withTiming(1, { duration: 1100, easing: OUT }); // 앞으로 나오며 커짐
+    eScale.value = withTiming(1, { duration: 1120, easing: OUT }); // 앞으로 나오며 커짐
     // X: 오른쪽 → 왼쪽으로 살짝 지나쳤다(‹ 꼭짓점) → 중앙
     eX.value = withSequence(
-      withTiming(-38, { duration: 780, easing: OUT }),
-      withTiming(0, { duration: 430, easing: INOUT }),
+      withTiming(-36, { duration: 780, easing: OUT }),
+      withTiming(0, { duration: 440, easing: INOUT }),
     );
     // Y: 포물선 배(아래로) → 안착
     eY.value = withSequence(
-      withTiming(26, { duration: 780, easing: INOUT }),
-      withTiming(0, { duration: 430, easing: Easing.out(Easing.quad) }, (finished) => {
+      withTiming(44, { duration: 760, easing: INOUT }),
+      withTiming(ENV_REST, { duration: 460, easing: Easing.out(Easing.quad) }, (finished) => {
         'worklet';
         if (finished) runOnJS(setShowPill)(true);
       }),
     );
-    // 비행 중 기울었다가 수평
     eRot.value = withSequence(
-      withTiming(-4, { duration: 780, easing: OUT }),
-      withTiming(0, { duration: 430, easing: INOUT }),
+      withTiming(-3, { duration: 780, easing: OUT }),
+      withTiming(0, { duration: 440, easing: INOUT }),
     );
   }, []);
 
   useEffect(() => {
     if (!showPill) return;
-    // 봉투가 살짝 확대되며 플랩이 열림 → 봉투 뒤의 팝업이 위로 올라와 입구로 나옴 → 봉투 페이드
-    eScale.value = withTiming(1.12, { duration: 480, easing: Easing.out(Easing.cubic) }); // 살짝 zoom
-    flapRot.value = withTiming(-155, { duration: 420, easing: Easing.out(Easing.quad) });
-    pillOpacity.value = withDelay(240, withTiming(1, { duration: 220 }));
-    pillShift.value = withDelay(300, withTiming(-22, { duration: 700, easing: Easing.out(Easing.cubic) })); // 위로 올라옴
-    pillScale.value = withDelay(560, withTiming(1, { duration: 560, easing: Easing.out(Easing.cubic) }));   // 나오면서 커짐
-    eOpacity.value = withDelay(660, withTiming(0, { duration: 460 }));
+    // 편지가 열린 봉투 안에서 위로 올라와 나옴 (봉투는 그대로 남아 편지를 담고 있음)
+    pillOpacity.value = withDelay(200, withTiming(1, { duration: 260 }));
+    pillShift.value = withDelay(240, withTiming(-23, { duration: 720, easing: Easing.out(Easing.cubic) })); // 위로 올라옴
+    pillScale.value = withDelay(340, withTiming(1, { duration: 640, easing: Easing.out(Easing.cubic) }));   // 나오며 커짐
   }, [showPill]);
 
   const shadowStyle = useAnimatedStyle(() => {
     const k = interpolate(eScale.value, [0.5, 1], [0.55, 1.05], Extrapolation.CLAMP);
-    const o = interpolate(eScale.value, [0.5, 1], [0.05, 0.18], Extrapolation.CLAMP);
+    const o = interpolate(eScale.value, [0.5, 1], [0.05, 0.16], Extrapolation.CLAMP);
     return {
       opacity: eOpacity.value * o,
-      transform: [{ translateX: eX.value }, { translateY: EH / 2 + 2 }, { scaleX: k * 1.9 }, { scaleY: k * 0.95 }],
+      transform: [{ translateX: eX.value }, { translateY: ENV_REST + EHH / 2 - 8 }, { scaleX: k * 2.2 }, { scaleY: k }],
     };
   });
   const envStyle = useAnimatedStyle(() => ({
@@ -187,9 +178,6 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
       { scale: eScale.value },
     ],
   }));
-  const flapStyle = useAnimatedStyle(() => ({
-    transform: [{ perspective: 700 }, { rotateX: `${flapRot.value}deg` }],
-  }));
   const pillStyle = useAnimatedStyle(() => ({
     opacity: pillOpacity.value,
     transform: [{ translateY: pillShift.value }, { scale: pillScale.value }],
@@ -200,12 +188,10 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
       <Animated.View style={[styles.shadow, shadowStyle]} pointerEvents="none">
         <GroundShadow />
       </Animated.View>
-      {/* 팝업은 봉투보다 먼저(뒤에) 렌더 — 봉투 몸통이 아랫부분을 가려 '안에서' 나오는 느낌 */}
+      {/* 뒷벽 → 편지(팝업) → 앞주머니 순으로 쌓아 편지가 봉투 안에 꽂힌 형태 */}
+      <Animated.View style={[styles.envelope, envStyle]} pointerEvents="none"><EnvelopeBack /></Animated.View>
       {showPill && <ArrivalPill accent={accent} onView={onView} style={pillStyle} />}
-      <Animated.View style={[styles.envelope, envStyle]} pointerEvents="none">
-        <View style={styles.envBody}><EnvelopeBody /></View>
-        <Animated.View style={[styles.envFlap, flapStyle]}><EnvelopeFlap /></Animated.View>
-      </Animated.View>
+      <Animated.View style={[styles.envelope, envStyle]} pointerEvents="none"><EnvelopeFront /></Animated.View>
     </View>
   );
 }
@@ -358,12 +344,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   ball: { position: 'absolute', width: BALL, height: BALL },
-  envelope: { position: 'absolute', width: EW, height: EH },
-  envBody: { position: 'absolute', top: 0, left: 0 },
-  envFlap: {
-    position: 'absolute', top: FLAP_TOP, left: 0, width: EW, height: 46,
-    transformOrigin: 'center top', // 윗변을 힌지로 열림
-  },
+  envelope: { position: 'absolute', width: EW, height: EHH },
   shadow: {
     position: 'absolute',
     width: SHADOW_W, height: SHADOW_H,
