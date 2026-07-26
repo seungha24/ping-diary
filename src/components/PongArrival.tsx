@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import Svg, {
-  Defs, RadialGradient, Stop, Circle, Ellipse, Rect, Path, ClipPath,
+  Defs, RadialGradient, LinearGradient, Stop, Circle, Ellipse, Rect, Path, ClipPath,
 } from 'react-native-svg';
 import TouchableOpacity from './Touchable';
 import Animated, {
@@ -37,22 +37,35 @@ function PingPongBall() {
 
 const PW = 82, PH = 136; // 탁구채 SVG 크기 (키움)
 
-/** 탁구채 — 이모지풍 플랫(아웃라인 없음). 앱의 차분한 톤에 맞춰 채도를 낮춘
- *  더스티 로즈 블레이드 + 그레이시 우드 손잡이·throat. */
+/** 탁구채 — 더스티 로즈 블레이드 + 그레이시 우드 손잡이·throat.
+ *  공과 결을 맞추려 은은한 라디얼 음영 + 하이라이트로 입체감을 준다(과하지 않게). */
 function Paddle() {
-  const ROSE = '#cf8790';
-  const WOOD = '#cbb79a';
   return (
     <Svg width={PW} height={PH}>
       <Defs>
+        <RadialGradient id="pblade" cx="38%" cy="30%" r="80%">
+          <Stop offset="0" stopColor="#e2a3ab" />
+          <Stop offset="0.55" stopColor="#d18a94" />
+          <Stop offset="1" stopColor="#bc757f" />
+        </RadialGradient>
+        <LinearGradient id="pwood" x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0" stopColor="#d8c7ab" />
+          <Stop offset="1" stopColor="#bca380" />
+        </LinearGradient>
+        <RadialGradient id="phi" cx="50%" cy="50%" r="50%">
+          <Stop offset="0" stopColor="#ffffff" stopOpacity="0.48" />
+          <Stop offset="1" stopColor="#ffffff" stopOpacity="0" />
+        </RadialGradient>
         <ClipPath id="blade"><Circle cx={41} cy={40} r={37} /></ClipPath>
       </Defs>
       {/* 손잡이(나무) — 블레이드 뒤로 들어가 아래로 뻗음 */}
-      <Rect x={30} y={71} width={22} height={60} rx={11} fill={WOOD} />
+      <Rect x={30} y={71} width={22} height={60} rx={11} fill="url(#pwood)" />
       {/* 블레이드 */}
-      <Circle cx={41} cy={40} r={37} fill={ROSE} />
+      <Circle cx={41} cy={40} r={37} fill="url(#pblade)" />
       {/* 나무 throat — 블레이드 좌하단으로 대각선으로 파고듦 */}
-      <Path d="M0 34 L55 77 L60 93 L0 93 Z" fill={WOOD} clipPath="url(#blade)" />
+      <Path d="M0 34 L55 77 L60 93 L0 93 Z" fill="url(#pwood)" clipPath="url(#blade)" />
+      {/* 좌상단 하이라이트 */}
+      <Ellipse cx={30} cy={24} rx={14} ry={10} fill="url(#phi)" />
     </Svg>
   );
 }
@@ -84,11 +97,11 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
   // 공
   const bX = useSharedValue(-92);
   const bY = useSharedValue(-8);
+  const bScale = useSharedValue(1);
   const bOpacity = useSharedValue(0);
   // 팝업
   const pillOpacity = useSharedValue(0);
-  const pillScale = useSharedValue(0.96);
-  const pillShift = useSharedValue(14);
+  const pillScale = useSharedValue(0.4);
   const [showPill, setShowPill] = useState(false);
 
   useEffect(() => {
@@ -153,10 +166,12 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
 
   useEffect(() => {
     if (!showPill) return;
+    // 공이 안착한 그 자리에서 팝업이 피어나듯 연결 — 공은 오므라들며 사라지고,
+    // 팝업이 같은 지점에서 작게 시작해 살짝 튕기며(back) 커진다.
+    bScale.value = withTiming(0.2, { duration: 200, easing: Easing.in(Easing.quad) });
     bOpacity.value = withTiming(0, { duration: 200 });
-    pillOpacity.value = withDelay(80, withTiming(1, { duration: 260 }));
-    pillScale.value = withDelay(80, withTiming(1, { duration: 320, easing: Easing.out(Easing.back(1.4)) }));
-    pillShift.value = withDelay(80, withTiming(0, { duration: 320, easing: Easing.out(Easing.back(1.4)) }));
+    pillOpacity.value = withTiming(1, { duration: 220 });
+    pillScale.value = withTiming(1, { duration: 380, easing: Easing.out(Easing.back(1.5)) });
   }, [showPill]);
 
   const paddleStyle = useAnimatedStyle(() => ({
@@ -172,11 +187,12 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
     transform: [
       { translateX: bX.value },
       { translateY: bY.value },
+      { scale: bScale.value },
     ],
   }));
   const pillStyle = useAnimatedStyle(() => ({
     opacity: pillOpacity.value,
-    transform: [{ translateY: pillShift.value }, { scale: pillScale.value }],
+    transform: [{ scale: pillScale.value }],
   }));
 
   return (
@@ -187,11 +203,12 @@ export default function PongArrival({ accent, onView }: { accent: string; onView
             <Paddle />
           </Animated.View>
           <Animated.View style={[styles.flash, flashStyle]} pointerEvents="none" />
-          <Animated.View style={[styles.ball, ballStyle]} pointerEvents="none">
-            <PingPongBall />
-          </Animated.View>
         </>
       )}
+      {/* 공은 항상 마운트 — 팝업으로 오므라드는 연결 연출이 보이도록 opacity로만 제어 */}
+      <Animated.View style={[styles.ball, ballStyle]} pointerEvents="none">
+        <PingPongBall />
+      </Animated.View>
 
       {showPill && (
         <Animated.View style={[styles.pill, pillStyle]}>
