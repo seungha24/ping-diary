@@ -44,7 +44,7 @@ function PingPongBall() {
 const EW = 188;            // 공통 가로
 const EH_CLOSED = 134;     // 닫힘 세로 (188 * 640/900)
 const EH_OPEN = 226;       // 열림 세로 (188 * 960/800)
-const EH_POCKET = 88;      // 앞주머니 세로 (188 * 372/800)
+const EH_POCKET = 135;     // 앞주머니 세로 (188 * 575/800) — 옆 플랩 포함, 입구는 투명
 const ENVELOPE_CLOSED_IMG = require('../../assets/envelope.png');
 const ENVELOPE_OPEN_IMG = require('../../assets/envelope_open.png');
 const ENVELOPE_POCKET_IMG = require('../../assets/envelope_pocket.png');
@@ -115,7 +115,7 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
   const closedOp = useSharedValue(1); // 닫힘 이미지 ↔ 열림 이미지 크로스페이드
   const openOp = useSharedValue(0);
   // 편지(팝업) = 봉투 속 종이. 카드 자리에 종이처럼 꽂혀 있다가 위로 올라온다.
-  const CARD_Y = -14;          // 열린 봉투 속 종이(카드) 위치 — 아랫부분이 주머니에 꽂힘
+  const CARD_Y = -6;           // 열린 봉투 속 종이(카드) 위치 — 입구 안, 아랫부분은 플랩 뒤
   const CARD_SCALE = 0.64;     // 카드 크기(봉투 입구 폭에 맞춤)
   const pillOpacity = useSharedValue(0);
   const pillScale = useSharedValue(CARD_SCALE);
