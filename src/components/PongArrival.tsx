@@ -43,13 +43,15 @@ function PingPongBall() {
 const EW = 140, EH = 100; // 편지 봉투 크기
 const FLAP_TOP = 20;      // 플랩 힌지(윗변) y
 
-/** 봉투 몸통 — 오프화이트 종이 + 안쪽(플랩 열리면 보임). */
+/** 봉투 몸통 — 화이트 종이 + 아래 접힘선(X자) + 안쪽(플랩 열리면 보임). */
 function EnvelopeBody() {
   return (
     <Svg width={EW} height={EH}>
-      <Rect x={3} y={FLAP_TOP} width={134} height={76} rx={12} fill="#fdfcf9" stroke="#ddd9cd" strokeWidth={2} />
+      <Rect x={3} y={FLAP_TOP} width={134} height={76} rx={12} fill="#fdfdfb" stroke="#e4e1d8" strokeWidth={2} />
       {/* 안쪽 */}
-      <Rect x={7} y={FLAP_TOP + 2} width={126} height={38} rx={4} fill="#f4f2eb" />
+      <Rect x={7} y={FLAP_TOP + 2} width={126} height={38} rx={4} fill="#f6f4ef" />
+      {/* 아래 접힘선 */}
+      <Path d="M5 93 L70 56 L135 93" fill="none" stroke="#ece9e1" strokeWidth={2} />
     </Svg>
   );
 }
@@ -58,7 +60,7 @@ function EnvelopeBody() {
 function EnvelopeFlap() {
   return (
     <Svg width={EW} height={46}>
-      <Path d="M3 0 L70 42 L137 0 Z" fill="#eae7dd" stroke="#ddd9cd" strokeWidth={2} strokeLinejoin="round" />
+      <Path d="M3 0 L70 42 L137 0 Z" fill="#f0eee7" stroke="#e4e1d8" strokeWidth={2} strokeLinejoin="round" />
     </Svg>
   );
 }
@@ -158,12 +160,13 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
 
   useEffect(() => {
     if (!showPill) return;
-    // 봉투 플랩이 열리고 → 그 안에서 팝업이 위로 올라오며 등장 → 봉투는 사라짐
-    flapRot.value = withTiming(-160, { duration: 380, easing: Easing.out(Easing.quad) });
-    pillShift.value = withDelay(300, withTiming(-10, { duration: 540, easing: Easing.out(Easing.cubic) }));
-    pillScale.value = withDelay(300, withTiming(1, { duration: 540, easing: Easing.out(Easing.cubic) }));
-    pillOpacity.value = withDelay(320, withTiming(1, { duration: 400 }));
-    eOpacity.value = withDelay(560, withTiming(0, { duration: 400 }));
+    // 봉투가 살짝 확대되며 플랩이 열리고 → 그 안에서 팝업이 위로 올라오며 등장 → 봉투는 사라짐
+    eScale.value = withTiming(1.14, { duration: 480, easing: Easing.out(Easing.cubic) }); // 살짝 zoom
+    flapRot.value = withTiming(-160, { duration: 420, easing: Easing.out(Easing.quad) });
+    pillShift.value = withDelay(320, withTiming(-10, { duration: 560, easing: Easing.out(Easing.cubic) }));
+    pillScale.value = withDelay(320, withTiming(1, { duration: 560, easing: Easing.out(Easing.cubic) }));
+    pillOpacity.value = withDelay(340, withTiming(1, { duration: 420 }));
+    eOpacity.value = withDelay(600, withTiming(0, { duration: 420 }));
   }, [showPill]);
 
   const shadowStyle = useAnimatedStyle(() => {
