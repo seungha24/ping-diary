@@ -37,18 +37,17 @@ function PingPongBall() {
 
 const PW = 60, PH = 100; // 탁구채 SVG 크기
 
-/** 탁구채 — 빨간 러버 + 흰 테두리 + 흰 손잡이의 플랫 아이콘(음영·그라데이션 없음). */
+/** 탁구채 — 플랫 스티커 스타일(굵은 남색 아웃라인 + 빨간 블레이드 + 나무색 손잡이). */
 function Paddle() {
-  const RED = '#e5322a';
-  const EDGE = '#c9ced6';
+  const NAVY = '#2c2f4a';
+  const RED = '#ec5566';
+  const WOOD = '#ecca9a';
   return (
     <Svg width={PW} height={PH}>
-      {/* 손잡이(흰색) */}
-      <Rect x={22} y={54} width={16} height={40} rx={7.5} fill="#ffffff" stroke={EDGE} strokeWidth={1.6} />
-      {/* 블레이드 흰 테두리 */}
-      <Circle cx={30} cy={32} r={28} fill="#ffffff" stroke={EDGE} strokeWidth={1.6} />
-      {/* 러버(빨강) */}
-      <Circle cx={30} cy={32} r={23} fill={RED} />
+      {/* 손잡이(나무색) — 블레이드 뒤로 들어가 아래로 뻗음 */}
+      <Rect x={21.5} y={50} width={17} height={46} rx={8} fill={WOOD} stroke={NAVY} strokeWidth={3} strokeLinejoin="round" />
+      {/* 블레이드(빨강) */}
+      <Circle cx={30} cy={29} r={26} fill={RED} stroke={NAVY} strokeWidth={3} />
     </Svg>
   );
 }
