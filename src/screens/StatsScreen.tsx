@@ -17,6 +17,7 @@ import PingLogo from '../components/PingLogo';
 import useTabSwipe from '../hooks/useTabSwipe';
 import { useThemedStyles } from '../theme/themed';
 import SheetWrap from '../components/SheetWrap';
+import CurtainReveal from '../components/CurtainReveal';
 import { animateLayout } from '../anim';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -108,6 +109,7 @@ export default function StatsScreen() {
   const [awardsLoading, setAwardsLoading] = useState(false);
   const [awardsError, setAwardsError] = useState<string | null>(null);
   const [revealed, setRevealed] = useState<Set<string>>(new Set()); // 개봉한 상 (달-인덱스)
+  const [curtainFor, setCurtainFor] = useState<number | null>(null); // 시상식 커튼 연출 중인 달
   const monthAwards = awardsByMonth[reportMonth] ?? null;
 
   // 월별 기록에서 달 선택 → 그 달의 시상식 카드로 전환
@@ -126,6 +128,7 @@ export default function StatsScreen() {
       const res = await getMonthlyAwards(thisYear, target + 1);
       if (res.awards.length > 0) {
         setAwardsByMonth((prev) => ({ ...prev, [target]: { awards: res.awards, closing: res.closing } }));
+        setCurtainFor(target); // 커튼이 양옆으로 걷히며 시상식 등장
       } else {
         setAwardsError(`${target + 1} 월 기록이 없어요. p!ng를 쓰면 시상식을 열어드릴게요.`);
       }
@@ -285,7 +288,7 @@ export default function StatsScreen() {
             awardsCollapsed ? (
               null // 접힌 상태: 헤더만 남김 (화살표로 다시 펼침)
             ) : (
-            <>
+            <View style={{ position: 'relative' }}>
               {monthAwards.awards.map((a, i) => {
                 const key = `${reportMonth}-${i}`;
                 const open = revealed.has(key);
@@ -331,7 +334,11 @@ export default function StatsScreen() {
                   <Text style={styles.awardCollapseText}>시상식 접기</Text>
                 </TouchableOpacity>
               )}
-            </>
+              {/* 시상식 열기 직후: 커튼이 상들을 덮고 있다가 양옆으로 걷힘 */}
+              {curtainFor === reportMonth && (
+                <CurtainReveal onDone={() => setCurtainFor(null)} />
+              )}
+            </View>
             )
           ) : (
             <>
