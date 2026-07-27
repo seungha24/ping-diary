@@ -152,24 +152,26 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
     // 천천히 위로 올라옴 → 봉투 페이드아웃과 함께 중앙에 자리잡음. (여유 있는 페이싱)
     // 닫힘→열림은 크로스페이드 없이 한순간에 탁 전환 — 반투명 구간이 있으면
     // 종이가 비쳐 보이고, 종이를 늦게 넣으면 빈 봉투가 보이는 딜레마의 근본 해결.
-    // 전환과 동시에 종이도 안에 들어 있고, 봉투가 살짝 튀는 펄스로 '탁 열림'을 판다.
-    closedOp.value = withDelay(380, withTiming(0, { duration: 40 }));
-    openOp.value = withDelay(380, withTiming(1, { duration: 40 }));
-    pillOpacity.value = withDelay(380, withTiming(1, { duration: 40 }));
-    eScale.value = withDelay(380, withSequence(
-      withTiming(1.045, { duration: 130, easing: Easing.out(Easing.quad) }),
-      withTiming(1, { duration: 190, easing: Easing.inOut(Easing.quad) }),
+    // 대신 앞뒤로 시간을 늘려 천천히 열리는 느낌을 준다:
+    // 지그시 움츠림(예비 동작) → 탁 전환(종이 동시 삽입) → 천천히 부풀며 정리.
+    eScale.value = withDelay(420, withSequence(
+      withTiming(0.968, { duration: 340, easing: Easing.inOut(Easing.quad) }), // 움츠림
+      withTiming(1.05, { duration: 320, easing: Easing.out(Easing.quad) }),    // 열리며 부풂
+      withTiming(1, { duration: 340, easing: Easing.inOut(Easing.quad) }),     // 정리
     ));
+    closedOp.value = withDelay(760, withTiming(0, { duration: 40 }));
+    openOp.value = withDelay(760, withTiming(1, { duration: 40 }));
+    pillOpacity.value = withDelay(760, withTiming(1, { duration: 40 }));
     pillShift.value = withSequence(
-      withTiming(CARD_Y, { duration: 1950 }),                                   // 꽂힌 채 여유 있게
+      withTiming(CARD_Y, { duration: 2200 }),                                   // 꽂힌 채 여유 있게
       withTiming(-74, { duration: 950, easing: Easing.out(Easing.cubic) }),     // 천천히 올라옴
       withTiming(0, { duration: 700, easing: Easing.inOut(Easing.quad) }),      // 중앙 자리잡기
     );
     pillScale.value = withSequence(
-      withTiming(CARD_SCALE, { duration: 2900 }),
+      withTiming(CARD_SCALE, { duration: 3150 }),
       withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) }),
     );
-    eOpacity.value = withDelay(2900, withTiming(0, { duration: 620 })); // 봉투는 서서히 사라짐
+    eOpacity.value = withDelay(3150, withTiming(0, { duration: 620 })); // 봉투는 서서히 사라짐
   }, [showPill]);
 
   const shadowStyle = useAnimatedStyle(() => {
