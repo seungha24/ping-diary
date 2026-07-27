@@ -127,7 +127,12 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
     // 실패 시 지운 항목만 되살린다 (전체 스냅샷 복원 금지 — updateEntry와 동일한 이유)
     const removed = entries.find((e) => e.id === id);
     pendingDel.current.add(id);
-    setEntries((prev) => prev.filter((e) => e.id !== id));
+    setEntries((prev) => {
+      const next = prev.filter((e) => e.id !== id);
+      // 캐시도 즉시 갱신 — 다음 진입 때 캐시가 지운 글을 되살렸다 지우는 깜빡임 방지
+      saveCache(CACHE_KEYS.entries, next);
+      return next;
+    });
     removeEntry(id)
       // 커밋 전에 시작된 재조회 응답에 이 글이 남아 있어도 되살아나지 않게 잠시 보호 유지
       .then(() => { setTimeout(() => pendingDel.current.delete(id), PENDING_GRACE_MS); })
@@ -144,7 +149,11 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
   async function refresh() {
     try {
       const list = await fetchEntries();
-      setEntries((prev) => mergeRefreshed(prev, list, pendingAdd.current, pendingDel.current));
+      setEntries((prev) => {
+        const next = mergeRefreshed(prev, list, pendingAdd.current, pendingDel.current);
+        saveCache(CACHE_KEYS.entries, next);
+        return next;
+      });
     } catch {}
   }
 

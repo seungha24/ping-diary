@@ -152,7 +152,8 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
     // 천천히 위로 올라옴 → 봉투 페이드아웃과 함께 중앙에 자리잡음. (여유 있는 페이싱)
     closedOp.value = withDelay(380, withTiming(0, { duration: 460 }));
     openOp.value = withDelay(380, withTiming(1, { duration: 460 }));
-    pillOpacity.value = withDelay(760, withTiming(1, { duration: 340 })); // 열린 뒤 종이 노출
+    // 종이(팝업)는 열림 크로스페이드와 정확히 같이 나타난다 — 열렸을 땐 이미 안에 꽂혀 있음
+    pillOpacity.value = withDelay(380, withTiming(1, { duration: 460 }));
     pillShift.value = withSequence(
       withTiming(CARD_Y, { duration: 1950 }),                                   // 꽂힌 채 여유 있게
       withTiming(-74, { duration: 950, easing: Easing.out(Easing.cubic) }),     // 천천히 올라옴
