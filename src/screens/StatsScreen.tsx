@@ -336,7 +336,7 @@ export default function StatsScreen() {
               )}
               {/* 시상식 열기 직후: 커튼이 상들을 덮고 있다가 양옆으로 걷힘 */}
               {curtainFor === reportMonth && (
-                <CurtainReveal onDone={() => setCurtainFor(null)} />
+                <CurtainReveal accent={accent} onDone={() => setCurtainFor(null)} />
               )}
             </View>
             )
