@@ -35,6 +35,9 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
   // 아직 서버에 없는 새 글이 사라지거나 방금 지운 글이 되살아나지 않게 한다.
   const pendingAdd = useRef<Set<number>>(new Set()); // 저장 중인 새 글 id (서버에 아직 없을 수 있음 → 유지)
   const pendingDel = useRef<Set<number>>(new Set()); // 삭제 중인 글 id (서버에 아직 있을 수 있음 → 제외)
+  // 서버 커밋 직전에 시작된 재조회 응답이 커밋 후에 도착하는 레이스 대비 —
+  // 성공 후에도 잠시 보호를 유지해, 지운 글이 목록에 되살아났다 사라지는 깜빡임을 막는다.
+  const PENDING_GRACE_MS = 15_000;
 
   // 인증 완료 후 서버에서 p!ng 로드
   useEffect(() => {
@@ -84,7 +87,9 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
       .then((saved) => {
         // 서버 id로 교체하되 _localId는 유지 (열려 있는 상세가 이 값으로 승격됨)
         setEntries((prev) => sortByNewest(prev.map((e) => (e._localId === localId ? { ...saved, _localId: localId } : e))));
-        pendingAdd.current.delete(localId);
+        // 커밋 전에 시작된 재조회가 새 글 없이 도착해도 지워지지 않게 잠시 보호 유지
+        pendingAdd.current.add(saved.id);
+        setTimeout(() => { pendingAdd.current.delete(localId); pendingAdd.current.delete(saved.id); }, PENDING_GRACE_MS);
         notify('p!ng 업로드 완료!');
       })
       .catch((err) => {
@@ -124,7 +129,8 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
     pendingDel.current.add(id);
     setEntries((prev) => prev.filter((e) => e.id !== id));
     removeEntry(id)
-      .then(() => { pendingDel.current.delete(id); })
+      // 커밋 전에 시작된 재조회 응답에 이 글이 남아 있어도 되살아나지 않게 잠시 보호 유지
+      .then(() => { setTimeout(() => pendingDel.current.delete(id), PENDING_GRACE_MS); })
       .catch(() => {
         pendingDel.current.delete(id);
         if (removed) setEntries((prev) => sortByNewest([removed, ...prev.filter((e) => e.id !== id)]));
