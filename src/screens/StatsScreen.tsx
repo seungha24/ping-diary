@@ -124,15 +124,17 @@ export default function StatsScreen() {
     const target = reportMonth;
     setAwardsLoading(true);
     setAwardsError(null);
+    setCurtainFor(target); // 누르자마자 닫힌 커튼 등장 — AI 심사 시간이 커튼 뒤에 숨는다
     try {
       const res = await getMonthlyAwards(thisYear, target + 1);
       if (res.awards.length > 0) {
         setAwardsByMonth((prev) => ({ ...prev, [target]: { awards: res.awards, closing: res.closing } }));
-        setCurtainFor(target); // 커튼이 양옆으로 걷히며 시상식 등장
       } else {
+        setCurtainFor(null);
         setAwardsError(`${target + 1} 월 기록이 없어요. p!ng를 쓰면 시상식을 열어드릴게요.`);
       }
     } catch (e: any) {
+      setCurtainFor(null); // 실패 → 커튼 회수
       setAwardsError(e?.message ?? '시상식 준비에 실패했어요. 잠시 후 다시 시도해주세요.');
     } finally {
       setAwardsLoading(false);
@@ -340,6 +342,11 @@ export default function StatsScreen() {
               )}
             </View>
             )
+          ) : curtainFor === reportMonth ? (
+            // 심사(AI) 진행 중 — 닫힌 커튼이 무대를 덮고 기다린다
+            <View style={{ position: 'relative', height: 190 }}>
+              <CurtainReveal accent={accent} ready={false} onDone={() => {}} />
+            </View>
           ) : (
             <>
               {awardsError && <Text style={styles.reportError}>{awardsError}</Text>}
