@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import Svg, { Defs, LinearGradient, Stop, Path } from 'react-native-svg';
 import Animated, {
-  useSharedValue, useAnimatedStyle, withDelay, withTiming, Easing, runOnJS,
+  useSharedValue, useAnimatedStyle, withDelay, withRepeat, withSequence, withTiming,
+  Easing, runOnJS,
 } from 'react-native-reanimated';
 
 // ── 색 유틸: accent를 어둡게/밝게 섞어 커튼 톤 생성 ──
@@ -60,11 +61,22 @@ export default function CurtainReveal({ accent, ready = true, onDone }: {
   const started = useRef(false);
   const progress = useSharedValue(0); // 0=닫힘, 1=양옆으로 걷힘
   const fade = useSharedValue(1);     // 마지막 전체 페이드
+  const labelOp = useSharedValue(0);  // '심사 중' 문구 (대기 동안 깜빡임)
+
+  // 심사(로딩) 중 — 커튼 위에 문구를 은은히 깜빡여 멈춘 게 아님을 보여준다
+  useEffect(() => {
+    if (ready || started.current) return;
+    labelOp.value = withRepeat(withSequence(
+      withTiming(1, { duration: 850, easing: Easing.inOut(Easing.sin) }),
+      withTiming(0.45, { duration: 850, easing: Easing.inOut(Easing.sin) }),
+    ), -1, false);
+  }, [ready]);
 
   useEffect(() => {
     if (!w || !ready || started.current) return;
     started.current = true;
-    // 준비 완료 → 잠깐 숨 고르고 주름을 접으며 걷힘 → 잠깐 유지 → 페이드
+    // 준비 완료 → 문구 걷고 → 주름을 접으며 걷힘 → 잠깐 유지 → 페이드
+    labelOp.value = withTiming(0, { duration: 220 });
     progress.value = withDelay(250, withTiming(1, {
       duration: 1300,
       easing: Easing.inOut(Easing.cubic),
@@ -83,6 +95,7 @@ export default function CurtainReveal({ accent, ready = true, onDone }: {
   const rightStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: progress.value * 26 }, { scaleX: 1 - progress.value * 0.68 }],
   }));
+  const labelStyle = useAnimatedStyle(() => ({ opacity: labelOp.value }));
 
   return (
     <Animated.View
@@ -95,6 +108,10 @@ export default function CurtainReveal({ accent, ready = true, onDone }: {
       </Animated.View>
       <Animated.View style={[styles.half, styles.halfRight, rightStyle]}>
         <CurtainPanel accent={accent} flip />
+      </Animated.View>
+      {/* 심사 중 문구 — 닫힌 커튼 위에서 은은히 깜빡임 */}
+      <Animated.View style={[styles.labelWrap, labelStyle]} pointerEvents="none">
+        <Text style={styles.labelText}>심사위원들이 상을 고르고 있어요…</Text>
       </Animated.View>
     </Animated.View>
   );
@@ -109,4 +126,12 @@ const styles = StyleSheet.create({
   half: { position: 'absolute', top: 0, bottom: 0, width: '50%' },
   halfLeft: { left: 0, transformOrigin: 'left center' },   // 왼쪽 가장자리로 개더링
   halfRight: { right: 0, transformOrigin: 'right center' }, // 오른쪽 가장자리로 개더링
+  labelWrap: {
+    position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  labelText: {
+    color: '#ffffff', fontSize: 13.5, fontWeight: '700', letterSpacing: 0.2,
+    textShadowColor: 'rgba(0,0,0,0.35)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4,
+  },
 });
