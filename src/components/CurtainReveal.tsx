@@ -111,7 +111,7 @@ export default function CurtainReveal({ accent, ready = true, onDone }: {
       </Animated.View>
       {/* 심사 중 문구 — 닫힌 커튼 위에서 은은히 깜빡임 */}
       <Animated.View style={[styles.labelWrap, labelStyle]} pointerEvents="none">
-        <Text style={styles.labelText}>심사위원들이 상을 고르고 있어요…</Text>
+        <Text style={styles.labelText}>심사중입니다..</Text>
       </Animated.View>
     </Animated.View>
   );
