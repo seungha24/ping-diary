@@ -148,21 +148,21 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
 
   useEffect(() => {
     if (!showPill) return;
-    // 안착 후: 닫힘 → 열림 크로스페이드. 열리는 동시에 종이(팝업)가 카드 자리에 나타나
-    // 봉투 속에 꽂힌 모습 → 위로 쑥 올라옴 → 봉투 페이드아웃과 함께 중앙에 자리잡음.
-    closedOp.value = withDelay(240, withTiming(0, { duration: 320 }));
-    openOp.value = withDelay(240, withTiming(1, { duration: 320 }));
-    pillOpacity.value = withDelay(340, withTiming(1, { duration: 260 })); // 열리면서 종이 노출
+    // 안착 후: 잠깐 숨 → 닫힘 → 열림 크로스페이드 → 종이가 꽂힌 채 머물다 →
+    // 천천히 위로 올라옴 → 봉투 페이드아웃과 함께 중앙에 자리잡음. (여유 있는 페이싱)
+    closedOp.value = withDelay(380, withTiming(0, { duration: 460 }));
+    openOp.value = withDelay(380, withTiming(1, { duration: 460 }));
+    pillOpacity.value = withDelay(760, withTiming(1, { duration: 340 })); // 열린 뒤 종이 노출
     pillShift.value = withSequence(
-      withTiming(CARD_Y, { duration: 900 }),                                    // 꽂힌 채 잠깐
-      withTiming(-74, { duration: 720, easing: Easing.out(Easing.cubic) }),     // 위로 올라옴
-      withTiming(0, { duration: 560, easing: Easing.inOut(Easing.quad) }),      // 중앙 자리잡기
+      withTiming(CARD_Y, { duration: 1950 }),                                   // 꽂힌 채 여유 있게
+      withTiming(-74, { duration: 950, easing: Easing.out(Easing.cubic) }),     // 천천히 올라옴
+      withTiming(0, { duration: 700, easing: Easing.inOut(Easing.quad) }),      // 중앙 자리잡기
     );
     pillScale.value = withSequence(
-      withTiming(CARD_SCALE, { duration: 1620 }),
-      withTiming(1, { duration: 560, easing: Easing.out(Easing.cubic) }),
+      withTiming(CARD_SCALE, { duration: 2900 }),
+      withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) }),
     );
-    eOpacity.value = withDelay(1620, withTiming(0, { duration: 480 })); // 봉투는 서서히 사라짐
+    eOpacity.value = withDelay(2900, withTiming(0, { duration: 620 })); // 봉투는 서서히 사라짐
   }, [showPill]);
 
   const shadowStyle = useAnimatedStyle(() => {
