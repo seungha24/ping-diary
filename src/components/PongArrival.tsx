@@ -150,12 +150,16 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
     if (!showPill) return;
     // 안착 후: 잠깐 숨 → 닫힘 → 열림 크로스페이드 → 종이가 꽂힌 채 머물다 →
     // 천천히 위로 올라옴 → 봉투 페이드아웃과 함께 중앙에 자리잡음. (여유 있는 페이싱)
-    closedOp.value = withDelay(380, withTiming(0, { duration: 460 }));
-    openOp.value = withDelay(380, withTiming(1, { duration: 460 }));
-    // 종이(팝업)는 크로스페이드가 끝난 직후 바로 나타난다 — 크로스페이드 '중'에는
-    // 앞주머니 조각도 반투명이라 뒤의 종이가 비쳐(통과해 보여) 안 됨.
-    // 주머니가 완전 불투명해진 뒤 등장하므로, 열린 순간엔 이미 안에 꽂혀 있는 모습.
-    pillOpacity.value = withDelay(850, withTiming(1, { duration: 130 }));
+    // 닫힘→열림은 크로스페이드 없이 한순간에 탁 전환 — 반투명 구간이 있으면
+    // 종이가 비쳐 보이고, 종이를 늦게 넣으면 빈 봉투가 보이는 딜레마의 근본 해결.
+    // 전환과 동시에 종이도 안에 들어 있고, 봉투가 살짝 튀는 펄스로 '탁 열림'을 판다.
+    closedOp.value = withDelay(380, withTiming(0, { duration: 40 }));
+    openOp.value = withDelay(380, withTiming(1, { duration: 40 }));
+    pillOpacity.value = withDelay(380, withTiming(1, { duration: 40 }));
+    eScale.value = withDelay(380, withSequence(
+      withTiming(1.045, { duration: 130, easing: Easing.out(Easing.quad) }),
+      withTiming(1, { duration: 190, easing: Easing.inOut(Easing.quad) }),
+    ));
     pillShift.value = withSequence(
       withTiming(CARD_Y, { duration: 1950 }),                                   // 꽂힌 채 여유 있게
       withTiming(-74, { duration: 950, easing: Easing.out(Easing.cubic) }),     // 천천히 올라옴
