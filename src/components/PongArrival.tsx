@@ -163,15 +163,15 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
     openOp.value = withDelay(460, withTiming(1, { duration: 40 }));
     pillOpacity.value = withDelay(460, withTiming(1, { duration: 40 }));
     pillShift.value = withSequence(
-      withTiming(CARD_Y, { duration: 1900 }),                                   // 꽂힌 채 여유 있게
+      withTiming(CARD_Y, { duration: 1350 }),                                   // 꽂힌 채 잠깐
       withTiming(-74, { duration: 950, easing: Easing.out(Easing.cubic) }),     // 천천히 올라옴
       withTiming(0, { duration: 700, easing: Easing.inOut(Easing.quad) }),      // 중앙 자리잡기
     );
     pillScale.value = withSequence(
-      withTiming(CARD_SCALE, { duration: 2850 }),
+      withTiming(CARD_SCALE, { duration: 2300 }),
       withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) }),
     );
-    eOpacity.value = withDelay(2850, withTiming(0, { duration: 620 })); // 봉투는 서서히 사라짐
+    eOpacity.value = withDelay(2300, withTiming(0, { duration: 620 })); // 봉투는 서서히 사라짐
   }, [showPill]);
 
   const shadowStyle = useAnimatedStyle(() => {
