@@ -111,6 +111,8 @@ export default function DiaryDetailScreen() {
   // p0ng 도착 연출: 이 화면에서 코멘트가 '새로' 도착하면 탁구공 연출 후 보러가기로 공개.
   // 이미 코멘트가 있던 글은 바로 보여준다(연출 없음).
   const [pongRevealed, setPongRevealed] = useState<boolean>(!!entry.aiComment);
+  // '미리 받기' 생성 중 — 봉투가 미리 날아와 닫힌 채 기다리는 상태
+  const [pongPending, setPongPending] = useState(false);
   const hadCommentRef = useRef<boolean>(!!entry.aiComment);
   useEffect(() => {
     const has = !!aiComment;
@@ -268,11 +270,15 @@ export default function DiaryDetailScreen() {
   // AI 코멘트 즉시 생성 (24 시간 기다리지 않고 미리 받아보기)
   async function handleGenerateComment() {
     setGenLoading(true);
+    // 첫 수령이면 생성 중에 봉투가 미리 날아와 기다리게 한다 — 생성 시간과
+    // 연출이 겹쳐 체감 대기가 사라짐 (봉투는 닫힌 채 대기, 도착 시 열림)
+    if (!aiComment) setPongPending(true);
     try {
       const updated = await generateComment(entry.id, persona);
       setAiComment(updated.aiComment);
       updateLocal(updated); // 목록에도 반영
     } catch (e: any) {
+      setPongPending(false); // 실패 → 봉투 회수, 잠금 박스로 복귀
       notify(e?.message ?? 'p0ng 생성에 실패했어요. 잠시 후 다시 시도해주세요.');
     } finally {
       setGenLoading(false);
@@ -462,10 +468,15 @@ export default function DiaryDetailScreen() {
             )}
           </View>
 
-          {aiComment && !pongRevealed ? (
-            // 방금 도착 → 탁구채 연출만 (뒷배경 박스 없이 투명 무대)
+          {!pongRevealed && (aiComment || pongPending) ? (
+            // 방금 도착(또는 생성 대기) → 도착 연출. 생성 중엔 봉투가 닫힌 채 기다리다
+            // 코멘트가 도착하면(ready) 열린다.
             <View style={{ height: 190, overflow: 'visible' }}>
-              <PongArrival accent={accent} onView={() => setPongRevealed(true)} />
+              <PongArrival
+                accent={accent}
+                ready={!!aiComment}
+                onView={() => { setPongRevealed(true); setPongPending(false); }}
+              />
             </View>
           ) : aiComment ? (
             aiOpen &&

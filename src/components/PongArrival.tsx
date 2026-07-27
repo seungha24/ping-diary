@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import Svg, {
   Defs, RadialGradient, Stop, Circle, Ellipse, Rect, Path, ClipPath,
 } from 'react-native-svg';
 import TouchableOpacity from './Touchable';
 import Animated, {
-  useSharedValue, useAnimatedStyle, withSequence, withTiming, withDelay,
+  useSharedValue, useAnimatedStyle, withSequence, withTiming, withDelay, withRepeat,
   Easing, runOnJS, interpolate, Extrapolation,
 } from 'react-native-reanimated';
 
@@ -105,7 +105,7 @@ function ArrivalPill({ accent, onView, style }: { accent: string; onView: () => 
 // ══════════════════════════════════════════════════════════════
 const ENV_REST = -20; // 봉투(컨테이너) 안착 y — 닫힌 몸통 중심이 화면중심+26에 오도록
 
-function LetterArrival({ accent, onView }: { accent: string; onView: () => void }) {
+function LetterArrival({ accent, onView, ready }: { accent: string; onView: () => void; ready: boolean }) {
   // 비행: 오른쪽 뒤에서 '‹' 포물선을 그리며 앞으로(커지며) 날아옴
   const eX = useSharedValue(150);
   const eY = useSharedValue(-34);
@@ -120,7 +120,9 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
   const pillOpacity = useSharedValue(0);
   const pillScale = useSharedValue(CARD_SCALE);
   const pillShift = useSharedValue(CARD_Y);
-  const [showPill, setShowPill] = useState(false);
+  const [landed, setLanded] = useState(false);   // 안착 완료
+  const [opening, setOpening] = useState(false); // 열림 시작(팝업 마운트)
+  const openedRef = useRef(false);               // 열림 시퀀스는 한 번만
 
   useEffect(() => {
     const OUT = Easing.out(Easing.cubic);
@@ -137,7 +139,7 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
       withTiming(ENV_REST + 46, { duration: 1280, easing: Easing.inOut(Easing.sin) }),
       withTiming(ENV_REST, { duration: 640, easing: Easing.out(Easing.quad) }, (finished) => {
         'worklet';
-        if (finished) runOnJS(setShowPill)(true);
+        if (finished) runOnJS(setLanded)(true);
       }),
     );
     eRot.value = withSequence(
@@ -146,8 +148,20 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
     );
   }, []);
 
+  // 안착했는데 아직 코멘트 생성 중(ready=false)이면 닫힌 채 두둥실 기다린다
   useEffect(() => {
-    if (!showPill) return;
+    if (!landed || ready || openedRef.current) return;
+    eY.value = withRepeat(withSequence(
+      withTiming(ENV_REST - 5, { duration: 950, easing: Easing.inOut(Easing.sin) }),
+      withTiming(ENV_REST, { duration: 950, easing: Easing.inOut(Easing.sin) }),
+    ), -1, false);
+  }, [landed, ready]);
+
+  useEffect(() => {
+    if (!landed || !ready || openedRef.current) return;
+    openedRef.current = true;
+    // 대기 중 두둥실을 멈추고 바닥으로 복귀
+    eY.value = withTiming(ENV_REST, { duration: 240, easing: Easing.out(Easing.quad) });
     // 안착 후: 잠깐 숨 → 닫힘 → 열림 크로스페이드 → 종이가 꽂힌 채 머물다 →
     // 천천히 위로 올라옴 → 봉투 페이드아웃과 함께 중앙에 자리잡음. (여유 있는 페이싱)
     // 닫힘→열림은 크로스페이드 없이 한순간에 탁 전환 — 반투명 구간이 있으면
@@ -172,7 +186,8 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
       withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) }),
     );
     eOpacity.value = withDelay(2300, withTiming(0, { duration: 620 })); // 봉투는 서서히 사라짐
-  }, [showPill]);
+    setOpening(true); // 팝업(종이) 마운트 — 열림과 함께 등장
+  }, [landed, ready]);
 
   const shadowStyle = useAnimatedStyle(() => {
     const k = interpolate(eScale.value, [0.5, 1], [0.55, 1.05], Extrapolation.CLAMP);
@@ -219,7 +234,7 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
         <Animated.Image source={ENVELOPE_CLOSED_IMG} style={[styles.envClosed, closedStyle]} resizeMode="contain" />
       </Animated.View>
       {/* 팝업(종이) — 뒤: 봉투 전체 / 앞: 앞주머니 조각 → 주머니 속에서 올라오는 구조 */}
-      {showPill && <ArrivalPill accent={accent} onView={onView} style={pillStyle} />}
+      {opening && <ArrivalPill accent={accent} onView={onView} style={pillStyle} />}
       <Animated.View style={[styles.envelope, pocketStyle]} pointerEvents="none">
         <Image source={ENVELOPE_POCKET_IMG} style={styles.envPocket} resizeMode="contain" />
       </Animated.View>
@@ -362,10 +377,15 @@ function PaddleArrival({ accent, onView }: { accent: string; onView: () => void 
 
 /**
  * p0ng 도착 연출. ARRIVAL_STYLE 상수로 편지/탁구채 버전 전환.
+ * ready=false면(코멘트 생성 중) 봉투가 닫힌 채 두둥실 기다리다, true가 되면 연다.
  * 순수 연출이라 실패해도 데이터엔 영향 없음.
  */
-export default function PongArrival(props: { accent: string; onView: () => void }) {
-  return ARRIVAL_STYLE === 'letter' ? <LetterArrival {...props} /> : <PaddleArrival {...props} />;
+export default function PongArrival({ accent, onView, ready = true }: {
+  accent: string; onView: () => void; ready?: boolean;
+}) {
+  return ARRIVAL_STYLE === 'letter'
+    ? <LetterArrival accent={accent} onView={onView} ready={ready} />
+    : <PaddleArrival accent={accent} onView={onView} />;
 }
 
 const styles = StyleSheet.create({
