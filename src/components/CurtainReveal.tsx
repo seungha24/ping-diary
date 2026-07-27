@@ -17,13 +17,24 @@ function shade(hex: string, amt: number): string {
   return `#${[mix(r), mix(g), mix(b)].map((c) => c.toString(16).padStart(2, '0')).join('')}`;
 }
 
+// 채도 낮추기 — 회색(밝기 유지) 쪽으로 섞는다
+function desaturate(hex: string, k: number): string {
+  const m = hex.replace('#', '');
+  const n = m.length === 3 ? m.split('').map((c) => c + c).join('') : m;
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(n.slice(i, i + 2), 16));
+  const gray = Math.round(r * 0.299 + g * 0.587 + b * 0.114);
+  const mix = (c: number) => Math.round(c + (gray - c) * k);
+  return `#${[mix(r), mix(g), mix(b)].map((c) => c.toString(16).padStart(2, '0')).join('')}`;
+}
+
 const PLEATS = 7;
 
 /** 커튼 한 짝 — 주름(그라데이션 세로 밴드) + 물결치는 밑단. (첫 극장 커튼에서
  *  명암만 한 단계 낮춘 버전) */
 function CurtainPanel({ accent, flip }: { accent: string; flip?: boolean }) {
-  const dark = shade(accent, -0.3);
-  const light = shade(accent, 0.12);
+  // 명암 완화 + 채도 다운(차분한 톤)
+  const dark = desaturate(shade(accent, -0.2), 0.3);
+  const light = desaturate(shade(accent, 0.1), 0.3);
   const pw = 100 / PLEATS;
   return (
     <Svg width="100%" height="100%" viewBox="0 0 100 160" preserveAspectRatio="none"
