@@ -115,7 +115,7 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
   const closedOp = useSharedValue(1); // 닫힘 이미지 ↔ 열림 이미지 크로스페이드
   const openOp = useSharedValue(0);
   // 편지(팝업) = 봉투 속 종이. 카드 자리에 종이처럼 꽂혀 있다가 위로 올라온다.
-  const CARD_Y = 18;           // 열린 봉투 속 종이(카드) 위치 — 깊숙이 꽂혀 윗부분만 입구로 보임
+  const CARD_Y = -6;           // 열린 봉투 속 종이(카드) 위치 — 입구 안, 아랫부분은 플랩 뒤
   const CARD_SCALE = 0.64;     // 카드 크기(봉투 입구 폭에 맞춤)
   const pillOpacity = useSharedValue(0);
   const pillScale = useSharedValue(CARD_SCALE);
@@ -152,8 +152,10 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
     // 천천히 위로 올라옴 → 봉투 페이드아웃과 함께 중앙에 자리잡음. (여유 있는 페이싱)
     closedOp.value = withDelay(380, withTiming(0, { duration: 460 }));
     openOp.value = withDelay(380, withTiming(1, { duration: 460 }));
-    // 종이(팝업)는 열림 크로스페이드와 정확히 같이 나타난다 — 열렸을 땐 이미 안에 꽂혀 있음
-    pillOpacity.value = withDelay(380, withTiming(1, { duration: 460 }));
+    // 종이(팝업)는 크로스페이드가 끝난 직후 바로 나타난다 — 크로스페이드 '중'에는
+    // 앞주머니 조각도 반투명이라 뒤의 종이가 비쳐(통과해 보여) 안 됨.
+    // 주머니가 완전 불투명해진 뒤 등장하므로, 열린 순간엔 이미 안에 꽂혀 있는 모습.
+    pillOpacity.value = withDelay(850, withTiming(1, { duration: 130 }));
     pillShift.value = withSequence(
       withTiming(CARD_Y, { duration: 1950 }),                                   // 꽂힌 채 여유 있게
       withTiming(-74, { duration: 950, easing: Easing.out(Easing.cubic) }),     // 천천히 올라옴
