@@ -32,9 +32,9 @@ const PLEATS = 7;
 /** 커튼 한 짝 — 주름(그라데이션 세로 밴드) + 물결치는 밑단. (첫 극장 커튼에서
  *  명암만 한 단계 낮춘 버전) */
 function CurtainPanel({ accent, flip }: { accent: string; flip?: boolean }) {
-  // 명암 완화 + 채도 다운(차분한 톤)
-  const dark = desaturate(shade(accent, -0.2), 0.3);
-  const light = desaturate(shade(accent, 0.1), 0.3);
+  // 밝고 플랫한 차분 톤 — 전체를 밝히고 명암 폭은 좁게, 채도는 낮게
+  const dark = desaturate(shade(accent, -0.04), 0.28);
+  const light = desaturate(shade(accent, 0.18), 0.28);
   const pw = 100 / PLEATS;
   return (
     <Svg width="100%" height="100%" viewBox="0 0 100 160" preserveAspectRatio="none"
