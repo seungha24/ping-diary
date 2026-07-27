@@ -154,24 +154,24 @@ function LetterArrival({ accent, onView }: { accent: string; onView: () => void 
     // 종이가 비쳐 보이고, 종이를 늦게 넣으면 빈 봉투가 보이는 딜레마의 근본 해결.
     // 대신 앞뒤로 시간을 늘려 천천히 열리는 느낌을 준다:
     // 지그시 움츠림(예비 동작) → 탁 전환(종이 동시 삽입) → 천천히 부풀며 정리.
-    eScale.value = withDelay(420, withSequence(
+    eScale.value = withDelay(120, withSequence(
       withTiming(0.968, { duration: 340, easing: Easing.inOut(Easing.quad) }), // 움츠림
       withTiming(1.05, { duration: 320, easing: Easing.out(Easing.quad) }),    // 열리며 부풂
       withTiming(1, { duration: 340, easing: Easing.inOut(Easing.quad) }),     // 정리
     ));
-    closedOp.value = withDelay(760, withTiming(0, { duration: 40 }));
-    openOp.value = withDelay(760, withTiming(1, { duration: 40 }));
-    pillOpacity.value = withDelay(760, withTiming(1, { duration: 40 }));
+    closedOp.value = withDelay(460, withTiming(0, { duration: 40 }));
+    openOp.value = withDelay(460, withTiming(1, { duration: 40 }));
+    pillOpacity.value = withDelay(460, withTiming(1, { duration: 40 }));
     pillShift.value = withSequence(
-      withTiming(CARD_Y, { duration: 2200 }),                                   // 꽂힌 채 여유 있게
+      withTiming(CARD_Y, { duration: 1900 }),                                   // 꽂힌 채 여유 있게
       withTiming(-74, { duration: 950, easing: Easing.out(Easing.cubic) }),     // 천천히 올라옴
       withTiming(0, { duration: 700, easing: Easing.inOut(Easing.quad) }),      // 중앙 자리잡기
     );
     pillScale.value = withSequence(
-      withTiming(CARD_SCALE, { duration: 3150 }),
+      withTiming(CARD_SCALE, { duration: 2850 }),
       withTiming(1, { duration: 700, easing: Easing.out(Easing.cubic) }),
     );
-    eOpacity.value = withDelay(3150, withTiming(0, { duration: 620 })); // 봉투는 서서히 사라짐
+    eOpacity.value = withDelay(2850, withTiming(0, { duration: 620 })); // 봉투는 서서히 사라짐
   }, [showPill]);
 
   const shadowStyle = useAnimatedStyle(() => {
