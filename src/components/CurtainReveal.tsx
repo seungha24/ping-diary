@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Defs, LinearGradient, Stop, Path } from 'react-native-svg';
 import Animated, {
   useSharedValue, useAnimatedStyle, withDelay, withRepeat, withSequence, withTiming,
   Easing, runOnJS,
@@ -19,21 +19,30 @@ function shade(hex: string, amt: number): string {
 
 const PLEATS = 7;
 
-/** 커튼 한 짝 — 투톤 플랫 주름 + 가지런한 스캘럽(반원) 밑단. 깔끔한 커튼. */
+/** 커튼 한 짝 — 주름(그라데이션 세로 밴드) + 물결치는 밑단. (첫 극장 커튼에서
+ *  명암만 한 단계 낮춘 버전) */
 function CurtainPanel({ accent, flip }: { accent: string; flip?: boolean }) {
-  const a = shade(accent, 0.12);   // 밝은 주름
-  const b = shade(accent, -0.12);  // 어두운 주름
+  const dark = shade(accent, -0.3);
+  const light = shade(accent, 0.12);
   const pw = 100 / PLEATS;
   return (
     <Svg width="100%" height="100%" viewBox="0 0 100 160" preserveAspectRatio="none"
       style={flip ? { transform: [{ scaleX: -1 }] } : undefined}>
+      <Defs>
+        <LinearGradient id="curtP" x1="0" y1="0" x2="1" y2="0">
+          <Stop offset="0" stopColor={dark} />
+          <Stop offset="0.45" stopColor={light} />
+          <Stop offset="1" stopColor={dark} />
+        </LinearGradient>
+      </Defs>
       {Array.from({ length: PLEATS }, (_, i) => {
         const x0 = i * pw, x1 = x0 + pw, xm = x0 + pw / 2;
+        const dip = i % 2 === 0 ? 160 : 150; // 물결 밑단
         return (
           <Path
             key={i}
-            d={`M${x0} 0 L${x1} 0 L${x1} 144 Q${xm} 160 ${x0} 144 Z`}
-            fill={i % 2 === 0 ? a : b}
+            d={`M${x0} 0 L${x1} 0 L${x1} ${i % 2 === 0 ? 150 : 156} Q${xm} ${dip} ${x0} ${i % 2 === 0 ? 156 : 150} Z`}
+            fill="url(#curtP)"
           />
         );
       })}
