@@ -19,10 +19,10 @@ function shade(hex: string, amt: number): string {
 
 const PLEATS = 7;
 
-/** 커튼 한 짝 — 주름(그라데이션 세로 밴드) + 물결치는 밑단. */
+/** 커튼 한 짝 — 은은한 주름(저대비 세로 밴드) + 완만한 물결 밑단. 플랫 톤. */
 function CurtainPanel({ accent, flip }: { accent: string; flip?: boolean }) {
-  const dark = shade(accent, -0.42);
-  const light = shade(accent, 0.16);
+  const dark = shade(accent, -0.14);
+  const light = shade(accent, 0.03);
   const pw = 100 / PLEATS;
   return (
     <Svg width="100%" height="100%" viewBox="0 0 100 160" preserveAspectRatio="none"
@@ -36,11 +36,11 @@ function CurtainPanel({ accent, flip }: { accent: string; flip?: boolean }) {
       </Defs>
       {Array.from({ length: PLEATS }, (_, i) => {
         const x0 = i * pw, x1 = x0 + pw, xm = x0 + pw / 2;
-        const dip = i % 2 === 0 ? 160 : 150; // 물결 밑단
+        const dip = i % 2 === 0 ? 158 : 152; // 완만한 물결 밑단
         return (
           <Path
             key={i}
-            d={`M${x0} 0 L${x1} 0 L${x1} ${i % 2 === 0 ? 150 : 156} Q${xm} ${dip} ${x0} ${i % 2 === 0 ? 156 : 150} Z`}
+            d={`M${x0} 0 L${x1} 0 L${x1} ${i % 2 === 0 ? 152 : 156} Q${xm} ${dip} ${x0} ${i % 2 === 0 ? 156 : 152} Z`}
             fill="url(#curtP)"
           />
         );
