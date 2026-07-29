@@ -1188,12 +1188,16 @@ const lightStyles = StyleSheet.create({
   titleInput: {
     fontSize: 18, fontWeight: '600', color: '#1f2937',
     borderBottomWidth: 1, borderBottomColor: '#e5e7eb', paddingVertical: 6,
+    paddingHorizontal: 15, // 질문 카드 안쪽 내용(테두리 1+패딩 14)과 시작점 정렬
   },
   bodyCard: {
     backgroundColor: '#f9fafb', borderRadius: 16, borderWidth: 1, borderColor: '#e5e7eb',
     padding: 14, minHeight: 140,
   },
-  bodyInput: { fontSize: 15, color: '#374151', lineHeight: 24, paddingVertical: 4 },
+  bodyInput: {
+    fontSize: 15, color: '#374151', lineHeight: 24, paddingVertical: 4,
+    paddingHorizontal: 15, // 질문 카드·제목과 시작점 정렬
+  },
   photoBox: { position: 'relative', borderRadius: 14, overflow: 'hidden' },
   photoImg: { width: '100%', height: 180 },
   photoRemove: {
