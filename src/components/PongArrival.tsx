@@ -168,14 +168,14 @@ function LetterArrival({ accent, onView, ready }: { accent: string; onView: () =
     // 종이가 비쳐 보이고, 종이를 늦게 넣으면 빈 봉투가 보이는 딜레마의 근본 해결.
     // 대신 앞뒤로 시간을 늘려 천천히 열리는 느낌을 준다:
     // 지그시 움츠림(예비 동작) → 탁 전환(종이 동시 삽입) → 천천히 부풀며 정리.
-    eScale.value = withDelay(120, withSequence(
-      withTiming(0.968, { duration: 340, easing: Easing.inOut(Easing.quad) }), // 움츠림
-      withTiming(1.05, { duration: 320, easing: Easing.out(Easing.quad) }),    // 열리며 부풂
+    eScale.value = withDelay(60, withSequence(
+      withTiming(0.968, { duration: 200, easing: Easing.inOut(Easing.quad) }), // 움츠림(짧게)
+      withTiming(1.05, { duration: 300, easing: Easing.out(Easing.quad) }),    // 열리며 부풂
       withTiming(1, { duration: 340, easing: Easing.inOut(Easing.quad) }),     // 정리
     ));
-    closedOp.value = withDelay(460, withTiming(0, { duration: 40 }));
-    openOp.value = withDelay(460, withTiming(1, { duration: 40 }));
-    pillOpacity.value = withDelay(460, withTiming(1, { duration: 40 }));
+    closedOp.value = withDelay(260, withTiming(0, { duration: 40 }));
+    openOp.value = withDelay(260, withTiming(1, { duration: 40 }));
+    pillOpacity.value = withDelay(260, withTiming(1, { duration: 40 }));
     pillShift.value = withSequence(
       withTiming(CARD_Y, { duration: 1350 }),                                   // 꽂힌 채 잠깐
       withTiming(-74, { duration: 950, easing: Easing.out(Easing.cubic) }),     // 천천히 올라옴
