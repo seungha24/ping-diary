@@ -123,6 +123,7 @@ function LetterArrival({ accent, onView, ready }: { accent: string; onView: () =
   const [landed, setLanded] = useState(false);   // 안착 완료
   const [opening, setOpening] = useState(false); // 열림 시작(팝업 마운트)
   const openedRef = useRef(false);               // 열림 시퀀스는 한 번만
+  const waitLabelOp = useSharedValue(0);         // 생성 대기 중 문구
 
   useEffect(() => {
     const OUT = Easing.out(Easing.cubic);
@@ -148,19 +149,25 @@ function LetterArrival({ accent, onView, ready }: { accent: string; onView: () =
     );
   }, []);
 
-  // 안착했는데 아직 코멘트 생성 중(ready=false)이면 닫힌 채 두둥실 기다린다
+  // 안착했는데 아직 코멘트 생성 중(ready=false)이면 닫힌 채 두둥실 기다린다.
+  // 멈춘 것처럼 보이지 않게 부유폭을 키우고, 봉투 위에 작성 중 문구를 깜빡인다.
   useEffect(() => {
     if (!landed || ready || openedRef.current) return;
     eY.value = withRepeat(withSequence(
-      withTiming(ENV_REST - 5, { duration: 950, easing: Easing.inOut(Easing.sin) }),
-      withTiming(ENV_REST, { duration: 950, easing: Easing.inOut(Easing.sin) }),
+      withTiming(ENV_REST - 8, { duration: 800, easing: Easing.inOut(Easing.sin) }),
+      withTiming(ENV_REST, { duration: 800, easing: Easing.inOut(Easing.sin) }),
+    ), -1, false);
+    waitLabelOp.value = withRepeat(withSequence(
+      withTiming(1, { duration: 750, easing: Easing.inOut(Easing.sin) }),
+      withTiming(0.4, { duration: 750, easing: Easing.inOut(Easing.sin) }),
     ), -1, false);
   }, [landed, ready]);
 
   useEffect(() => {
     if (!landed || !ready || openedRef.current) return;
     openedRef.current = true;
-    // 대기 중 두둥실을 멈추고 바닥으로 복귀
+    // 대기 중 두둥실·문구를 걷고 바닥으로 복귀
+    waitLabelOp.value = withTiming(0, { duration: 180 });
     eY.value = withTiming(ENV_REST, { duration: 240, easing: Easing.out(Easing.quad) });
     // 안착 후: 잠깐 숨 → 닫힘 → 열림 크로스페이드 → 종이가 꽂힌 채 머물다 →
     // 천천히 위로 올라옴 → 봉투 페이드아웃과 함께 중앙에 자리잡음. (여유 있는 페이싱)
@@ -222,6 +229,11 @@ function LetterArrival({ accent, onView, ready }: { accent: string; onView: () =
     opacity: pillOpacity.value,
     transform: [{ translateY: pillShift.value }, { scale: pillScale.value }],
   }));
+  // 생성 대기 문구 — 봉투 앞면 하단에 얹혀 봉투와 함께 두둥실
+  const waitLabelStyle = useAnimatedStyle(() => ({
+    opacity: waitLabelOp.value,
+    transform: [{ translateY: eY.value + 46 }],
+  }));
 
   return (
     <View style={styles.overlay} pointerEvents="box-none">
@@ -237,6 +249,10 @@ function LetterArrival({ accent, onView, ready }: { accent: string; onView: () =
       {opening && <ArrivalPill accent={accent} onView={onView} style={pillStyle} />}
       <Animated.View style={[styles.envelope, pocketStyle]} pointerEvents="none">
         <Image source={ENVELOPE_POCKET_IMG} style={styles.envPocket} resizeMode="contain" />
+      </Animated.View>
+      {/* 생성 대기 중 문구 */}
+      <Animated.View style={[styles.waitLabel, waitLabelStyle]} pointerEvents="none">
+        <Text style={styles.waitLabelText}>p0ng이 오고 있어요...</Text>
       </Animated.View>
     </View>
   );
@@ -400,6 +416,8 @@ const styles = StyleSheet.create({
   envClosed: { position: 'absolute', left: 0, bottom: 0, width: EW, height: EH_CLOSED },
   envOpen: { position: 'absolute', left: 0, bottom: 0, width: EW, height: EH_OPEN },
   envPocket: { position: 'absolute', left: 0, bottom: 0, width: EW, height: EH_POCKET },
+  waitLabel: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
+  waitLabelText: { fontSize: 12.5, fontWeight: '600', color: '#9ca3af', letterSpacing: 0.2 },
   shadow: {
     position: 'absolute',
     width: SHADOW_W, height: SHADOW_H,
